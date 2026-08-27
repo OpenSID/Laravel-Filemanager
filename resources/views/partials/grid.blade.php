@@ -1,19 +1,22 @@
 @php
     $filesManager = app(\OpenSID\LaravelFilemanager\Services\FilesystemManager::class);
-    $imageExts = config('filemanager.extensions.image', []);
+    $imageExts = array_flip(config('filemanager.extensions.image', []));
+    $archiveExts = array_flip(config('filemanager.extensions.archive', []));
+    $videoExts = array_flip(config('filemanager.extensions.video', []));
+    $audioExts = array_flip(config('filemanager.extensions.audio', []));
     $iconTheme = config('filemanager.icon_theme', 'ico');
     $thumbsDisk = $filesManager->thumbsDisk();
     $baseFolder = trim((string) config('filemanager.base_folder', ''), '/');
     $isAtBaseFolder = $subdir === '' || $subdir === $baseFolder;
     $parentDir = \Illuminate\Support\Str::beforeLast($subdir, '/') === $subdir ? $baseFolder : \Illuminate\Support\Str::beforeLast($subdir, '/');
-    $knownIconExts = [
+    $knownIconExts = array_flip([
         'jpg', 'jpeg', 'png', 'gif', 'bmp', 'svg', 'ico', 'webp',
         'doc', 'docx', 'pdf', 'xls', 'xlsx', 'ppt', 'pptx',
         'mov', 'mpeg', 'm4v', 'mp4', 'avi', 'mpg', 'wma', 'flv', 'webm',
         'mp3', 'mpga', 'm4a', 'ac3', 'aiff', 'mid', 'ogg', 'wav',
         'zip', 'rar', 'gz', 'tar', 'iso', 'dmg',
         'txt', 'log', 'xml', 'html', 'css', 'htm', 'js', 'json', 'sql',
-    ];
+    ]);
 @endphp
 
 @if (! $isAtBaseFolder)
@@ -84,22 +87,22 @@
         </li>
     @else
         @php
-            $isImage = in_array($entry['extension'], $imageExts, true);
+            $isImage = isset($imageExts[$entry['extension']]);
             $isPdf = $entry['extension'] === 'pdf';
             $fileUrl = $filesManager->url($entry['path']);
             $thumbUrl = $isImage && $thumbsDisk->exists($entry['path']) ? $filesManager->thumbUrl($entry['path']) : null;
-            $iconFile = in_array($entry['extension'], $knownIconExts, true) ? $entry['extension'] . '.jpg' : 'default.jpg';
+            $iconFile = isset($knownIconExts[$entry['extension']]) ? $entry['extension'] . '.jpg' : 'default.jpg';
             $iconUrl = filemanager_asset('img/' . $iconTheme . '/' . $iconFile);
             $imageSrc = $thumbUrl ?: $iconUrl;
 
             $itemTypeClass = 'ff-item-type-1';
             if ($isImage) {
                 $itemTypeClass = 'ff-item-type-2';
-            } elseif (in_array($entry['extension'], config('filemanager.extensions.archive', []), true)) {
+            } elseif (isset($archiveExts[$entry['extension']])) {
                 $itemTypeClass = 'ff-item-type-3';
-            } elseif (in_array($entry['extension'], config('filemanager.extensions.video', []), true)) {
+            } elseif (isset($videoExts[$entry['extension']])) {
                 $itemTypeClass = 'ff-item-type-4';
-            } elseif (in_array($entry['extension'], config('filemanager.extensions.audio', []), true)) {
+            } elseif (isset($audioExts[$entry['extension']])) {
                 $itemTypeClass = 'ff-item-type-5';
             }
         @endphp

@@ -138,18 +138,6 @@
     </style>
 </head>
 <body>
-    <script src="{{ filemanager_asset('js/tmpl.min.js') }}"></script>
-    <script src="{{ filemanager_asset('js/load-image.all.min.js') }}"></script>
-    <script src="{{ filemanager_asset('js/canvas-to-blob.min.js') }}"></script>
-    <script src="{{ filemanager_asset('js/jquery.iframe-transport.js') }}"></script>
-    <script src="{{ filemanager_asset('js/jquery.fileupload.js') }}"></script>
-    <script src="{{ filemanager_asset('js/jquery.fileupload-process.js') }}"></script>
-    <script src="{{ filemanager_asset('js/jquery.fileupload-image.js') }}"></script>
-    <script src="{{ filemanager_asset('js/jquery.fileupload-audio.js') }}"></script>
-    <script src="{{ filemanager_asset('js/jquery.fileupload-video.js') }}"></script>
-    <script src="{{ filemanager_asset('js/jquery.fileupload-validate.js') }}"></script>
-    <script src="{{ filemanager_asset('js/jquery.fileupload-ui.js') }}"></script>
-
     {{--
         Config bridge: include.js (unmodified) reads its configuration from
         these hidden inputs rather than from an API call. Keep ids/values in
@@ -259,5 +247,17 @@
         <div id="loading" style="background-color:#000; position:fixed; width:100%; height:100%; top:0px; left:0px;z-index:100000"></div>
         <img id="loading_animation" src="{{ filemanager_asset('img/storing_animation.gif') }}" alt="loading" style="z-index:10001; margin-left:-32px; margin-top:-32px; position:fixed; left:50%; top:50%">
     </div>
+
+    <script src="{{ filemanager_asset('js/tmpl.min.js') }}" defer></script>
+    <script src="{{ filemanager_asset('js/load-image.all.min.js') }}" defer></script>
+    <script src="{{ filemanager_asset('js/canvas-to-blob.min.js') }}" defer></script>
+    <script src="{{ filemanager_asset('js/jquery.iframe-transport.js') }}" defer></script>
+    <script src="{{ filemanager_asset('js/jquery.fileupload.js') }}" defer></script>
+    <script src="{{ filemanager_asset('js/jquery.fileupload-process.js') }}" defer></script>
+    <script src="{{ filemanager_asset('js/jquery.fileupload-image.js') }}" defer></script>
+    <script src="{{ filemanager_asset('js/jquery.fileupload-audio.js') }}" defer></script>
+    <script src="{{ filemanager_asset('js/jquery.fileupload-video.js') }}" defer></script>
+    <script src="{{ filemanager_asset('js/jquery.fileupload-validate.js') }}" defer></script>
+    <script src="{{ filemanager_asset('js/jquery.fileupload-ui.js') }}" defer></script>
 </body>
 </html>
