@@ -34,7 +34,7 @@
                 bootbox.alert('<div class="text-center"><br/><h4><strong>OpenSID File Manager</strong></h4><p><a href="https://opendesa.id" target="_blank" rel="noopener">opendesa.id</a></p><br/><p>Pengembang: <strong>Tim Pengembang OpenDesa</strong></p><p>Hak Cipta &copy; 2016 - {{ date("Y") }} <a href="https://opendesa.id" target="_blank" rel="noopener">Perkumpulan Desa Digital Terbuka</a></p><br/><p><small>Lisensi: <a href="http://www.gnu.org/licenses/gpl.html" target="_blank" rel="noopener">GPL v3</a></small></p></div>');
             });
 
-            $(document).on('click', '[data-toggle="dropdown"]', function (e) {
+            $(document).on('click', '.sorting-btn, [data-toggle="dropdown"]', function (e) {
                 e.preventDefault();
                 e.stopPropagation();
                 var $parent = $(this).closest('.btn-group, .dropdown');
@@ -45,13 +45,20 @@
                 }
             });
 
-            $(document).on('click', function () {
-                $('.btn-group.open, .dropdown.open').removeClass('open');
+            $(document).on('click', function (e) {
+                if (!$(e.target).closest('.btn-group, .dropdown').length) {
+                    $('.btn-group.open, .dropdown.open').removeClass('open');
+                }
             });
         });
     </script>
 
     <style>
+        .breadcrumb {
+            overflow: visible !important;
+            position: relative;
+            z-index: 50;
+        }
         .btn-group {
             position: relative;
             display: inline-block;
@@ -61,10 +68,10 @@
             position: absolute;
             top: 100%;
             left: 0;
-            z-index: 1000;
+            z-index: 99999;
             display: none;
             float: left;
-            min-width: 160px;
+            min-width: 150px;
             padding: 5px 0;
             margin: 2px 0 0;
             list-style: none;
@@ -74,12 +81,12 @@
             border-radius: 4px;
             box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
         }
-        .btn-group.open .dropdown-menu {
-            display: block;
+        .btn-group.open > .dropdown-menu {
+            display: block !important;
         }
         .dropdown-menu.pull-right {
-            right: 0;
-            left: auto;
+            right: 0 !important;
+            left: auto !important;
         }
         .dropdown-menu > li > a {
             display: block;
