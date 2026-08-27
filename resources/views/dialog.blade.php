@@ -12,10 +12,12 @@
     <noscript><link rel="stylesheet" href="{{ filemanager_asset('css/jquery.fileupload-noscript.css') }}"></noscript>
     <noscript><link rel="stylesheet" href="{{ filemanager_asset('css/jquery.fileupload-ui-noscript.css') }}"></noscript>
     <link rel="stylesheet" href="{{ filemanager_asset('css/style.css') }}">
+    <link rel="stylesheet" href="{{ filemanager_asset('css/cropper.min.css') }}">
 
     <script src="{{ filemanager_asset('js/jquery.min.js') }}"></script>
     <script src="{{ filemanager_asset('js/jquery-ui.min.js') }}"></script>
     <script src="{{ filemanager_asset('js/plugins.js') }}"></script>
+    <script src="{{ filemanager_asset('js/cropper.min.js') }}"></script>
     <script src="{{ filemanager_asset('js/modernizr.custom.js') }}"></script>
 
     <script>
@@ -1094,6 +1096,228 @@
         <div id="loading" style="background-color:#000; position:fixed; width:100%; height:100%; top:0px; left:0px;z-index:100000"></div>
         <img id="loading_animation" src="{{ filemanager_asset('img/storing_animation.gif') }}" alt="loading" style="z-index:10001; margin-left:-32px; margin-top:-32px; position:fixed; left:50%; top:50%">
     </div>
+
+    {{-- Modal Crop Gambar Modern --}}
+    <div id="cropper-modal" style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(15,23,42,0.75); z-index:100050; padding:15px; overflow-y:auto; -webkit-overflow-scrolling:touch;">
+        <div style="background:#ffffff; border-radius:5px; max-width:850px; margin:20px auto; box-shadow:0 20px 25px -5px rgba(0,0,0,0.2), 0 10px 10px -5px rgba(0,0,0,0.1); overflow:hidden; display:flex; flex-direction:column;">
+            {{-- Header Modal --}}
+            <div style="display:flex; justify-content:space-between; align-items:center; padding:12px 18px; border-bottom:1px solid #e2e8f0; background:#f8fafc;">
+                <div>
+                    <h3 style="margin:0; font-size:15px; font-weight:600; color:#0f172a;">{{ __('filemanager::filemanager.Crop') ?? 'Potong Gambar (Crop)' }}</h3>
+                    <small id="cropper-file-name" style="color:#64748b; font-size:12px;"></small>
+                </div>
+                <button type="button" id="cropper-close-btn" style="background:none; border:none; font-size:22px; line-height:1; color:#64748b; cursor:pointer; padding:4px 8px; border-radius:5px;">&times;</button>
+            </div>
+
+            {{-- Workspace Gambar --}}
+            <div style="padding:15px; background:#0f172a; text-align:center; min-height:360px; max-height:55vh; display:flex; align-items:center; justify-content:center; overflow:hidden;">
+                <img id="cropper-target-image" src="" alt="Crop target" style="max-width:100%; max-height:50vh; display:block;">
+            </div>
+
+            {{-- Toolbar Crop Controls --}}
+            <div style="padding:12px 16px; background:#f8fafc; border-top:1px solid #e2e8f0; display:flex; flex-wrap:wrap; gap:8px; align-items:center; justify-content:space-between;">
+                {{-- Aspect Ratio Buttons --}}
+                <div style="display:inline-flex; gap:4px; align-items:center;">
+                    <span style="font-size:12px; font-weight:600; color:#475569; margin-right:4px;">Rasio:</span>
+                    <button type="button" class="btn btn-small cropper-ratio-btn active" data-ratio="NaN" style="border-radius:5px; font-size:11px; padding:3px 8px;">Bebas</button>
+                    <button type="button" class="btn btn-small cropper-ratio-btn" data-ratio="1" style="border-radius:5px; font-size:11px; padding:3px 8px;">1:1</button>
+                    <button type="button" class="btn btn-small cropper-ratio-btn" data-ratio="1.3333333333" style="border-radius:5px; font-size:11px; padding:3px 8px;">4:3</button>
+                    <button type="button" class="btn btn-small cropper-ratio-btn" data-ratio="1.7777777778" style="border-radius:5px; font-size:11px; padding:3px 8px;">16:9</button>
+                </div>
+
+                {{-- Action / Transform Buttons --}}
+                <div style="display:inline-flex; gap:4px; align-items:center;">
+                    <button type="button" id="cropper-rotate-left" class="btn btn-small" title="Putar Kiri 90°" style="border-radius:5px; padding:3px 8px; font-size:12px;"><i class="icon-repeat" style="transform: scaleX(-1); display:inline-block;"></i> -90°</button>
+                    <button type="button" id="cropper-rotate-right" class="btn btn-small" title="Putar Kanan 90°" style="border-radius:5px; padding:3px 8px; font-size:12px;"><i class="icon-repeat"></i> +90°</button>
+                    <button type="button" id="cropper-flip-h" class="btn btn-small" title="Flip Horizontal" style="border-radius:5px; padding:3px 8px; font-size:12px;">Flip H</button>
+                    <button type="button" id="cropper-flip-v" class="btn btn-small" title="Flip Vertical" style="border-radius:5px; padding:3px 8px; font-size:12px;">Flip V</button>
+                    <button type="button" id="cropper-reset" class="btn btn-small" title="Reset" style="border-radius:5px; padding:3px 8px; font-size:12px;"><i class="icon-refresh"></i></button>
+                </div>
+            </div>
+
+            {{-- Footer & Save Options --}}
+            <div style="padding:12px 18px; border-top:1px solid #e2e8f0; background:#ffffff; display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:10px;">
+                <div style="display:flex; align-items:center; gap:10px; flex:1; min-width:260px;">
+                    <label style="margin:0; font-size:12px; color:#334155; display:inline-flex; align-items:center; gap:4px; cursor:pointer;">
+                        <input type="radio" name="cropper_save_mode" value="overwrite" checked style="margin:0;">
+                        <span>Timpa berkas asli</span>
+                    </label>
+                    <label style="margin:0; font-size:12px; color:#334155; display:inline-flex; align-items:center; gap:4px; cursor:pointer;">
+                        <input type="radio" name="cropper_save_mode" value="new" style="margin:0;">
+                        <span>Simpan berkas baru:</span>
+                    </label>
+                    <input type="text" id="cropper-new-name" placeholder="nama-file-baru" style="height:26px; padding:2px 8px; font-size:12px; border:1px solid #cbd5e1; border-radius:5px; display:none; max-width:180px; margin:0;">
+                </div>
+
+                <div style="display:flex; gap:8px;">
+                    <button type="button" id="cropper-cancel-btn" class="btn" style="border-radius:5px; font-size:12px; padding:5px 14px;">Batal</button>
+                    <button type="button" id="cropper-save-btn" class="btn btn-primary" style="border-radius:5px; font-size:12px; padding:5px 16px; background:#2563eb; color:#ffffff; font-weight:500;">
+                        <i class="icon-ok icon-white"></i> Simpan Gambar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        $(function () {
+            var cropperInstance = null;
+            var currentFilePath = '';
+            var currentFileName = '';
+            var scaleX = 1;
+            var scaleY = 1;
+
+            // Buka Modal Crop Gambar
+            $(document).on('click', '.crop-file-btn', function (e) {
+                e.preventDefault();
+                e.stopPropagation();
+
+                currentFilePath = $(this).attr('data-path');
+                currentFileName = $(this).attr('data-name');
+                var imageUrl = $(this).attr('data-url');
+
+                $('#cropper-file-name').text(currentFileName);
+                $('#cropper-new-name').val(currentFileName.replace(/(\.[^.]+)$/, '-crop$1')).hide();
+                $('input[name="cropper_save_mode"][value="overwrite"]').prop('checked', true);
+
+                var $img = $('#cropper-target-image');
+                $img.attr('src', imageUrl);
+
+                $('#cropper-modal').fadeIn(150);
+
+                if (cropperInstance) {
+                    cropperInstance.destroy();
+                }
+
+                scaleX = 1;
+                scaleY = 1;
+
+                setTimeout(function () {
+                    cropperInstance = new Cropper($img[0], {
+                        viewMode: 1,
+                        dragMode: 'move',
+                        autoCropArea: 0.85,
+                        restore: false,
+                        guides: true,
+                        center: true,
+                        highlight: false,
+                        cropBoxMovable: true,
+                        cropBoxResizable: true,
+                        toggleDragModeOnDblclick: false,
+                    });
+                }, 100);
+            });
+
+            // Tutup Modal Crop
+            function closeCropperModal() {
+                $('#cropper-modal').fadeOut(150);
+                if (cropperInstance) {
+                    cropperInstance.destroy();
+                    cropperInstance = null;
+                }
+            }
+
+            $('#cropper-close-btn, #cropper-cancel-btn').on('click', closeCropperModal);
+
+            // Ganti Pilihan Mode Simpan
+            $('input[name="cropper_save_mode"]').on('change', function () {
+                if ($(this).val() === 'new') {
+                    $('#cropper-new-name').show().focus();
+                } else {
+                    $('#cropper-new-name').hide();
+                }
+            });
+
+            // Rasio Crop Preset
+            $(document).on('click', '.cropper-ratio-btn', function () {
+                $('.cropper-ratio-btn').removeClass('active btn-primary');
+                $(this).addClass('active btn-primary');
+                if (cropperInstance) {
+                    var ratio = parseFloat($(this).attr('data-ratio'));
+                    cropperInstance.setAspectRatio(ratio);
+                }
+            });
+
+            // Putar dan Flip
+            $('#cropper-rotate-left').on('click', function () {
+                if (cropperInstance) cropperInstance.rotate(-90);
+            });
+
+            $('#cropper-rotate-right').on('click', function () {
+                if (cropperInstance) cropperInstance.rotate(90);
+            });
+
+            $('#cropper-flip-h').on('click', function () {
+                if (cropperInstance) {
+                    scaleX = -scaleX;
+                    cropperInstance.scaleX(scaleX);
+                }
+            });
+
+            $('#cropper-flip-v').on('click', function () {
+                if (cropperInstance) {
+                    scaleY = -scaleY;
+                    cropperInstance.scaleY(scaleY);
+                }
+            });
+
+            $('#cropper-reset').on('click', function () {
+                if (cropperInstance) {
+                    scaleX = 1;
+                    scaleY = 1;
+                    cropperInstance.reset();
+                }
+            });
+
+            // Simpan Hasil Crop ke Server
+            $('#cropper-save-btn').on('click', function () {
+                if (!cropperInstance) return;
+
+                var $btn = $(this);
+                var saveMode = $('input[name="cropper_save_mode"]:checked').val();
+                var newName = saveMode === 'new' ? $.trim($('#cropper-new-name').val()) : '';
+
+                var canvas = cropperInstance.getCroppedCanvas();
+                if (!canvas) {
+                    bootbox.alert('Gagal membuat kanvas potongan gambar.');
+                    return;
+                }
+
+                var ext = currentFileName.split('.').pop().toLowerCase();
+                var mimeType = ext === 'png' ? 'image/png' : (ext === 'webp' ? 'image/webp' : 'image/jpeg');
+                var dataUrl = canvas.toDataURL(mimeType, 0.92);
+
+                $btn.prop('disabled', true).text('Menyimpan...');
+                show_animation();
+
+                $.ajax({
+                    type: 'POST',
+                    url: '/filemanager/execute?action=crop_image',
+                    data: {
+                        path: currentFilePath,
+                        image_data: dataUrl,
+                        name_new: newName
+                    }
+                }).done(function (res) {
+                    hide_animation();
+                    $btn.prop('disabled', false).html('<i class="icon-ok icon-white"></i> Simpan Gambar');
+
+                    if (res && res !== '') {
+                        bootbox.alert(res);
+                    } else {
+                        closeCropperModal();
+                        setTimeout(function () {
+                            window.location.href = $('#refresh').attr('href') + '&' + (new Date).getTime();
+                        }, 250);
+                    }
+                }).fail(function () {
+                    hide_animation();
+                    $btn.prop('disabled', false).html('<i class="icon-ok icon-white"></i> Simpan Gambar');
+                    bootbox.alert('Terjadi kesalahan saat menyimpan potongan gambar.');
+                });
+            });
+        });
+    </script>
 
     <script src="{{ filemanager_asset('js/tmpl.min.js') }}" defer></script>
     <script src="{{ filemanager_asset('js/load-image.all.min.js') }}" defer></script>

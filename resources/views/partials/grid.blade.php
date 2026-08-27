@@ -151,6 +151,9 @@
 
                         @if ($isImage)
                             <a class="tip-right preview" title="{{ __('filemanager::filemanager.Preview') }}" data-featherlight="image" href="{{ $fileUrl }}"><i class="icon-eye-open"></i></a>
+                            @if ($canUpload && ! in_array($entry['extension'], ['svg', 'ico'], true))
+                                <a class="tip-right crop-file-btn" title="{{ __('filemanager::filemanager.Crop') ?? 'Crop Gambar' }}" href="javascript:void('')" data-url="{{ $fileUrl }}" data-path="{{ $entry['path'] }}" data-name="{{ $entry['name'] }}"><i class="icon-picture"></i></a>
+                            @endif
                         @elseif ($isPdf)
                             <a class="tip-right preview" title="{{ __('filemanager::filemanager.Preview') }}" data-featherlight="iframe" data-featherlight-iframe-width="100%" data-featherlight-iframe-height="100%" href="{{ $fileUrl }}"><i class="icon-eye-open"></i></a>
                         @elseif (config('filemanager.text_editing_enabled') && app(\OpenSID\LaravelFilemanager\Support\FilemanagerConfig::class)->isEditableTextExtension($entry['extension']))

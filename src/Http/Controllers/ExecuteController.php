@@ -8,9 +8,11 @@ use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Gate;
 use OpenSID\LaravelFilemanager\Exceptions\UnsafePathException;
 use OpenSID\LaravelFilemanager\Services\ClipboardManager;
+use OpenSID\LaravelFilemanager\Services\FileContentValidator;
 use OpenSID\LaravelFilemanager\Services\FilenameSanitizer;
 use OpenSID\LaravelFilemanager\Services\FilesystemManager;
 use OpenSID\LaravelFilemanager\Services\PathGuard;
+use OpenSID\LaravelFilemanager\Services\ThumbnailGenerator;
 use OpenSID\LaravelFilemanager\Support\FilemanagerConfig;
 use OpenSID\LaravelFilemanager\Support\ResolvesFilemanagerContext;
 
@@ -50,6 +52,7 @@ class ExecuteController extends Controller
                 'create_file' => $this->createFile($request),
                 'rename_file' => $this->renameFile($request),
                 'duplicate_file' => $this->duplicateFile($request),
+                'crop_image' => $this->cropImage($request),
                 'paste_clipboard' => $this->pasteClipboard($request),
                 'save_text_file' => $this->saveTextFile($request),
                 default => $this->ok(trans('filemanager::filemanager.wrong action')),
@@ -318,6 +321,74 @@ class ExecuteController extends Controller
         $dir = trim($dir, '/');
 
         return $dir === '' ? $name : "{$dir}/{$name}";
+    }
+
+    protected function cropImage(Request $request): Response
+    {
+        if (! Gate::allows('filemanager.upload', $this->filemanagerContext())) {
+            return $this->ok(trans('filemanager::filemanager.File_Permission_Not_Allowed'));
+        }
+
+        $path = $this->safePath($request->input('path', ''));
+        $dataUrl = (string) $request->input('image_data', '');
+        $nameNew = (string) $request->input('name_new', '');
+
+        if ($dataUrl === '' || ! $this->files->exists($path)) {
+            return $this->ok(trans('filemanager::filemanager.wrong path'));
+        }
+
+        $extension = strtolower(pathinfo($path, PATHINFO_EXTENSION));
+        if (! in_array($extension, config('filemanager.extensions.image', []), true) || in_array($extension, ['svg', 'ico'], true)) {
+            return $this->ok(trans('filemanager::filemanager.wrong extension'));
+        }
+
+        if (preg_match('/^data:image\/(\w+);base64,/', $dataUrl)) {
+            $data = substr($dataUrl, strpos($dataUrl, ',') + 1);
+            $decoded = base64_decode($data);
+            if ($decoded === false) {
+                return $this->ok(trans('filemanager::filemanager.Upload_error'));
+            }
+        } else {
+            return $this->ok(trans('filemanager::filemanager.Upload_error'));
+        }
+
+        $targetPath = $path;
+        if ($nameNew !== '') {
+            $sanitizedName = $this->names->sanitize($nameNew);
+            $dir = dirname($path);
+            $dir = ($dir === '.' || $dir === '/') ? '' : $dir;
+            $newExt = pathinfo($sanitizedName, PATHINFO_EXTENSION);
+            if ($newExt === '') {
+                $sanitizedName .= '.' . $extension;
+            }
+            $targetPath = $this->join($dir, $sanitizedName);
+        }
+
+        $tmp = tempnam(sys_get_temp_dir(), 'rfmCrop');
+        file_put_contents($tmp, $decoded);
+
+        $validator = app(FileContentValidator::class);
+        $targetExt = pathinfo($targetPath, PATHINFO_EXTENSION) ?: $extension;
+        if (! $validator->isValidUpload($tmp, $targetExt)) {
+            @unlink($tmp);
+            return $this->ok('File is dangerous');
+        }
+
+        $this->files->put($targetPath, $decoded);
+        @unlink($tmp);
+
+        try {
+            app(ThumbnailGenerator::class)->make(
+                config('filemanager.storage_disk', 'public'),
+                $targetPath,
+                config('filemanager.thumbs_disk', 'public'),
+                $targetPath
+            );
+        } catch (\Throwable) {
+            // best-effort thumbnail recreation
+        }
+
+        return $this->ok();
     }
 
     protected function ok(string $body = ''): Response
