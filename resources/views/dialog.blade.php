@@ -174,7 +174,7 @@
     <input type="hidden" id="cur_dir" value="{{ $curDir }}">
     <input type="hidden" id="ftp_base_url" value="">
     <input type="hidden" id="fldr_value" value="{{ $subdirWithSlash }}">
-    <input type="hidden" id="sub_folder" value="{{ $mediaBasePath }}">
+    <input type="hidden" id="sub_folder" value="">
     <input type="hidden" id="return_relative_url" value="{{ $relativeUrl ? 1 : 0 }}">
     <input type="hidden" id="file_number_limit_js" value="500">
     <input type="hidden" id="sort_by" value="{{ $sortBy }}">

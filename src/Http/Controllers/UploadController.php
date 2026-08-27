@@ -59,7 +59,20 @@ class UploadController extends Controller
         Gate::authorize('filemanager.upload', $this->filemanagerContext());
 
         try {
-            $folder = trim((string) $request->input('fldr', ''), '/');
+            $folder = trim(str_replace('\\', '/', (string) $request->input('fldr', '')), '/');
+
+            // Strip absolute disk root / media path prefix if mistakenly passed
+            $diskConfig = config('filesystems.disks.' . $this->config->disk(), []);
+            $diskRoot = trim(str_replace('\\', '/', (string) ($diskConfig['root'] ?? '')), '/');
+            $basePath = trim(str_replace('\\', '/', (string) base_path()), '/');
+            $relativeDiskRoot = str_starts_with($diskRoot, $basePath)
+                ? trim(substr($diskRoot, strlen($basePath)), '/')
+                : $diskRoot;
+
+            if ($relativeDiskRoot !== '' && str_starts_with($folder, $relativeDiskRoot)) {
+                $folder = trim(substr($folder, strlen($relativeDiskRoot)), '/');
+            }
+
             PathGuard::assertSafe($folder);
             PathGuard::assertInsideBaseFolder($folder, $this->config->baseFolder());
         } catch (UnsafePathException) {
