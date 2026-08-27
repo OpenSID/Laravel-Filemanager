@@ -152,7 +152,7 @@
                         @if ($isImage)
                             <a class="tip-right preview" title="{{ __('filemanager::filemanager.Preview') }}" data-featherlight="image" href="{{ $fileUrl }}"><i class="icon-eye-open"></i></a>
                             @if ($canUpload && ! in_array($entry['extension'], ['svg', 'ico'], true))
-                                <a class="tip-right crop-file-btn" title="{{ __('filemanager::filemanager.Crop') ?? 'Crop Gambar' }}" href="javascript:void('')" data-url="{{ $fileUrl }}" data-path="{{ $entry['path'] }}" data-name="{{ $entry['name'] }}"><i class="icon-picture"></i></a>
+                                <a class="tip-right crop-file-btn" title="{{ __('filemanager::filemanager.Crop') }}" href="javascript:void(0)" data-url="{{ $fileUrl }}" data-path="{{ $entry['path'] }}" data-name="{{ $entry['name'] }}" style="display:inline-block; vertical-align:middle; cursor:pointer;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="pointer-events:none; vertical-align:-1px;"><path d="M6 2v14a2 2 0 0 0 2 2h14"></path><path d="M18 22V8a2 2 0 0 0-2-2H2"></path></svg></a>
                             @endif
                         @elseif ($isPdf)
                             <a class="tip-right preview" title="{{ __('filemanager::filemanager.Preview') }}" data-featherlight="iframe" data-featherlight-iframe-width="100%" data-featherlight-iframe-height="100%" href="{{ $fileUrl }}"><i class="icon-eye-open"></i></a>

@@ -80,6 +80,7 @@ return [
   'Extract' => 'Extract here',
   'File_info' => 'file info',
   'Edit_image' => 'Edit image',
+  'Crop' => 'Crop image',
   'Duplicate' => 'Duplicate',
   'Folders' => 'Folders',
   'Copy' => 'Copy',

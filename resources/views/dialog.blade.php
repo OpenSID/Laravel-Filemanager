@@ -1098,19 +1098,19 @@
     </div>
 
     {{-- Modal Crop Gambar Modern --}}
-    <div id="cropper-modal" style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(15,23,42,0.75); z-index:100050; padding:15px; overflow-y:auto; -webkit-overflow-scrolling:touch;">
-        <div style="background:#ffffff; border-radius:5px; max-width:850px; margin:20px auto; box-shadow:0 20px 25px -5px rgba(0,0,0,0.2), 0 10px 10px -5px rgba(0,0,0,0.1); overflow:hidden; display:flex; flex-direction:column;">
+    <div id="cropper-modal" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(15,23,42,0.8); z-index:9999999; padding:15px; box-sizing:border-box; overflow-y:auto; align-items:center; justify-content:center;">
+        <div style="background:#ffffff; border-radius:5px; max-width:850px; width:100%; margin:auto; box-shadow:0 25px 50px -12px rgba(0,0,0,0.3); overflow:hidden; display:flex; flex-direction:column; position:relative; z-index:10000000;">
             {{-- Header Modal --}}
             <div style="display:flex; justify-content:space-between; align-items:center; padding:12px 18px; border-bottom:1px solid #e2e8f0; background:#f8fafc;">
                 <div>
-                    <h3 style="margin:0; font-size:15px; font-weight:600; color:#0f172a;">{{ __('filemanager::filemanager.Crop') ?? 'Potong Gambar (Crop)' }}</h3>
+                    <h3 style="margin:0; font-size:15px; font-weight:600; color:#0f172a;">{{ __('filemanager::filemanager.Crop') }}</h3>
                     <small id="cropper-file-name" style="color:#64748b; font-size:12px;"></small>
                 </div>
-                <button type="button" id="cropper-close-btn" style="background:none; border:none; font-size:22px; line-height:1; color:#64748b; cursor:pointer; padding:4px 8px; border-radius:5px;">&times;</button>
+                <button type="button" id="cropper-close-btn" style="background:none; border:none; font-size:24px; line-height:1; color:#64748b; cursor:pointer; padding:2px 8px; border-radius:5px;">&times;</button>
             </div>
 
             {{-- Workspace Gambar --}}
-            <div style="padding:15px; background:#0f172a; text-align:center; min-height:360px; max-height:55vh; display:flex; align-items:center; justify-content:center; overflow:hidden;">
+            <div style="padding:15px; background:#0f172a; text-align:center; min-height:340px; max-height:55vh; display:flex; align-items:center; justify-content:center; overflow:hidden;">
                 <img id="cropper-target-image" src="" alt="Crop target" style="max-width:100%; max-height:50vh; display:block;">
             </div>
 
@@ -1172,9 +1172,15 @@
                 e.preventDefault();
                 e.stopPropagation();
 
-                currentFilePath = $(this).attr('data-path');
-                currentFileName = $(this).attr('data-name');
-                var imageUrl = $(this).attr('data-url');
+                var $btn = $(this);
+                currentFilePath = $btn.attr('data-path') || $btn.closest('figure').attr('data-path') || '';
+                currentFileName = $btn.attr('data-name') || $btn.closest('figure').attr('data-name') || '';
+                var imageUrl = $btn.attr('data-url') || $btn.closest('figure').find('a.preview').attr('href') || '';
+
+                if (!imageUrl) {
+                    bootbox.alert('URL gambar tidak ditemukan.');
+                    return;
+                }
 
                 $('#cropper-file-name').text(currentFileName);
                 $('#cropper-new-name').val(currentFileName.replace(/(\.[^.]+)$/, '-crop$1')).hide();
@@ -1183,36 +1189,46 @@
                 var $img = $('#cropper-target-image');
                 $img.attr('src', imageUrl);
 
-                $('#cropper-modal').fadeIn(150);
+                $('#cropper-modal').css('display', 'flex').show();
 
                 if (cropperInstance) {
-                    cropperInstance.destroy();
+                    try { cropperInstance.destroy(); } catch(err){}
+                    cropperInstance = null;
                 }
 
                 scaleX = 1;
                 scaleY = 1;
 
+                if (typeof Cropper === 'undefined') {
+                    bootbox.alert('Pustaka Cropper.js sedang dimuat, silakan coba beberapa saat lagi.');
+                    return;
+                }
+
                 setTimeout(function () {
-                    cropperInstance = new Cropper($img[0], {
-                        viewMode: 1,
-                        dragMode: 'move',
-                        autoCropArea: 0.85,
-                        restore: false,
-                        guides: true,
-                        center: true,
-                        highlight: false,
-                        cropBoxMovable: true,
-                        cropBoxResizable: true,
-                        toggleDragModeOnDblclick: false,
-                    });
+                    try {
+                        cropperInstance = new Cropper($img[0], {
+                            viewMode: 1,
+                            dragMode: 'move',
+                            autoCropArea: 0.85,
+                            restore: false,
+                            guides: true,
+                            center: true,
+                            highlight: false,
+                            cropBoxMovable: true,
+                            cropBoxResizable: true,
+                            toggleDragModeOnDblclick: false,
+                        });
+                    } catch(err) {
+                        console.error('Cropper error:', err);
+                    }
                 }, 100);
             });
 
             // Tutup Modal Crop
             function closeCropperModal() {
-                $('#cropper-modal').fadeOut(150);
+                $('#cropper-modal').hide();
                 if (cropperInstance) {
-                    cropperInstance.destroy();
+                    try { cropperInstance.destroy(); } catch(err){}
                     cropperInstance = null;
                 }
             }

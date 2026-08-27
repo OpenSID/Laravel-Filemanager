@@ -80,6 +80,7 @@ return [
   'Extract' => 'extract disini',
   'File_info' => 'info berkas',
   'Edit_image' => 'edit gambar',
+  'Crop' => 'Potong gambar',
   'Duplicate' => 'Duplikat',
   'Folders' => 'Folders',
   'Copy' => 'Copy',
