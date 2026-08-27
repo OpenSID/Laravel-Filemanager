@@ -570,6 +570,7 @@
         .list-view2.grid .img-precontainer-mini .filetype {
             display: none !important;
         }
+        /* List View 1 & 2 Thumbnail Position */
         .list-view1.grid .img-precontainer-mini,
         .list-view2.grid .img-precontainer-mini {
             display: flex !important;
@@ -578,13 +579,19 @@
             position: absolute !important;
             top: 50% !important;
             transform: translateY(-50%) !important;
-            left: 36px !important;
-            width: 32px !important;
-            height: 32px !important;
+            left: 8px !important;
+            width: 28px !important;
+            height: 28px !important;
             overflow: hidden !important;
             border-radius: 4px !important;
             background: transparent !important;
             z-index: 5 !important;
+        }
+        .list-view1.grid figure:has(.selector) .img-precontainer-mini,
+        .list-view2.grid figure:has(.selector) .img-precontainer-mini,
+        .list-view1.grid li:not(.no-selector) .img-precontainer-mini,
+        .list-view2.grid li:not(.no-selector) .img-precontainer-mini {
+            left: 28px !important;
         }
         .list-view1.grid li.no-selector .img-precontainer-mini,
         .list-view2.grid li.no-selector .img-precontainer-mini {
@@ -602,8 +609,8 @@
         }
         .list-view1.grid .img-container-mini img,
         .list-view2.grid .img-container-mini img {
-            max-width: 28px !important;
-            max-height: 28px !important;
+            max-width: 26px !important;
+            max-height: 26px !important;
             width: auto !important;
             height: auto !important;
             display: block !important;
@@ -618,8 +625,8 @@
         }
         .list-view1.grid li figure {
             display: block !important;
-            height: 40px !important;
-            line-height: 40px !important;
+            height: 38px !important;
+            line-height: 38px !important;
             position: relative !important;
             border-radius: 5px !important;
             border: 1px solid #e2e8f0 !important;
@@ -633,7 +640,7 @@
         }
         .list-view1.grid .selector {
             position: absolute !important;
-            left: 10px !important;
+            left: 8px !important;
             top: 50% !important;
             transform: translateY(-50%) !important;
             margin: 0 !important;
@@ -641,22 +648,26 @@
         }
         .list-view1.grid figure .box {
             display: block !important;
-            height: 40px !important;
-            line-height: 40px !important;
-            margin: 0 0 0 76px !important;
-            padding: 0 450px 0 0 !important;
+            height: 38px !important;
+            line-height: 38px !important;
+            margin: 0 0 0 42px !important;
+            padding: 0 440px 0 0 !important;
             border: none !important;
             background: transparent !important;
             overflow: hidden !important;
         }
+        .list-view1.grid figure:has(.selector) .box,
+        .list-view1.grid li:not(.no-selector) figure .box {
+            margin-left: 62px !important;
+        }
         .list-view1.grid li.no-selector figure .box {
-            margin-left: 48px !important;
+            margin-left: 42px !important;
         }
         .list-view1.grid figure .box h4 {
             margin: 0 !important;
             padding: 0 !important;
-            height: 40px !important;
-            line-height: 40px !important;
+            height: 38px !important;
+            line-height: 38px !important;
             font-size: 13px !important;
             font-weight: 500 !important;
             color: #1e293b !important;
@@ -668,20 +679,20 @@
         .list-view1.grid .file-date, .list-view1.grid .file-size, .list-view1.grid .file-extension {
             position: absolute !important;
             top: 0 !important;
-            height: 40px !important;
-            line-height: 40px !important;
+            height: 38px !important;
+            line-height: 38px !important;
             margin: 0 !important;
             display: block !important;
         }
-        .list-view1.grid .file-extension { width: 55px; right: 375px; font-size: 11px; color: #64748b; }
-        .list-view1.grid .file-size { width: 65px; right: 305px; font-size: 11px; color: #64748b; }
-        .list-view1.grid .file-date { width: 120px; right: 175px; font-size: 11px; color: #64748b; white-space: nowrap; }
+        .list-view1.grid .file-extension { width: 55px; right: 360px; font-size: 11px; color: #64748b; }
+        .list-view1.grid .file-size { width: 65px; right: 290px; font-size: 11px; color: #64748b; }
+        .list-view1.grid .file-date { width: 120px; right: 160px; font-size: 11px; color: #64748b; white-space: nowrap; }
         .list-view1.grid figcaption {
             position: absolute !important;
-            right: 8px !important;
+            right: 6px !important;
             top: 0 !important;
             bottom: 0 !important;
-            height: 40px !important;
+            height: 38px !important;
             display: flex !important;
             align-items: center !important;
             justify-content: flex-end !important;
@@ -693,7 +704,7 @@
         .list-view1.grid figcaption form {
             display: flex !important;
             align-items: center !important;
-            gap: 4px !important;
+            gap: 3px !important;
             height: 100% !important;
             margin: 0 !important;
         }
@@ -701,8 +712,8 @@
             display: inline-flex !important;
             align-items: center !important;
             justify-content: center !important;
-            width: 24px !important;
-            height: 24px !important;
+            width: 22px !important;
+            height: 22px !important;
             color: #64748b !important;
             border-radius: 4px !important;
             background: #f1f5f9 !important;
@@ -716,6 +727,7 @@
             margin: 0 !important;
             vertical-align: middle !important;
             line-height: 1 !important;
+            font-size: 11px !important;
         }
 
         /* List View 2 (Multi-Column Compact Cards) */
@@ -724,8 +736,8 @@
         }
         .list-view2.grid li figure {
             display: block !important;
-            height: 40px !important;
-            line-height: 40px !important;
+            height: 38px !important;
+            line-height: 38px !important;
             position: relative !important;
             border-radius: 5px !important;
             border: 1px solid #e2e8f0 !important;
@@ -740,7 +752,7 @@
         }
         .list-view2.grid .selector {
             position: absolute !important;
-            left: 8px !important;
+            left: 6px !important;
             top: 50% !important;
             transform: translateY(-50%) !important;
             margin: 0 !important;
@@ -748,22 +760,26 @@
         }
         .list-view2.grid figure .box {
             display: block !important;
-            height: 40px !important;
-            line-height: 40px !important;
-            margin: 0 0 0 76px !important;
-            padding: 0 115px 0 0 !important;
+            height: 38px !important;
+            line-height: 38px !important;
+            margin: 0 0 0 42px !important;
+            padding: 0 92px 0 0 !important;
             border: none !important;
             background: transparent !important;
             overflow: hidden !important;
         }
+        .list-view2.grid figure:has(.selector) .box,
+        .list-view2.grid li:not(.no-selector) figure .box {
+            margin-left: 62px !important;
+        }
         .list-view2.grid li.no-selector figure .box {
-            margin-left: 48px !important;
+            margin-left: 42px !important;
         }
         .list-view2.grid figure .box h4 {
             margin: 0 !important;
             padding: 0 !important;
-            height: 40px !important;
-            line-height: 40px !important;
+            height: 38px !important;
+            line-height: 38px !important;
             font-size: 12px !important;
             font-weight: 500 !important;
             color: #1e293b !important;
@@ -778,10 +794,10 @@
         }
         .list-view2.grid figcaption {
             position: absolute !important;
-            right: 6px !important;
+            right: 4px !important;
             top: 0 !important;
             bottom: 0 !important;
-            height: 40px !important;
+            height: 38px !important;
             display: flex !important;
             align-items: center !important;
             justify-content: flex-end !important;
@@ -794,19 +810,20 @@
         .list-view2.grid figcaption form {
             display: flex !important;
             align-items: center !important;
-            gap: 3px !important;
+            gap: 2px !important;
             margin: 0 !important;
         }
         .list-view2.grid figcaption a {
             display: inline-flex !important;
             align-items: center !important;
             justify-content: center !important;
-            width: 22px !important;
-            height: 22px !important;
+            width: 20px !important;
+            height: 20px !important;
             color: #64748b !important;
             border-radius: 4px !important;
             background: #f1f5f9 !important;
             transition: all 0.15s ease !important;
+            padding: 0 !important;
         }
         .list-view2.grid figcaption a:hover {
             background: #e2e8f0 !important;
@@ -816,7 +833,7 @@
             margin: 0 !important;
             vertical-align: middle !important;
             line-height: 1 !important;
-            font-size: 11px !important;
+            font-size: 10px !important;
         }
         .list-view2.grid .file-date,
         .list-view2.grid .file-size,
