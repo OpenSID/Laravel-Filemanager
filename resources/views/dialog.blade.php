@@ -34,21 +34,25 @@
                 bootbox.alert('<div class="text-center"><br/><h4><strong>OpenSID File Manager</strong></h4><p><a href="https://opendesa.id" target="_blank" rel="noopener">opendesa.id</a></p><br/><p>Pengembang: <strong>Tim Pengembang OpenDesa</strong></p><p>Hak Cipta &copy; 2016 - {{ date("Y") }} <a href="https://opendesa.id" target="_blank" rel="noopener">Perkumpulan Desa Digital Terbuka</a></p><br/><p><small>Lisensi: <a href="http://www.gnu.org/licenses/gpl.html" target="_blank" rel="noopener">GPL v3</a></small></p></div>');
             });
 
-            $(document).on('click', '.sorting-btn, [data-toggle="dropdown"]', function (e) {
+            $(document).on('click', '#sorting-dropdown-btn, .sorting-btn', function (e) {
                 e.preventDefault();
                 e.stopPropagation();
-                var $parent = $(this).closest('.btn-group, .dropdown');
-                var isOpen = $parent.hasClass('open');
-                $('.btn-group.open, .dropdown.open').removeClass('open');
-                if (!isOpen) {
-                    $parent.addClass('open');
+                var $menu = $('#sorting-menu');
+                var isVisible = $menu.is(':visible');
+                $('.dropdown-menu').hide();
+                if (!isVisible) {
+                    $menu.show();
                 }
             });
 
             $(document).on('click', function (e) {
-                if (!$(e.target).closest('.btn-group, .dropdown').length) {
-                    $('.btn-group.open, .dropdown.open').removeClass('open');
+                if (!$(e.target).closest('#sorting-dropdown-btn, #sorting-menu, .sorting-btn').length) {
+                    $('#sorting-menu').hide();
                 }
+            });
+
+            $(document).on('click', '#sorting-menu .sorter', function () {
+                $('#sorting-menu').hide();
             });
 
             // Re-initialize tooltips with container: 'body' so they float freely outside cards
@@ -239,42 +243,41 @@
         .breadcrumb-actions {
             display: inline-flex !important;
             align-items: center !important;
-            gap: 6px;
-            height: 30px;
-        }
-        .breadcrumb-actions .btn-group {
-            display: inline-flex !important;
-            align-items: center !important;
-            height: 30px;
-            margin: 0 !important;
-            vertical-align: middle !important;
+            gap: 6px !important;
+            height: 28px !important;
         }
         .bc-action-btn {
             display: inline-flex !important;
             align-items: center !important;
             justify-content: center !important;
-            height: 30px !important;
-            min-width: 30px !important;
+            height: 28px !important;
             box-sizing: border-box !important;
-            padding: 0 8px !important;
             border-radius: 5px !important;
-            border: 1px solid #e2e8f0 !important;
+            border: 1px solid #cbd5e1 !important;
             background: #ffffff !important;
             color: #475569 !important;
             text-decoration: none !important;
             font-size: 13px !important;
             line-height: 1 !important;
-            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03) !important;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04) !important;
             vertical-align: middle !important;
+            cursor: pointer !important;
+            margin: 0 !important;
+            padding: 0 6px !important;
             gap: 4px !important;
         }
-        .bc-action-btn.tip:not(.dropdown-toggle) {
-            width: 30px !important;
+        .bc-action-btn.tip {
+            width: 28px !important;
             padding: 0 !important;
         }
+        #sorting-dropdown-btn {
+            width: auto !important;
+            min-width: 44px !important;
+            padding: 0 6px !important;
+        }
         .bc-action-btn:hover {
-            background: #f8fafc !important;
-            border-color: #cbd5e1 !important;
+            background: #f1f5f9 !important;
+            border-color: #94a3b8 !important;
             color: #0f172a !important;
         }
         .bc-action-btn i,
@@ -289,9 +292,7 @@
         .bc-action-btn .caret {
             display: inline-block !important;
             vertical-align: middle !important;
-            margin-top: 0 !important;
-            margin-bottom: 0 !important;
-            margin-left: 2px !important;
+            margin: 0 !important;
             border-top: 4px solid #475569 !important;
             border-right: 4px solid transparent !important;
             border-left: 4px solid transparent !important;
@@ -306,16 +307,11 @@
         }
 
         /* Dropdown & Menus */
-        .btn-group {
-            position: relative;
-            display: inline-block;
-            vertical-align: middle;
-        }
         .dropdown-menu {
             position: absolute;
             top: 100%;
             left: 0;
-            z-index: 99999;
+            z-index: 999999;
             display: none;
             float: left;
             min-width: 160px;
@@ -325,12 +321,10 @@
             background-color: #ffffff;
             border: 1px solid #e2e8f0;
             border-radius: 5px;
-            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.12), 0 8px 10px -6px rgba(0, 0, 0, 0.06);
         }
-        .btn-group.open > .dropdown-menu {
-            display: block !important;
-        }
-        .dropdown-menu.pull-right {
+        .dropdown-menu.pull-right,
+        #sorting-menu {
             right: 0 !important;
             left: auto !important;
         }

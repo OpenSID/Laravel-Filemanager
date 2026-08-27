@@ -94,12 +94,12 @@
         <div class="breadcrumb-actions">
             <a class="bc-action-btn tip" href="javascript:void('')" id="info" title="Info"><i class="icon-question-sign"></i></a>
             <a class="bc-action-btn tip" id="refresh" href="?{{ http_build_query($linkParams + ['fldr' => $subdir]) }}" title="{{ __('filemanager::filemanager.Refresh') }}"><i class="icon-refresh"></i></a>
-            <div class="btn-group">
-                <a class="bc-action-btn dropdown-toggle sorting-btn" data-toggle="dropdown" href="javascript:void('')" title="{{ __('filemanager::filemanager.Sorting') }}">
+            <div class="dropdown" style="position: relative; display: inline-flex; height: 28px; margin: 0; padding: 0;">
+                <button type="button" class="bc-action-btn sorting-btn" id="sorting-dropdown-btn" title="{{ __('filemanager::filemanager.Sorting') }}">
                     <i class="icon-signal"></i>
                     <span class="caret"></span>
-                </a>
-                <ul class="dropdown-menu pull-right sorting">
+                </button>
+                <ul class="dropdown-menu pull-right sorting" id="sorting-menu">
                     <li class="text-center"><strong>{{ __('filemanager::filemanager.Sorting') }}</strong></li>
                     <li><a class="sorter sort-name {{ $sortBy == 'name' ? ($descending ? 'descending' : 'ascending') : '' }}" href="javascript:void('')" data-sort="name">{{ __('filemanager::filemanager.Filename') }}</a></li>
                     <li><a class="sorter sort-date {{ $sortBy == 'date' ? ($descending ? 'descending' : 'ascending') : '' }}" href="javascript:void('')" data-sort="date">{{ __('filemanager::filemanager.Date') }}</a></li>
