@@ -127,6 +127,31 @@ CKEDITOR.replace('editor', {
 
 ---
 
+## 🛡️ Keamanan Web Server (Apache, OpenLiteSpeed, LiteSpeed, Nginx)
+
+Setiap pembuatan folder baru di filemanager secara otomatis menyertakan berkas `.htaccess` dan `index.html` yang telah diperkuat (*hardened*) untuk memblokir eksekusi skrip PHP, CGI, ASP, shell, dan indeks direktori.
+
+### 1. Apache & OpenLiteSpeed / LiteSpeed
+Konfigurasi `.htaccess` otomatis aktif pada Apache dan OpenLiteSpeed (OLS) dengan aturan:
+- `<FilesMatch>` dengan `Require all denied` & `Deny from all`
+- `RewriteRule` penolakan instan `[F,L]`
+- `RemoveHandler` dan `SetHandler None`
+- `Options -ExecCGI -Indexes`
+- `php_flag engine off`
+
+### 2. Nginx
+Pada Nginx (karena Nginx tidak membaca `.htaccess`), tambahkan blok aturan berikut pada konfigurasi `server` Nginx Anda untuk memblokir eksekusi skrip di folder berkas unggahan:
+
+```nginx
+# Blokir eksekusi skrip berbahaya di direktori kelola_file / storage
+location ~* /(kelola_file|storage)/.*\.(php|phtml|php[0-9]|phar|sh|cgi|pl|py|exe|bat|cmd|env)$ {
+    deny all;
+    return 403;
+}
+```
+
+---
+
 ## 🤝 Berkontribusi
 
 Kontribusi selalu terbuka untuk perbaikan bug, peningkatan performa, dan fitur baru!
@@ -142,3 +167,4 @@ Kontribusi selalu terbuka untuk perbaikan bug, peningkatan performa, dan fitur b
 ## 📜 Lisensi
 
 Paket ini dirilis di bawah lisensi [GPL-3.0-or-later](LICENSE). Hak Cipta &copy; Perkumpulan Desa Digital Terbuka (OpenDesa).
+

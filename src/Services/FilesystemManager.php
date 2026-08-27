@@ -181,12 +181,16 @@ class FilesystemManager
     }
 
     /**
-     * Places a hardened .htaccess file inside the directory to prevent
-     * script execution (PHP, CGI, ASP, shell scripts, etc.).
+     * Places a hardened .htaccess file and index.html inside the directory
+     * to prevent script execution (PHP, CGI, ASP, shell scripts, etc.) and
+     * directory listing across Apache, OpenLiteSpeed, LiteSpeed, and Nginx.
      */
     public function protectDirectory(string $path, bool $isThumbDisk = false): void
     {
         $htaccessContent = <<<HTACCESS
+# ----------------------------------------------------------------------
+# 1. Block Access to Dangerous Files (Apache 2.2, 2.4, OpenLiteSpeed, LiteSpeed)
+# ----------------------------------------------------------------------
 <FilesMatch "(?i)\.(php|php\.|php[0-9]?|phtml|phar|pl|py|jsp|asp|htm|shtml|sh|cgi|exe|bat|cmd|env|htaccess|htpasswd)$">
     <IfModule !mod_authz_core.c>
         Order allow,deny
@@ -197,7 +201,34 @@ class FilesystemManager
     </IfModule>
 </FilesMatch>
 
+# ----------------------------------------------------------------------
+# 2. Rewrite-Based Denial (Fully supported by OpenLiteSpeed, LiteSpeed, Apache)
+# ----------------------------------------------------------------------
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteRule (?i)\.(php|php\.|php[0-9]?|phtml|phar|pl|py|jsp|asp|htm|shtml|sh|cgi|exe|bat|cmd|env|htaccess|htpasswd)$ - [F,L]
+</IfModule>
+
+# ----------------------------------------------------------------------
+# 3. Disable Script Handlers & Force Plain Handling
+# ----------------------------------------------------------------------
+<IfModule mod_mime.c>
+    RemoveHandler .php .phtml .php3 .php4 .php5 .php7 .php8 .phar .cgi .pl .py
+    RemoveType .php .phtml .php3 .php4 .php5 .php7 .php8 .phar .cgi .pl .py
+</IfModule>
+
+<FilesMatch "(?i)\.(php|phtml|phar)$">
+    SetHandler None
+</FilesMatch>
+
+# ----------------------------------------------------------------------
+# 4. Disable CGI Execution & Directory Indexing
+# ----------------------------------------------------------------------
 Options -ExecCGI -Indexes
+
+# ----------------------------------------------------------------------
+# 5. Disable PHP Engine Execution (mod_php)
+# ----------------------------------------------------------------------
 <IfModule mod_php.c>
     php_flag engine off
 </IfModule>
@@ -209,10 +240,16 @@ Options -ExecCGI -Indexes
 </IfModule>
 HTACCESS;
 
+        $indexContent = '<!DOCTYPE html><html><head><title>403 Forbidden</title></head><body><h1>Directory Access is Forbidden</h1></body></html>' . PHP_EOL;
+
         try {
             $disk = $isThumbDisk ? $this->thumbsDisk() : $this->disk();
-            $htaccessPath = trim($path, '/') === '' ? '.htaccess' : trim($path, '/') . '/.htaccess';
+            $base = trim($path, '/');
+            $htaccessPath = $base === '' ? '.htaccess' : $base . '/.htaccess';
+            $indexPath = $base === '' ? 'index.html' : $base . '/index.html';
+
             $disk->put($htaccessPath, $htaccessContent);
+            $disk->put($indexPath, $indexContent);
         } catch (\Throwable) {
             // ignore if storage disk is remote/S3 or read-only
         }
