@@ -149,8 +149,8 @@
                         <input type="hidden" class="name_download" name="name" value="{{ $entry['name'] }}">
                         <a title="{{ __('filemanager::filemanager.Download') }}" class="tip-right" href="javascript:void('')" onclick="jQuery(this).closest('form').submit();"><i class="icon-download"></i></a>
 
-                        @if ($isImage && $thumbUrl)
-                            <a class="tip-right preview" title="{{ __('filemanager::filemanager.Preview') }}" data-featherlight="{{ $fileUrl }}" href="#"><i class="icon-eye-open"></i></a>
+                        @if ($isImage)
+                            <a class="tip-right preview" title="{{ __('filemanager::filemanager.Preview') }}" data-featherlight="image" href="{{ $fileUrl }}"><i class="icon-eye-open"></i></a>
                         @elseif ($isPdf)
                             <a class="tip-right preview" title="{{ __('filemanager::filemanager.Preview') }}" data-featherlight="iframe" data-featherlight-iframe-width="100%" data-featherlight-iframe-height="100%" href="{{ $fileUrl }}"><i class="icon-eye-open"></i></a>
                         @elseif (config('filemanager.text_editing_enabled') && app(\OpenSID\LaravelFilemanager\Support\FilemanagerConfig::class)->isEditableTextExtension($entry['extension']))

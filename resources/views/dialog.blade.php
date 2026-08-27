@@ -27,6 +27,10 @@
 
     <script>
         $(function () {
+            if ($.featherlight && $.featherlight.contentFilters && $.featherlight.contentFilters.image) {
+                $.featherlight.contentFilters.image.regex = /\.(png|jpg|jpeg|gif|tiff?|bmp|svg|webp|avif)(\?\S*)?$/i;
+            }
+
             $.ajaxSetup({ headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' } });
 
             $('#info').off('click').on('click', function(e) {
