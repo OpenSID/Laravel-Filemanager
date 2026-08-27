@@ -156,33 +156,52 @@
             font-size: 12px;
         }
 
-        /* Breadcrumbs */
-        .breadcrumb {
-            background: #ffffff !important;
+        /* Breadcrumbs Container & Alignment */
+        .breadcrumb-container {
+            background: #ffffff;
             border: 1px solid #e2e8f0;
             border-radius: 8px;
-            padding: 8px 14px;
+            padding: 6px 12px;
             margin: 10px 0 14px 0;
             box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
-            overflow: visible !important;
-            position: relative;
-            z-index: 50;
             display: flex;
             align-items: center;
+            justify-content: space-between;
+            min-height: 42px;
+            box-sizing: border-box;
+            position: relative;
+            z-index: 50;
+        }
+        .breadcrumb {
+            background: transparent !important;
+            border: none !important;
+            border-radius: 0 !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            box-shadow: none !important;
+            display: flex !important;
+            align-items: center !important;
+            gap: 4px;
+            list-style: none;
+            overflow: visible !important;
         }
         .breadcrumb > li {
             text-shadow: none;
-            display: inline-flex;
-            align-items: center;
+            display: inline-flex !important;
+            align-items: center !important;
+            line-height: 1 !important;
+            margin: 0;
         }
         .breadcrumb > li a {
             color: #64748b;
             text-decoration: none;
             font-weight: 500;
             font-size: 13px;
-            padding: 2px 4px;
+            padding: 4px 6px;
             border-radius: 4px;
-            transition: color 0.15s ease;
+            display: inline-flex !important;
+            align-items: center !important;
+            transition: color 0.15s ease, background 0.15s ease;
         }
         .breadcrumb > li a:hover {
             color: #2563eb;
@@ -192,10 +211,13 @@
             color: #0f172a;
             font-weight: 600;
             font-size: 13px;
+            padding: 4px 6px;
         }
         .breadcrumb .divider {
             color: #cbd5e1;
-            padding: 0 6px;
+            padding: 0 2px;
+            display: inline-flex;
+            align-items: center;
         }
         .breadcrumb small {
             background: #f1f5f9;
@@ -204,7 +226,51 @@
             border-radius: 12px;
             font-size: 11px;
             font-weight: 600;
-            margin-left: 8px;
+            margin-left: 6px;
+            display: inline-flex;
+            align-items: center;
+            line-height: 1.2;
+        }
+        .breadcrumb-actions {
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 6px;
+        }
+        .bc-action-btn {
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            height: 30px;
+            padding: 0 8px;
+            border-radius: 6px;
+            border: 1px solid #e2e8f0;
+            background: #ffffff;
+            color: #475569;
+            text-decoration: none !important;
+            font-size: 13px;
+            transition: all 0.15s ease;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+            gap: 4px;
+        }
+        .bc-action-btn:hover {
+            background: #f8fafc;
+            border-color: #cbd5e1;
+            color: #0f172a;
+        }
+        .bc-action-btn i {
+            margin: 0 !important;
+            line-height: 1 !important;
+            vertical-align: middle !important;
+        }
+        .bc-action-btn .caret {
+            margin-top: 0 !important;
+            margin-left: 3px !important;
+            vertical-align: middle !important;
+        }
+        i[class^="icon-"], i[class*=" icon-"] {
+            vertical-align: middle !important;
+            margin-top: 0 !important;
+            display: inline-block;
         }
 
         /* Dropdown & Menus */

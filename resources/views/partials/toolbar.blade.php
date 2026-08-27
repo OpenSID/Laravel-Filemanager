@@ -72,24 +72,31 @@
 </div>
 
 <div class="row-fluid">
-    <ul class="breadcrumb">
-        <li class="pull-left"><a href="?{{ http_build_query($linkParams + ['fldr' => trim((string) config('filemanager.base_folder', ''), '/')]) }}"><i class="icon-home"></i></a></li>
-        <li><span class="divider">/</span></li>
-        @foreach ($breadcrumbs as $crumb)
-            @if (! $loop->last)
-                <li><a href="?{{ http_build_query($linkParams + ['fldr' => $crumb['path']]) }}">{{ $crumb['name'] }}</a></li>
-                <li><span class="divider">/</span></li>
-            @else
-                <li class="active">{{ $crumb['name'] }}</li>
-            @endif
-        @endforeach
+    <div class="breadcrumb-container">
+        <ul class="breadcrumb">
+            <li class="bc-item"><a href="?{{ http_build_query($linkParams + ['fldr' => trim((string) config('filemanager.base_folder', ''), '/')]) }}" class="bc-link"><i class="icon-home"></i></a></li>
+            <li class="bc-divider"><span class="divider">/</span></li>
+            @foreach ($breadcrumbs as $crumb)
+                @if (! $loop->last)
+                    <li class="bc-item"><a href="?{{ http_build_query($linkParams + ['fldr' => $crumb['path']]) }}" class="bc-link">{{ $crumb['name'] }}</a></li>
+                    <li class="bc-divider"><span class="divider">/</span></li>
+                @else
+                    <li class="bc-item active">{{ $crumb['name'] }}</li>
+                @endif
+            @endforeach
+            <li class="bc-count">
+                <small class="hidden-phone">
+                    (<span id="files_number">{{ collect($entries)->where('is_dir', false)->count() }}</span> {{ __('filemanager::filemanager.Files') }}
+                    - <span id="folders_number">{{ collect($entries)->where('is_dir', true)->count() }}</span> {{ __('filemanager::filemanager.Folders') }})
+                </small>
+            </li>
+        </ul>
 
-        <li class="pull-right"><a class="btn-small" href="javascript:void('')" id="info"><i class="icon-question-sign"></i></a></li>
-        <li class="pull-right"><a id="refresh" class="btn-small" href="?{{ http_build_query($linkParams + ['fldr' => $subdir]) }}"><i class="icon-refresh"></i></a></li>
-
-        <li class="pull-right">
+        <div class="breadcrumb-actions">
+            <a class="bc-action-btn tip" href="javascript:void('')" id="info" title="Info"><i class="icon-question-sign"></i></a>
+            <a class="bc-action-btn tip" id="refresh" href="?{{ http_build_query($linkParams + ['fldr' => $subdir]) }}" title="{{ __('filemanager::filemanager.Refresh') }}"><i class="icon-refresh"></i></a>
             <div class="btn-group">
-                <a class="btn dropdown-toggle sorting-btn" data-toggle="dropdown" href="javascript:void('')">
+                <a class="bc-action-btn dropdown-toggle sorting-btn" data-toggle="dropdown" href="javascript:void('')" title="{{ __('filemanager::filemanager.Sorting') }}">
                     <i class="icon-signal"></i>
                     <span class="caret"></span>
                 </a>
@@ -101,12 +108,6 @@
                     <li><a class="sorter sort-extension {{ $sortBy == 'extension' ? ($descending ? 'descending' : 'ascending') : '' }}" href="javascript:void('')" data-sort="extension">{{ __('filemanager::filemanager.Type') }}</a></li>
                 </ul>
             </div>
-        </li>
-        <li>
-            <small class="hidden-phone">
-                (<span id="files_number">{{ collect($entries)->where('is_dir', false)->count() }}</span> {{ __('filemanager::filemanager.Files') }}
-                - <span id="folders_number">{{ collect($entries)->where('is_dir', true)->count() }}</span> {{ __('filemanager::filemanager.Folders') }})
-            </small>
-        </li>
-    </ul>
+        </div>
+    </div>
 </div>
