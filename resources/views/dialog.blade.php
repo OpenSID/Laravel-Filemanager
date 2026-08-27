@@ -550,11 +550,181 @@
             border-radius: 4px;
         }
 
-        /* List View Adjustments */
-        .list-view1.grid .file-date, .sorter-container .file-date { width: 120px; right: 185px; font-size: 11px; white-space: nowrap; }
-        .list-view1.grid .file-size, .sorter-container .file-size { width: 65px; right: 310px; font-size: 11px; }
-        .list-view1.grid .file-extension, .sorter-container .file-extension { width: 55px; right: 380px; font-size: 11px; }
-        .list-view1.grid figure .box { padding-right: 440px; }
+        /* Image & Thumbnail Centering */
+        .img-container, .img-container-mini {
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            text-align: center !important;
+            margin: 0 auto !important;
+        }
+        .img-container img, .img-container-mini img {
+            margin: auto !important;
+            display: block !important;
+            object-fit: contain !important;
+        }
+        .img-precontainer-mini .filetype, .img-precontainer .filetype {
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            text-align: center !important;
+        }
+
+        /* List View 1 & 2 Modern Vertical Centering */
+        .list-view1.grid li, .list-view2.grid li {
+            margin-bottom: 6px !important;
+        }
+        .list-view1.grid li figure, .list-view2.grid li figure {
+            display: flex !important;
+            align-items: center !important;
+            min-height: 42px !important;
+            height: 42px !important;
+            position: relative !important;
+            border-radius: 5px !important;
+            border: 1px solid #e2e8f0 !important;
+            background: #ffffff !important;
+            padding: 0 8px !important;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03) !important;
+        }
+        .list-view1.grid li figure:hover, .list-view2.grid li figure:hover {
+            background: #f8fafc !important;
+            border-color: #cbd5e1 !important;
+        }
+        .list-view1.grid .img-precontainer-mini, .list-view2.grid .img-precontainer-mini {
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            position: absolute !important;
+            width: 36px !important;
+            height: 36px !important;
+            left: 28px !important;
+            top: 50% !important;
+            transform: translateY(-50%) !important;
+            overflow: hidden !important;
+            border-radius: 4px !important;
+        }
+        .list-view1.grid li.no-selector .img-precontainer-mini, .list-view2.grid li.no-selector .img-precontainer-mini {
+            left: 8px !important;
+        }
+        .list-view1.grid .img-container-mini, .list-view2.grid .img-container-mini {
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            width: 100% !important;
+            height: 100% !important;
+            margin: 0 !important;
+            left: 0 !important;
+        }
+        .list-view1.grid .img-precontainer-mini img, .list-view2.grid .img-precontainer-mini img {
+            max-width: 32px !important;
+            max-height: 32px !important;
+            width: auto !important;
+            height: auto !important;
+            margin: auto !important;
+            display: block !important;
+            border-radius: 3px !important;
+        }
+        .list-view1.grid .img-precontainer-mini .filetype, .list-view2.grid .img-precontainer-mini .filetype {
+            position: relative !important;
+            top: auto !important;
+            left: auto !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            width: 32px !important;
+            height: 26px !important;
+            line-height: 26px !important;
+            border-radius: 4px !important;
+            font-size: 11px !important;
+            font-weight: 600 !important;
+            margin: auto !important;
+        }
+        .list-view1.grid .selector, .list-view2.grid .selector {
+            position: absolute !important;
+            left: 8px !important;
+            top: 50% !important;
+            transform: translateY(-50%) !important;
+            margin: 0 !important;
+            display: flex !important;
+            align-items: center !important;
+        }
+        .list-view1.grid figure .box, .list-view2.grid figure .box {
+            display: flex !important;
+            align-items: center !important;
+            height: 100% !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            margin-left: 68px !important;
+            border: none !important;
+            background: transparent !important;
+        }
+        .list-view1.grid li.no-selector figure .box, .list-view2.grid li.no-selector figure .box {
+            margin-left: 48px !important;
+        }
+        .list-view1.grid figure .box h4, .list-view2.grid figure .box h4 {
+            margin: 0 !important;
+            padding: 0 !important;
+            line-height: 1.2 !important;
+            font-size: 13px !important;
+            font-weight: 500 !important;
+            display: flex !important;
+            align-items: center !important;
+        }
+        .list-view1.grid figcaption, .list-view2.grid figcaption {
+            position: absolute !important;
+            right: 8px !important;
+            top: 50% !important;
+            transform: translateY(-50%) !important;
+            bottom: auto !important;
+            height: 30px !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: flex-end !important;
+            background: transparent !important;
+            box-shadow: none !important;
+            padding: 0 !important;
+        }
+        .list-view1.grid figcaption form, .list-view2.grid figcaption form {
+            display: flex !important;
+            align-items: center !important;
+            gap: 4px !important;
+            height: 100% !important;
+            margin: 0 !important;
+        }
+        .list-view1.grid figcaption a, .list-view2.grid figcaption a {
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            width: 26px !important;
+            height: 26px !important;
+            color: #475569 !important;
+            border-radius: 4px !important;
+            background: #f1f5f9 !important;
+            transition: all 0.15s ease !important;
+        }
+        .list-view1.grid figcaption a:hover, .list-view2.grid figcaption a:hover {
+            background: #e2e8f0 !important;
+            color: #0f172a !important;
+        }
+        .list-view1.grid figcaption a i, .list-view2.grid figcaption a i {
+            margin: 0 !important;
+            vertical-align: middle !important;
+            line-height: 1 !important;
+            color: #475569 !important;
+        }
+        .list-view1.grid .file-date, .list-view1.grid .file-size, .list-view1.grid .file-extension {
+            top: 50% !important;
+            transform: translateY(-50%) !important;
+            margin: 0 !important;
+            display: flex !important;
+            align-items: center !important;
+            line-height: 1 !important;
+        }
+        .list-view1.grid .file-date { width: 120px; right: 185px; font-size: 11px; white-space: nowrap; }
+        .list-view1.grid .file-size { width: 65px; right: 310px; font-size: 11px; }
+        .list-view1.grid .file-extension { width: 55px; right: 380px; font-size: 11px; }
+        .list-view1.grid figure .box { padding-right: 440px !important; }
+        .list-view2.grid figure .box { padding-right: 120px !important; }
 
         /* Modern Lightbox Preview */
         .featherlight-iframe .featherlight-content {
