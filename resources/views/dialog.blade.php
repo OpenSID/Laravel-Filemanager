@@ -35,7 +35,19 @@
 
             $('#info').off('click').on('click', function(e) {
                 e.preventDefault();
-                bootbox.alert('<div class="text-center"><br/><h4><strong>OpenSID File Manager</strong></h4><p><a href="https://opendesa.id" target="_blank" rel="noopener">opendesa.id</a></p><br/><p>Pengembang: <strong>Tim Pengembang OpenDesa</strong></p><p>Hak Cipta &copy; 2016 - {{ date("Y") }} <a href="https://opendesa.id" target="_blank" rel="noopener">Perkumpulan Desa Digital Terbuka</a></p><br/><p><small>Lisensi: <a href="http://www.gnu.org/licenses/gpl.html" target="_blank" rel="noopener">GPL v3</a></small></p></div>');
+                var $dialog = bootbox.dialog(
+                    '<button type="button" class="close" data-dismiss="modal" aria-hidden="true" style="position:absolute; top:12px; right:16px; font-size:24px; line-height:1; font-weight:300; opacity:0.6; cursor:pointer; background:none; border:none; color:#0f172a; padding:0; z-index:100;">&times;</button>' +
+                    '<div class="text-center" style="padding: 16px 16px 12px 16px;">' +
+                    '<h4 style="margin:0 0 6px 0; font-size:16px; font-weight:600; color:#0f172a;">OpenSID File Manager</h4>' +
+                    '<p style="margin:0 0 16px 0;"><a href="https://opendesa.id" target="_blank" rel="noopener" style="color:#2563eb; text-decoration:none; font-weight:500;">opendesa.id</a></p>' +
+                    '<p style="margin:0 0 6px 0; color:#334155; font-size:13px;">Pengembang: <strong>Tim Pengembang OpenDesa</strong></p>' +
+                    '<p style="margin:0 0 16px 0; color:#64748b; font-size:12px;">Hak Cipta &copy; 2016 - {{ date("Y") }} <a href="https://opendesa.id" target="_blank" rel="noopener" style="color:#475569;">Perkumpulan Desa Digital Terbuka</a></p>' +
+                    '<p style="margin:0; color:#94a3b8; font-size:11px;">Lisensi: <a href="http://www.gnu.org/licenses/gpl.html" target="_blank" rel="noopener" style="color:#64748b;">GPL v3</a></p>' +
+                    '</div>',
+                    []
+                );
+                $dialog.find('.modal-footer').remove();
+                $dialog.find('.modal-header').remove();
             });
 
             $(document).on('click', '#sorting-dropdown-btn, .sorting-btn', function (e) {
