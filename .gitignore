@@ -1,0 +1,10 @@
+/vendor
+composer.lock
+.phpunit.cache
+.phpunit.result.cache
+.DS_Store
+
+# The root .gitignore blanket-ignores phpunit.xml (the app's own copy is
+# meant to be locally generated) — this package needs its own committed so
+# its test suite is runnable standalone.
+!phpunit.xml
