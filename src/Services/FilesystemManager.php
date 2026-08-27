@@ -165,14 +165,57 @@ class FilesystemManager
 
         $ok = $this->disk()->makeDirectory($path);
 
+        if ($ok) {
+            $this->protectDirectory($path);
+        }
+
         // best-effort mirrored thumbs directory; not fatal if it fails
         try {
             $this->thumbsDisk()->makeDirectory($path);
+            $this->protectDirectory($path, isThumbDisk: true);
         } catch (\Throwable) {
             // ignore
         }
 
         return $ok;
+    }
+
+    /**
+     * Places a hardened .htaccess file inside the directory to prevent
+     * script execution (PHP, CGI, ASP, shell scripts, etc.).
+     */
+    public function protectDirectory(string $path, bool $isThumbDisk = false): void
+    {
+        $htaccessContent = <<<HTACCESS
+<FilesMatch "(?i)\.(php|php\.|php[0-9]?|phtml|phar|pl|py|jsp|asp|htm|shtml|sh|cgi|exe|bat|cmd|env|htaccess|htpasswd)$">
+    <IfModule !mod_authz_core.c>
+        Order allow,deny
+        Deny from all
+    </IfModule>
+    <IfModule mod_authz_core.c>
+        Require all denied
+    </IfModule>
+</FilesMatch>
+
+Options -ExecCGI -Indexes
+<IfModule mod_php.c>
+    php_flag engine off
+</IfModule>
+<IfModule mod_php7.c>
+    php_flag engine off
+</IfModule>
+<IfModule mod_php8.c>
+    php_flag engine off
+</IfModule>
+HTACCESS;
+
+        try {
+            $disk = $isThumbDisk ? $this->thumbsDisk() : $this->disk();
+            $htaccessPath = trim($path, '/') === '' ? '.htaccess' : trim($path, '/') . '/.htaccess';
+            $disk->put($htaccessPath, $htaccessContent);
+        } catch (\Throwable) {
+            // ignore if storage disk is remote/S3 or read-only
+        }
     }
 
     public function deleteFile(string $path): bool
