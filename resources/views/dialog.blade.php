@@ -55,9 +55,26 @@
                 $('#sorting-menu').hide();
             });
 
-            // Re-initialize tooltips with container: 'body' so they float freely outside cards
-            $('.tip, .tip-top, .tip-bottom, .tip-left, .tip-right').tooltip('destroy').tooltip({
-                container: 'body'
+            // Re-initialize tooltips with container: 'body'
+            $('.navbar .tip, .navbar [title], .breadcrumb-container .tip, .breadcrumb-container [title]').tooltip('destroy').tooltip({
+                container: 'body',
+                placement: 'bottom'
+            });
+            $('ul.grid .tip, ul.grid .tip-top, ul.grid [title]').tooltip('destroy').tooltip({
+                container: 'body',
+                placement: 'top'
+            });
+            $('.tip-bottom').tooltip('destroy').tooltip({
+                container: 'body',
+                placement: 'bottom'
+            });
+            $('.tip-left').tooltip('destroy').tooltip({
+                container: 'body',
+                placement: 'left'
+            });
+            $('.tip-right').tooltip('destroy').tooltip({
+                container: 'body',
+                placement: 'right'
             });
         });
     </script>
