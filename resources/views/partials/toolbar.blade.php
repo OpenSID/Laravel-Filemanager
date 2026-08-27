@@ -86,8 +86,7 @@
             @endforeach
             <li class="bc-count">
                 <small class="hidden-phone">
-                    (<span id="files_number">{{ collect($entries)->where('is_dir', false)->count() }}</span> {{ __('filemanager::filemanager.Files') }}
-                    - <span id="folders_number">{{ collect($entries)->where('is_dir', true)->count() }}</span> {{ __('filemanager::filemanager.Folders') }})
+                    (&nbsp;<span id="files_number">{{ collect($entries)->where('is_dir', false)->count() }}</span>&nbsp;{{ __('filemanager::filemanager.Files') }}&nbsp;-&nbsp;<span id="folders_number">{{ collect($entries)->where('is_dir', true)->count() }}</span>&nbsp;{{ __('filemanager::filemanager.Folders') }}&nbsp;)
                 </small>
             </li>
         </ul>
