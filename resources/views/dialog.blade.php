@@ -841,22 +841,40 @@
             display: none !important;
         }
 
-        /* Modern Lightbox Preview */
+        /* Modern Lightbox Preview (Images & Iframes) */
+        .featherlight .featherlight-content {
+            border-radius: 5px !important;
+            border: 1px solid #e2e8f0 !important;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25) !important;
+            background: #ffffff !important;
+            overflow: hidden !important;
+            padding: 10px !important;
+        }
+        .featherlight .featherlight-inner,
+        .featherlight .featherlight-image {
+            border-radius: 5px !important;
+            display: block !important;
+            max-width: 90vw !important;
+            max-height: 85vh !important;
+        }
+        .featherlight-close-icon {
+            border-radius: 5px !important;
+        }
         .featherlight-iframe .featherlight-content {
-            width: 85vw;
-            height: 85vh;
-            max-width: 1050px;
-            padding: 8px;
-            border-radius: 5px;
-            border: 1px solid #e2e8f0;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-            background: #ffffff;
+            width: 85vw !important;
+            height: 85vh !important;
+            max-width: 1050px !important;
+            padding: 8px !important;
+            border-radius: 5px !important;
+            border: 1px solid #e2e8f0 !important;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25) !important;
+            background: #ffffff !important;
         }
         .featherlight-iframe iframe {
-            border: none;
-            width: 100%;
-            height: 100%;
-            border-radius: 5px;
+            border: none !important;
+            width: 100% !important;
+            height: 100% !important;
+            border-radius: 5px !important;
         }
 
         /* Modern Uploader */
