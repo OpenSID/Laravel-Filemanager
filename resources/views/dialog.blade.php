@@ -376,6 +376,7 @@
             background: #ffffff !important;
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04) !important;
             transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1) !important;
+            overflow: hidden !important;
         }
         ul.grid li:hover {
             border-color: #cbd5e1 !important;
@@ -383,13 +384,24 @@
             box-shadow: 0 10px 20px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -2px rgba(0, 0, 0, 0.04) !important;
         }
         ul.grid li figure {
-            border-radius: 5px;
+            border-radius: 5px !important;
+            overflow: hidden !important;
+        }
+        ul.grid li figure .img-precontainer,
+        ul.grid li figure .img-container,
+        ul.grid li figure .img-container-mini,
+        ul.grid li figure .img-precontainer-mini,
+        ul.grid li figure .filetype,
+        ul.grid li figure .cover,
+        ul.grid li figure img {
+            border-top-left-radius: 5px !important;
+            border-top-right-radius: 5px !important;
         }
         ul.grid li figure .box {
             background: #ffffff;
             border-top: 1px solid #f1f5f9;
             padding: 4px 6px;
-            border-radius: 0 0 5px 5px;
+            border-radius: 0 0 5px 5px !important;
         }
         ul.grid li figure .box h4 {
             color: #1e293b;
@@ -399,15 +411,27 @@
         ul.grid li figure figcaption {
             background: rgba(15, 23, 42, 0.85);
             backdrop-filter: blur(4px);
-            border-radius: 0 0 5px 5px;
+            border-radius: 0 0 5px 5px !important;
         }
         ul.grid li figure figcaption a {
-            border-radius: 4px;
+            border-radius: 4px !important;
             color: #ffffff !important;
             transition: background 0.15s ease;
         }
         ul.grid li figure figcaption a:hover {
             background: rgba(255, 255, 255, 0.25);
+        }
+
+        /* Checkbox Selector */
+        .selector {
+            border-radius: 4px !important;
+        }
+        .selector label.cont {
+            border-radius: 4px !important;
+            overflow: hidden;
+        }
+        .selector .checkmark {
+            border-radius: 3px !important;
         }
 
         /* Floating Tooltips */
