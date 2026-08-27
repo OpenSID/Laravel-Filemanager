@@ -240,37 +240,64 @@
             display: inline-flex !important;
             align-items: center !important;
             gap: 6px;
+            height: 30px;
+        }
+        .breadcrumb-actions .btn-group {
+            display: inline-flex !important;
+            align-items: center !important;
+            height: 30px;
+            margin: 0 !important;
+            vertical-align: middle !important;
         }
         .bc-action-btn {
             display: inline-flex !important;
             align-items: center !important;
             justify-content: center !important;
-            height: 30px;
-            padding: 0 8px;
-            border-radius: 6px;
-            border: 1px solid #e2e8f0;
-            background: #ffffff;
-            color: #475569;
+            height: 30px !important;
+            min-width: 30px !important;
+            box-sizing: border-box !important;
+            padding: 0 8px !important;
+            border-radius: 6px !important;
+            border: 1px solid #e2e8f0 !important;
+            background: #ffffff !important;
+            color: #475569 !important;
             text-decoration: none !important;
-            font-size: 13px;
-            transition: all 0.15s ease;
-            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
-            gap: 4px;
+            font-size: 13px !important;
+            line-height: 1 !important;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03) !important;
+            vertical-align: middle !important;
+            gap: 4px !important;
+        }
+        .bc-action-btn.tip:not(.dropdown-toggle) {
+            width: 30px !important;
+            padding: 0 !important;
         }
         .bc-action-btn:hover {
-            background: #f8fafc;
-            border-color: #cbd5e1;
-            color: #0f172a;
+            background: #f8fafc !important;
+            border-color: #cbd5e1 !important;
+            color: #0f172a !important;
         }
-        .bc-action-btn i {
+        .bc-action-btn i,
+        .bc-action-btn [class^="icon-"],
+        .bc-action-btn [class*=" icon-"] {
             margin: 0 !important;
+            padding: 0 !important;
             line-height: 1 !important;
             vertical-align: middle !important;
+            display: inline-block !important;
         }
         .bc-action-btn .caret {
-            margin-top: 0 !important;
-            margin-left: 3px !important;
+            display: inline-block !important;
             vertical-align: middle !important;
+            margin-top: 0 !important;
+            margin-bottom: 0 !important;
+            margin-left: 2px !important;
+            border-top: 4px solid #475569 !important;
+            border-right: 4px solid transparent !important;
+            border-left: 4px solid transparent !important;
+            border-bottom: 0 !important;
+            width: 0 !important;
+            height: 0 !important;
         }
         i[class^="icon-"], i[class*=" icon-"] {
             vertical-align: middle !important;
