@@ -400,23 +400,55 @@
         ul.grid li figure .box {
             background: #ffffff;
             border-top: 1px solid #f1f5f9;
-            padding: 4px 6px;
+            padding: 6px 8px 8px 8px !important;
             border-radius: 0 0 5px 5px !important;
+            min-height: 28px;
+            box-sizing: border-box;
         }
         ul.grid li figure .box h4 {
             color: #1e293b;
             font-weight: 500;
             font-size: 12px;
+            margin: 0 !important;
+            line-height: 1.3 !important;
+            padding-bottom: 2px !important;
         }
         ul.grid li figure figcaption {
             background: rgba(15, 23, 42, 0.85);
             backdrop-filter: blur(4px);
             border-radius: 0 0 5px 5px !important;
+            padding: 5px 6px 6px 6px !important;
+            min-height: 30px !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            box-sizing: border-box !important;
+        }
+        ul.grid li figure figcaption form {
+            margin: 0 !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: space-around !important;
+            width: 100% !important;
+            height: 100% !important;
         }
         ul.grid li figure figcaption a {
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            width: 22px !important;
+            height: 22px !important;
+            margin: 0 2px !important;
             border-radius: 4px !important;
             color: #ffffff !important;
+            line-height: 1 !important;
             transition: background 0.15s ease;
+        }
+        ul.grid li figure figcaption a i {
+            margin: 0 !important;
+            line-height: 1 !important;
+            vertical-align: middle !important;
+            font-size: 12px !important;
         }
         ul.grid li figure figcaption a:hover {
             background: rgba(255, 255, 255, 0.25);
