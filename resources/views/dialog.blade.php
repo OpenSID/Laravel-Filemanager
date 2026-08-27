@@ -92,7 +92,7 @@
             background-image: none;
             border: 1px solid #cbd5e1;
             color: #475569;
-            border-radius: 6px;
+            border-radius: 5px;
             box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
             padding: 5px 10px;
             transition: all 0.15s ease;
@@ -139,9 +139,9 @@
         .filters .types input#filter-input {
             margin: 0 !important;
             height: 30px;
-            padding: 4px 12px;
+            padding: 4px 10px;
             font-size: 13px;
-            border-radius: 20px;
+            border-radius: 5px;
             border: 1px solid #cbd5e1;
             background: #f8fafc;
             color: #1e293b;
@@ -156,7 +156,7 @@
         }
         .filters .types label.btn {
             padding: 4px 8px;
-            border-radius: 6px;
+            border-radius: 5px;
             margin: 0;
             font-size: 12px;
         }
@@ -165,7 +165,7 @@
         .breadcrumb-container {
             background: #ffffff;
             border: 1px solid #e2e8f0;
-            border-radius: 8px;
+            border-radius: 5px;
             padding: 6px 12px;
             margin: 10px 0 14px 0;
             box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
@@ -227,8 +227,8 @@
         .breadcrumb small {
             background: #f1f5f9;
             color: #64748b;
-            padding: 3px 10px;
-            border-radius: 12px;
+            padding: 3px 8px;
+            border-radius: 5px;
             font-size: 11px;
             font-weight: 600;
             margin-left: 6px;
@@ -257,7 +257,7 @@
             min-width: 30px !important;
             box-sizing: border-box !important;
             padding: 0 8px !important;
-            border-radius: 6px !important;
+            border-radius: 5px !important;
             border: 1px solid #e2e8f0 !important;
             background: #ffffff !important;
             color: #475569 !important;
@@ -324,7 +324,7 @@
             list-style: none;
             background-color: #ffffff;
             border: 1px solid #e2e8f0;
-            border-radius: 8px;
+            border-radius: 5px;
             box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
         }
         .btn-group.open > .dropdown-menu {
@@ -360,7 +360,7 @@
             list-style: none;
         }
         ul.grid li {
-            border-radius: 10px !important;
+            border-radius: 5px !important;
             border: 1px solid #e2e8f0 !important;
             background: #ffffff !important;
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04) !important;
@@ -372,13 +372,13 @@
             box-shadow: 0 10px 20px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -2px rgba(0, 0, 0, 0.04) !important;
         }
         ul.grid li figure {
-            border-radius: 10px;
+            border-radius: 5px;
         }
         ul.grid li figure .box {
             background: #ffffff;
             border-top: 1px solid #f1f5f9;
             padding: 4px 6px;
-            border-radius: 0 0 9px 9px;
+            border-radius: 0 0 5px 5px;
         }
         ul.grid li figure .box h4 {
             color: #1e293b;
@@ -388,7 +388,7 @@
         ul.grid li figure figcaption {
             background: rgba(15, 23, 42, 0.85);
             backdrop-filter: blur(4px);
-            border-radius: 0 0 9px 9px;
+            border-radius: 0 0 5px 5px;
         }
         ul.grid li figure figcaption a {
             border-radius: 4px;
@@ -438,7 +438,7 @@
             text-align: center;
             text-decoration: none;
             background-color: #0f172a !important;
-            border-radius: 6px;
+            border-radius: 5px;
             font-weight: 500;
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.15);
         }
@@ -495,7 +495,7 @@
             height: 85vh;
             max-width: 1050px;
             padding: 8px;
-            border-radius: 12px;
+            border-radius: 5px;
             border: 1px solid #e2e8f0;
             box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
             background: #ffffff;
@@ -504,17 +504,17 @@
             border: none;
             width: 100%;
             height: 100%;
-            border-radius: 8px;
+            border-radius: 5px;
         }
 
         /* Modern Uploader */
         .uploader {
             background: #f8fafc;
-            border-radius: 12px;
+            border-radius: 5px;
             padding: 16px;
         }
         .upload-tabbable {
-            border-radius: 10px;
+            border-radius: 5px;
             border: 2px dashed #cbd5e1;
             background: #ffffff;
             padding: 20px;
