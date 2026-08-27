@@ -550,7 +550,7 @@
             border-radius: 4px;
         }
 
-        /* Image & Thumbnail Centering */
+        /* Centering Images & Thumbnails in All Views */
         .img-container, .img-container-mini {
             display: flex !important;
             align-items: center !important;
@@ -563,89 +563,68 @@
             display: block !important;
             object-fit: contain !important;
         }
-
-        /* List View 1 & 2 Thumbnail Logic (Never Overlap) */
-        .list-view1.grid .img-precontainer-mini,
-        .list-view2.grid .img-precontainer-mini {
-            width: 32px !important;
-            height: 32px !important;
-            display: flex !important;
-            align-items: center !important;
-            justify-content: center !important;
-            overflow: hidden !important;
-            border-radius: 4px !important;
-            background: #f1f5f9;
-            flex-shrink: 0 !important;
-        }
-        .list-view1.grid .img-precontainer-mini.directory,
-        .list-view2.grid .img-precontainer-mini.directory {
-            background: transparent !important;
-        }
-        .list-view1.grid .img-precontainer-mini .img-container-mini,
-        .list-view2.grid .img-precontainer-mini .img-container-mini {
-            width: 100% !important;
-            height: 100% !important;
-            display: flex !important;
-            align-items: center !important;
-            justify-content: center !important;
-            margin: 0 !important;
-            left: 0 !important;
-        }
-        .list-view1.grid .img-precontainer-mini img,
-        .list-view2.grid .img-precontainer-mini img {
-            max-width: 30px !important;
-            max-height: 30px !important;
-            width: auto !important;
-            height: auto !important;
-            margin: auto !important;
-            display: block !important;
-            border-radius: 3px !important;
+        .list-view1.grid .img-precontainer, .list-view2.grid .img-precontainer {
+            display: none !important;
         }
         .list-view1.grid .img-precontainer-mini .filetype,
         .list-view2.grid .img-precontainer-mini .filetype {
-            width: 100% !important;
-            height: 100% !important;
+            display: none !important;
+        }
+        .list-view1.grid .img-precontainer-mini,
+        .list-view2.grid .img-precontainer-mini {
             display: flex !important;
             align-items: center !important;
             justify-content: center !important;
-            font-size: 10px !important;
-            font-weight: 700 !important;
-            text-transform: uppercase !important;
-            color: #ffffff !important;
+            position: absolute !important;
+            top: 50% !important;
+            transform: translateY(-50%) !important;
+            left: 36px !important;
+            width: 32px !important;
+            height: 32px !important;
+            overflow: hidden !important;
             border-radius: 4px !important;
-            line-height: 1 !important;
-            position: static !important;
+            background: transparent !important;
+            z-index: 5 !important;
+        }
+        .list-view1.grid li.no-selector .img-precontainer-mini,
+        .list-view2.grid li.no-selector .img-precontainer-mini {
+            left: 8px !important;
+        }
+        .list-view1.grid .img-container-mini,
+        .list-view2.grid .img-container-mini {
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            width: 100% !important;
+            height: 100% !important;
             margin: 0 !important;
+            left: 0 !important;
         }
-        /* Show only one: image thumbnail OR filetype badge */
-        .list-view1.grid .img-precontainer-mini.original-thumb .filetype,
-        .list-view2.grid .img-precontainer-mini.original-thumb .filetype,
-        .list-view1.grid .img-precontainer-mini.directory .filetype,
-        .list-view2.grid .img-precontainer-mini.directory .filetype,
-        .list-view1.grid .img-precontainer-mini .filetype.hide,
-        .list-view2.grid .img-precontainer-mini .filetype.hide {
-            display: none !important;
-        }
-        .list-view1.grid .img-precontainer-mini:not(.original-thumb):not(.directory) .img-container-mini,
-        .list-view2.grid .img-precontainer-mini:not(.original-thumb):not(.directory) .img-container-mini {
-            display: none !important;
+        .list-view1.grid .img-container-mini img,
+        .list-view2.grid .img-container-mini img {
+            max-width: 28px !important;
+            max-height: 28px !important;
+            width: auto !important;
+            height: auto !important;
+            display: block !important;
+            margin: auto !important;
+            object-fit: contain !important;
         }
 
         /* List View 1 (Single Full-Width List) */
         .list-view1.grid li {
-            margin-bottom: 6px !important;
+            margin-bottom: 4px !important;
             width: 100% !important;
         }
         .list-view1.grid li figure {
-            display: flex !important;
-            align-items: center !important;
-            min-height: 42px !important;
-            height: 42px !important;
+            display: block !important;
+            height: 40px !important;
+            line-height: 40px !important;
             position: relative !important;
             border-radius: 5px !important;
             border: 1px solid #e2e8f0 !important;
             background: #ffffff !important;
-            padding: 0 10px !important;
+            padding: 0 !important;
             box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03) !important;
         }
         .list-view1.grid li figure:hover {
@@ -658,66 +637,58 @@
             top: 50% !important;
             transform: translateY(-50%) !important;
             margin: 0 !important;
-            display: flex !important;
-            align-items: center !important;
-        }
-        .list-view1.grid .img-precontainer-mini {
-            position: absolute !important;
-            left: 36px !important;
-            top: 50% !important;
-            transform: translateY(-50%) !important;
-        }
-        .list-view1.grid li.no-selector .img-precontainer-mini {
-            left: 10px !important;
+            z-index: 10 !important;
         }
         .list-view1.grid figure .box {
-            display: flex !important;
-            align-items: center !important;
-            height: 100% !important;
-            margin: 0 !important;
-            padding: 0 !important;
-            margin-left: 72px !important;
-            padding-right: 450px !important;
+            display: block !important;
+            height: 40px !important;
+            line-height: 40px !important;
+            margin: 0 0 0 76px !important;
+            padding: 0 450px 0 0 !important;
             border: none !important;
             background: transparent !important;
+            overflow: hidden !important;
         }
         .list-view1.grid li.no-selector figure .box {
-            margin-left: 46px !important;
+            margin-left: 48px !important;
         }
         .list-view1.grid figure .box h4 {
             margin: 0 !important;
             padding: 0 !important;
-            line-height: 1.2 !important;
+            height: 40px !important;
+            line-height: 40px !important;
             font-size: 13px !important;
             font-weight: 500 !important;
+            color: #1e293b !important;
+            text-align: left !important;
             overflow: hidden !important;
             text-overflow: ellipsis !important;
             white-space: nowrap !important;
         }
         .list-view1.grid .file-date, .list-view1.grid .file-size, .list-view1.grid .file-extension {
-            top: 50% !important;
-            transform: translateY(-50%) !important;
+            position: absolute !important;
+            top: 0 !important;
+            height: 40px !important;
+            line-height: 40px !important;
             margin: 0 !important;
-            display: flex !important;
-            align-items: center !important;
-            line-height: 1 !important;
+            display: block !important;
         }
-        .list-view1.grid .file-date { width: 120px; right: 175px; font-size: 11px; white-space: nowrap; color: #64748b; }
-        .list-view1.grid .file-size { width: 65px; right: 305px; font-size: 11px; color: #64748b; }
         .list-view1.grid .file-extension { width: 55px; right: 375px; font-size: 11px; color: #64748b; }
+        .list-view1.grid .file-size { width: 65px; right: 305px; font-size: 11px; color: #64748b; }
+        .list-view1.grid .file-date { width: 120px; right: 175px; font-size: 11px; color: #64748b; white-space: nowrap; }
         .list-view1.grid figcaption {
             position: absolute !important;
-            right: 10px !important;
-            top: 50% !important;
-            transform: translateY(-50%) !important;
-            bottom: auto !important;
-            height: 30px !important;
+            right: 8px !important;
+            top: 0 !important;
+            bottom: 0 !important;
+            height: 40px !important;
             display: flex !important;
             align-items: center !important;
             justify-content: flex-end !important;
             background: transparent !important;
             box-shadow: none !important;
             padding: 0 !important;
+            z-index: 15 !important;
         }
         .list-view1.grid figcaption form {
             display: flex !important;
@@ -730,8 +701,8 @@
             display: inline-flex !important;
             align-items: center !important;
             justify-content: center !important;
-            width: 26px !important;
-            height: 26px !important;
+            width: 24px !important;
+            height: 24px !important;
             color: #64748b !important;
             border-radius: 4px !important;
             background: #f1f5f9 !important;
@@ -749,91 +720,81 @@
 
         /* List View 2 (Multi-Column Compact Cards) */
         .list-view2.grid li {
-            margin-bottom: 6px !important;
+            margin-bottom: 4px !important;
         }
         .list-view2.grid li figure {
-            display: flex !important;
-            align-items: center !important;
-            justify-content: space-between !important;
-            min-height: 42px !important;
-            height: 42px !important;
+            display: block !important;
+            height: 40px !important;
+            line-height: 40px !important;
             position: relative !important;
             border-radius: 5px !important;
             border: 1px solid #e2e8f0 !important;
             background: #ffffff !important;
-            padding: 0 8px !important;
+            padding: 0 !important;
             box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03) !important;
-            gap: 8px !important;
+            overflow: hidden !important;
         }
         .list-view2.grid li figure:hover {
             background: #f8fafc !important;
             border-color: #cbd5e1 !important;
         }
         .list-view2.grid .selector {
-            position: static !important;
-            transform: none !important;
+            position: absolute !important;
+            left: 8px !important;
+            top: 50% !important;
+            transform: translateY(-50%) !important;
             margin: 0 !important;
-            flex-shrink: 0 !important;
-            display: flex !important;
-            align-items: center !important;
-        }
-        .list-view2.grid .img-precontainer-mini {
-            position: static !important;
-            transform: none !important;
-            margin: 0 !important;
-            flex-shrink: 0 !important;
-        }
-        .list-view2.grid a.link,
-        .list-view2.grid a.folder-link {
-            display: flex !important;
-            align-items: center !important;
-            gap: 8px !important;
-            flex: 1 1 auto !important;
-            min-width: 0 !important;
-            overflow: hidden !important;
-            text-decoration: none !important;
+            z-index: 10 !important;
         }
         .list-view2.grid figure .box {
-            display: flex !important;
-            align-items: center !important;
-            height: 100% !important;
-            margin: 0 !important;
-            padding: 0 !important;
+            display: block !important;
+            height: 40px !important;
+            line-height: 40px !important;
+            margin: 0 0 0 76px !important;
+            padding: 0 115px 0 0 !important;
             border: none !important;
             background: transparent !important;
-            flex: 1 1 auto !important;
-            min-width: 0 !important;
             overflow: hidden !important;
+        }
+        .list-view2.grid li.no-selector figure .box {
+            margin-left: 48px !important;
         }
         .list-view2.grid figure .box h4 {
             margin: 0 !important;
             padding: 0 !important;
-            line-height: 1.2 !important;
+            height: 40px !important;
+            line-height: 40px !important;
             font-size: 12px !important;
             font-weight: 500 !important;
             color: #1e293b !important;
+            text-align: left !important;
             overflow: hidden !important;
             text-overflow: ellipsis !important;
             white-space: nowrap !important;
-            width: 100% !important;
+        }
+        .list-view2.grid figure .box h4 a {
+            color: #1e293b !important;
+            text-decoration: none !important;
         }
         .list-view2.grid figcaption {
-            position: static !important;
-            transform: none !important;
-            height: 100% !important;
+            position: absolute !important;
+            right: 6px !important;
+            top: 0 !important;
+            bottom: 0 !important;
+            height: 40px !important;
             display: flex !important;
             align-items: center !important;
             justify-content: flex-end !important;
             background: transparent !important;
             box-shadow: none !important;
             padding: 0 !important;
-            flex-shrink: 0 !important;
+            margin: 0 !important;
+            z-index: 15 !important;
         }
         .list-view2.grid figcaption form {
             display: flex !important;
             align-items: center !important;
             gap: 3px !important;
-            height: 100% !important;
             margin: 0 !important;
         }
         .list-view2.grid figcaption a {
