@@ -122,6 +122,19 @@
         .list-view1.grid .file-size, .sorter-container .file-size { width: 65px; right: 310px; font-size: 11px; }
         .list-view1.grid .file-extension, .sorter-container .file-extension { width: 55px; right: 380px; font-size: 11px; }
         .list-view1.grid figure .box { padding-right: 440px; }
+        .featherlight-iframe .featherlight-content {
+            width: 85vw;
+            height: 85vh;
+            max-width: 1000px;
+            padding: 10px;
+            border-bottom: 0;
+            background: #fff;
+        }
+        .featherlight-iframe iframe {
+            border: none;
+            width: 100%;
+            height: 100%;
+        }
     </style>
 </head>
 <body>

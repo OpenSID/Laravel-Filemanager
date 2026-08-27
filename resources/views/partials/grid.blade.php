@@ -85,8 +85,9 @@
     @else
         @php
             $isImage = in_array($entry['extension'], $imageExts, true);
+            $isPdf = $entry['extension'] === 'pdf';
+            $fileUrl = $filesManager->url($entry['path']);
             $thumbUrl = $isImage && $thumbsDisk->exists($entry['path']) ? $filesManager->thumbUrl($entry['path']) : null;
-            $fileUrl = $isImage ? $filesManager->url($entry['path']) : null;
             $iconFile = in_array($entry['extension'], $knownIconExts, true) ? $entry['extension'] . '.jpg' : 'default.jpg';
             $iconUrl = filemanager_asset('img/' . $iconTheme . '/' . $iconFile);
             $imageSrc = $thumbUrl ?: $iconUrl;
@@ -147,6 +148,8 @@
 
                         @if ($isImage && $thumbUrl)
                             <a class="tip-right preview" title="{{ __('filemanager::filemanager.Preview') }}" data-featherlight="{{ $fileUrl }}" href="#"><i class="icon-eye-open"></i></a>
+                        @elseif ($isPdf)
+                            <a class="tip-right preview" title="{{ __('filemanager::filemanager.Preview') }}" data-featherlight="iframe" data-featherlight-iframe-width="100%" data-featherlight-iframe-height="100%" href="{{ $fileUrl }}"><i class="icon-eye-open"></i></a>
                         @elseif (config('filemanager.text_editing_enabled') && app(\OpenSID\LaravelFilemanager\Support\FilemanagerConfig::class)->isEditableTextExtension($entry['extension']))
                             <a class="tip-right file-preview-btn" title="{{ __('filemanager::filemanager.Preview') }}" data-url="{{ route('filemanager.ajax', ['action' => 'get_file', 'sub_action' => 'preview', 'preview_mode' => 'text', 'file' => $entry['path']]) }}" href="javascript:void('');"><i class="icon-eye-open"></i></a>
                         @else
