@@ -50,6 +50,11 @@
                     $('.btn-group.open, .dropdown.open').removeClass('open');
                 }
             });
+
+            // Re-initialize tooltips with container: 'body' so they float freely outside cards
+            $('.tip, .tip-top, .tip-bottom, .tip-left, .tip-right').tooltip('destroy').tooltip({
+                container: 'body'
+            });
         });
     </script>
 
@@ -333,7 +338,6 @@
             background: #ffffff !important;
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04) !important;
             transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1) !important;
-            overflow: hidden;
         }
         ul.grid li:hover {
             border-color: #cbd5e1 !important;
@@ -347,6 +351,7 @@
             background: #ffffff;
             border-top: 1px solid #f1f5f9;
             padding: 4px 6px;
+            border-radius: 0 0 9px 9px;
         }
         ul.grid li figure .box h4 {
             color: #1e293b;
@@ -365,6 +370,85 @@
         }
         ul.grid li figure figcaption a:hover {
             background: rgba(255, 255, 255, 0.25);
+        }
+
+        /* Floating Tooltips */
+        .tooltip {
+            position: absolute !important;
+            z-index: 100000 !important;
+            display: block;
+            visibility: visible;
+            font-size: 11px;
+            line-height: 1.3;
+            opacity: 0;
+            filter: alpha(opacity=0);
+            pointer-events: none;
+        }
+        .tooltip.in {
+            opacity: 0.95 !important;
+            filter: alpha(opacity=95);
+        }
+        .tooltip.top {
+            margin-top: -3px;
+            padding: 5px 0;
+        }
+        .tooltip.right {
+            margin-left: 3px;
+            padding: 0 5px;
+        }
+        .tooltip.bottom {
+            margin-top: 3px;
+            padding: 5px 0;
+        }
+        .tooltip.left {
+            margin-left: -3px;
+            padding: 0 5px;
+        }
+        .tooltip-inner {
+            max-width: 220px;
+            padding: 5px 9px;
+            color: #ffffff;
+            text-align: center;
+            text-decoration: none;
+            background-color: #0f172a !important;
+            border-radius: 6px;
+            font-weight: 500;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.15);
+        }
+        .tooltip-arrow {
+            position: absolute;
+            width: 0;
+            height: 0;
+            border-color: transparent;
+            border-style: solid;
+        }
+        .tooltip.top .tooltip-arrow {
+            bottom: 0;
+            left: 50%;
+            margin-left: -5px;
+            border-width: 5px 5px 0;
+            border-top-color: #0f172a !important;
+        }
+        .tooltip.right .tooltip-arrow {
+            top: 50%;
+            left: 0;
+            margin-top: -5px;
+            border-width: 5px 5px 5px 0;
+            border-right-color: #0f172a !important;
+        }
+        .tooltip.left .tooltip-arrow {
+            top: 50%;
+            right: 0;
+            margin-top: -5px;
+            border-width: 5px 0 5px 5px;
+            border-left-color: #0f172a !important;
+        }
+        .tooltip.bottom .tooltip-arrow {
+            top: 0;
+            left: 50%;
+            margin-left: -5px;
+            border-width: 0 5px 5px;
+            border-bottom-color: #0f172a !important;
         }
 
         /* Checkbox */
