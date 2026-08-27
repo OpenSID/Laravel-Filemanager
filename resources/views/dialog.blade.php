@@ -521,14 +521,91 @@
         /* Modern Uploader */
         .uploader {
             background: #f8fafc;
-            border-radius: 5px;
+            border-radius: 5px !important;
             padding: 16px;
         }
         .upload-tabbable {
-            border-radius: 5px;
+            border-radius: 5px !important;
             border: 2px dashed #cbd5e1;
             background: #ffffff;
             padding: 20px;
+        }
+
+        /* Universal 5px Rounded for All UI Components */
+        .btn, button, input[type="button"], input[type="submit"], input[type="reset"],
+        .btn-group, .btn-group-vertical, .btn-toolbar,
+        input, select, textarea, .uneditable-input,
+        .modal, .modal-dialog, .modal-content, .bootbox,
+        .alert, .well, .thumbnail,
+        .progress, .progress-bar, .bar,
+        .nav-tabs, .nav-pills, .nav-tabs > li > a, .nav-pills > li > a,
+        .tab-content, .tab-pane,
+        .badge, .label,
+        .popover, .tooltip-inner,
+        .uploader, .upload-tabbable, .fileupload-buttonbar, .fileinput-button,
+        .close-uploader, .start, .cancel, .delete {
+            border-radius: 5px !important;
+        }
+        .btn {
+            text-shadow: none !important;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04) !important;
+            transition: all 0.15s ease !important;
+        }
+        .btn-success {
+            background: #16a34a !important;
+            border-color: #15803d !important;
+            color: #ffffff !important;
+        }
+        .btn-success:hover {
+            background: #15803d !important;
+            border-color: #166534 !important;
+        }
+        .btn-primary {
+            background: #2563eb !important;
+            border-color: #1d4ed8 !important;
+            color: #ffffff !important;
+        }
+        .btn-primary:hover {
+            background: #1d4ed8 !important;
+        }
+        .btn-inverse, .close-uploader {
+            background: #0f172a !important;
+            border-color: #0f172a !important;
+            color: #ffffff !important;
+        }
+        .btn-inverse:hover, .close-uploader:hover {
+            background: #1e293b !important;
+            color: #ffffff !important;
+        }
+        .btn-danger {
+            background: #ef4444 !important;
+            border-color: #dc2626 !important;
+            color: #ffffff !important;
+        }
+        .btn-warning {
+            background: #f59e0b !important;
+            border-color: #d97706 !important;
+            color: #ffffff !important;
+        }
+        .modal {
+            border-radius: 5px !important;
+            border: 1px solid #e2e8f0 !important;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04) !important;
+        }
+        .modal-header {
+            border-top-left-radius: 5px !important;
+            border-top-right-radius: 5px !important;
+        }
+        .modal-footer {
+            border-bottom-left-radius: 5px !important;
+            border-bottom-right-radius: 5px !important;
+        }
+        .progress {
+            border-radius: 5px !important;
+            overflow: hidden !important;
+        }
+        .progress .bar {
+            border-radius: 5px !important;
         }
     </style>
 </head>
