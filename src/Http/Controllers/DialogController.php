@@ -35,7 +35,9 @@ class DialogController extends Controller
         $descending = (bool) $this->rememberedOrRequested($request, 'descending', 'filemanager.descending', true);
         $filter = (string) $request->query('filter', Session::get('filemanager.filter', ''));
 
-        $fieldId = $request->query('field_id');
+        $fieldId = $this->sanitizeIdentifier((string) $request->query('field_id', ''));
+        $editor = $this->sanitizeIdentifier((string) $request->query('editor', ''));
+        $callback = $this->sanitizeIdentifier((string) $request->query('callback', ''));
         $type = (int) $request->query('type', 0);
         $multiple = $request->query('multiple');
 
@@ -48,13 +50,13 @@ class DialogController extends Controller
         // $get_params bridge.
         $linkParams = array_filter([
             'type' => $type ?: null,
-            'field_id' => $fieldId,
+            'field_id' => $fieldId ?: null,
             'multiple' => $multiple,
             'popup' => $request->query('popup'),
             'crossdomain' => $request->query('crossdomain'),
-            'editor' => $request->query('editor'),
+            'editor' => $editor ?: null,
             'relative_url' => $request->query('relative_url'),
-            'callback' => $request->query('callback'),
+            'callback' => $callback ?: null,
         ], fn ($value) => $value !== null && $value !== '');
 
         return view('filemanager::dialog', [
@@ -71,8 +73,8 @@ class DialogController extends Controller
             'multiple' => $multiple,
             'popup' => (bool) $request->query('popup', false),
             'crossdomain' => (bool) $request->query('crossdomain', false),
-            'callback' => $request->query('callback'),
-            'editor' => $request->query('editor'),
+            'callback' => $callback,
+            'editor' => $editor,
             'relativeUrl' => (bool) $request->query('relative_url', false),
             'linkParams' => $linkParams,
             'clipboardHasContent' => $this->clipboard->hasContent(),
@@ -80,6 +82,11 @@ class DialogController extends Controller
             'canDelete' => Gate::allows('filemanager.delete', $context),
             'apply' => $this->resolveApplyFunction($type, $fieldId, $multiple),
         ]);
+    }
+
+    protected function sanitizeIdentifier(string $value): string
+    {
+        return preg_replace('/[^a-zA-Z0-9_\-\.\[\]]/', '', $value) ?? '';
     }
 
     /**

@@ -21,14 +21,18 @@ class PathGuardTest extends TestCase
 
     public static function unsafePaths(): array
     {
-        return [
             'parent dir' => ['../etc/passwd'],
             'parent dir mid-path' => ['foo/../../etc/passwd'],
             'current dir marker' => ['./foo'],
             'windows-style traversal' => ['foo\\..\\bar'],
             'bare double-dot' => ['..'],
+            'bare dot' => ['.'],
             'trailing parent marker' => ['foo/..'],
             'url-encoded traversal' => ['foo%2F..%2F..%2Fetc%2Fpasswd'],
+            'double url-encoded traversal' => ['foo%252e%252e%252fetc'],
+            'null byte injection' => ["foo\0bar"],
+            'url encoded null byte' => ['foo%00bar'],
+            'windows alternate data stream' => ['image.jpg::$DATA'],
         ];
     }
 

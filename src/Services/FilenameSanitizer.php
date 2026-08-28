@@ -10,6 +10,10 @@ class FilenameSanitizer
 {
     public function sanitize(string $name, bool $isFolder = false): string
     {
+        // Strip null bytes, control characters, and Windows Alternate Data Streams
+        $name = str_replace(["\0", "%00", '::$DATA'], '', $name);
+        $name = preg_replace('/[\x00-\x1F\x7F]/u', '', $name) ?? $name;
+
         $name = $this->stripDangerousMarkup($name);
 
         if (config('filemanager.convert_spaces')) {
@@ -34,7 +38,8 @@ class FilenameSanitizer
             $name = 'file' . $name;
         }
 
-        return trim($name);
+        // Trim whitespace, tabs, and trailing dots (Windows filesystem automatically strips trailing dots and spaces)
+        return trim($name, " .\t\n\r\0\x0B");
     }
 
     protected function stripDangerousMarkup(string $str): string

@@ -40,8 +40,8 @@ class FileContentValidator
             return false;
         }
 
-        // Detect all XSS vectors and embedded script/PHP tags in SVG (PR #6272 / Issue #11136)
-        $pattern = '/(<\s*script|<\s*object|<\s*iframe|<\s*embed|<\s*foreignObject|<!entity|<!doctype|javascript\s*:|\b(on[a-zA-Z]+)\s*=|xmlns\s*:\s*script|<\?php|<\?=)/i';
+        // Detect all XSS vectors, embedded script/PHP tags, redirects, and entity injections in SVG
+        $pattern = '/(<\s*script|<\s*object|<\s*iframe|<\s*embed|<\s*foreignObject|<\s*meta|<\s*link|<\s*form|<\s*base|<\s*applet|<!entity|<!doctype|javascript\s*:|data\s*:\s*text\/html|\b(on[a-zA-Z]+)\s*=|xmlns\s*:\s*script|<\?php|<\?=)/i';
 
         return ! preg_match($pattern, $contents);
     }
@@ -57,8 +57,8 @@ class FileContentValidator
             return false;
         }
 
-        // Block Image Polyglot: legitimate image binary containing hidden PHP or script tags (PR #6272)
-        if (preg_match('/(<\s*script|<\?php|<\?=)/i', $contents)) {
+        // Block Image Polyglot & HTML smuggling: legitimate image binary containing hidden PHP, script tags, or HTML document structure
+        if (preg_match('/(<\s*script|<\?php|<\?=|<!doctype\s+html|<\s*html\b)/i', $contents)) {
             return false;
         }
 

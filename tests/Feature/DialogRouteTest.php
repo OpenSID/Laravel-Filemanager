@@ -46,4 +46,21 @@ class DialogRouteTest extends TestCase
 
         $this->get(route('filemanager.dialog'))->assertForbidden();
     }
+
+    #[Test]
+    public function query_identifiers_are_sanitized(): void
+    {
+        $this->actingAsUser();
+        $this->allowAllFilemanagerAbilities();
+
+        $response = $this->get(route('filemanager.dialog', [
+            'callback' => 'alert(1);//valid_callback',
+            'field_id' => '"><script>alert(1)</script>',
+        ]));
+
+        $response->assertOk();
+        $response->assertSee('value="alert1valid_callback"', false);
+        $response->assertSee('value="scriptalert1script"', false);
+        $response->assertDontSee('value="alert(1);//valid_callback"', false);
+    }
 }

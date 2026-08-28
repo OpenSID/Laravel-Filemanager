@@ -80,6 +80,24 @@ class FileContentValidatorTest extends TestCase
     }
 
     #[Test]
+    public function rejects_an_svg_containing_meta_or_form_tags(): void
+    {
+        $path1 = $this->tempFile('<svg xmlns="http://www.w3.org/2000/svg"><meta http-equiv="refresh" content="0;url=http://evil.com"/></svg>');
+        $path2 = $this->tempFile('<svg xmlns="http://www.w3.org/2000/svg"><form action="http://evil.com"><input type="submit"/></form></svg>');
+
+        $this->assertFalse($this->validator->isValidUpload($path1, 'svg'));
+        $this->assertFalse($this->validator->isValidUpload($path2, 'svg'));
+    }
+
+    #[Test]
+    public function rejects_html_smuggling_in_raster_images(): void
+    {
+        $path = $this->tempFile("<!DOCTYPE html><html><body><script>alert(1)</script></body></html>");
+
+        $this->assertFalse($this->validator->isValidUpload($path, 'jpg'));
+    }
+
+    #[Test]
     public function non_image_extensions_are_not_content_checked_at_all(): void
     {
         // This validator's job is specifically "claims to be an image but

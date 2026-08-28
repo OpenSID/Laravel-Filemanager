@@ -17,7 +17,21 @@ class PathGuard
             return true;
         }
 
-        return self::isSafePartial($path) && self::isSafePartial(rawurldecode($path));
+        $decoded = $path;
+        $maxLoops = 10;
+        while ($maxLoops-- > 0) {
+            if (! self::isSafePartial($decoded)) {
+                return false;
+            }
+
+            $next = rawurldecode($decoded);
+            if ($next === $decoded) {
+                break;
+            }
+            $decoded = $next;
+        }
+
+        return self::isSafePartial($decoded);
     }
 
     public static function assertSafe(?string $path): void
@@ -51,7 +65,17 @@ class PathGuard
 
     protected static function isSafePartial(string $path): bool
     {
-        if ($path === '..') {
+        if ($path === '..' || $path === '.') {
+            return false;
+        }
+
+        // Null bytes or control characters
+        if (str_contains($path, "\0") || preg_match('/[\x00-\x1F\x7F]/', $path)) {
+            return false;
+        }
+
+        // Windows Alternate Data Streams (ADS)
+        if (str_contains($path, '::$DATA') || (str_contains($path, ':') && ! preg_match('/^[a-zA-Z]:[\\\\\/]/', $path))) {
             return false;
         }
 

@@ -76,4 +76,20 @@ class FilenameSanitizerTest extends TestCase
 
         $this->assertSame('my_photo.jpg', $this->sanitizer->sanitize('My Photo.JPG'));
     }
+
+    #[Test]
+    public function strips_null_bytes_and_ads(): void
+    {
+        $this->assertSame('photo.jpg', $this->sanitizer->sanitize("photo\0.jpg"));
+        $this->assertSame('photo.jpg', $this->sanitizer->sanitize("photo%00.jpg"));
+        $this->assertSame('photo.jpg', $this->sanitizer->sanitize('photo.jpg::$DATA'));
+    }
+
+    #[Test]
+    public function trims_trailing_dots_and_spaces_preventing_windows_truncation(): void
+    {
+        $this->assertSame('photo.php', $this->sanitizer->sanitize('photo.php.'));
+        $this->assertSame('photo.php', $this->sanitizer->sanitize('photo.php...'));
+        $this->assertSame('photo.php', $this->sanitizer->sanitize('photo.php '));
+    }
 }
