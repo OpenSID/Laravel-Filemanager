@@ -42,6 +42,15 @@ class DownloadController extends Controller
             abort(404, trans('filemanager::filemanager.File_Not_Found'));
         }
 
+        $extension = mb_strtolower(pathinfo($name, PATHINFO_EXTENSION));
+
+        if ($this->files->config()->isHiddenFile($name)
+            || ($extension !== '' && $this->files->config()->isHiddenExtension($extension))
+            || ! $this->files->config()->isFilenameSafe($name)
+        ) {
+            abort(403, trans('filemanager::filemanager.File_Permission_Not_Allowed'));
+        }
+
         return $this->files->disk()->download($fullPath, basename($fullPath));
     }
 }

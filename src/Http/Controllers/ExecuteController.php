@@ -69,6 +69,12 @@ class ExecuteController extends Controller
         }
 
         $path = $this->safePath($request->input('path', ''));
+        $name = basename($path);
+
+        if ($this->config->isHiddenFile($name)) {
+            return $this->ok(trans('filemanager::filemanager.File_Permission_Not_Allowed'));
+        }
+
         $this->files->deleteFile($path);
 
         return $this->ok();
@@ -81,7 +87,10 @@ class ExecuteController extends Controller
         }
 
         foreach ((array) $request->input('paths', []) as $path) {
-            $this->files->deleteFile($this->safePath((string) $path));
+            $safePath = $this->safePath((string) $path);
+            if (! $this->config->isHiddenFile(basename($safePath))) {
+                $this->files->deleteFile($safePath);
+            }
         }
 
         return $this->ok();
@@ -95,7 +104,7 @@ class ExecuteController extends Controller
 
         $path = $this->safePath($request->input('path', ''));
 
-        if (trim($path, '/') === '' || $path === $this->config->baseFolder()) {
+        if (trim($path, '/') === '' || $path === $this->config->baseFolder() || $this->config->isHiddenFolder(basename($path))) {
             return $this->ok(trans('filemanager::filemanager.wrong path'));
         }
 
@@ -167,7 +176,11 @@ class ExecuteController extends Controller
         }
 
         $extension = mb_strtolower(pathinfo($name, PATHINFO_EXTENSION));
-        if (! $this->config->isEditableTextExtension($extension) || ! $this->config->isFilenameSafe($name)) {
+        if (! $this->config->isEditableTextExtension($extension)
+            || ! $this->config->isFilenameSafe($name)
+            || $this->config->isHiddenFile($name)
+            || $this->config->isHiddenExtension($extension)
+        ) {
             return $this->ok(trans('filemanager::filemanager.Error_extension'));
         }
 
@@ -197,8 +210,14 @@ class ExecuteController extends Controller
 
         $extension = pathinfo($path, PATHINFO_EXTENSION);
         $newName = $extension !== '' ? "{$name}.{$extension}" : $name;
+        $targetExtension = pathinfo($newName, PATHINFO_EXTENSION);
 
-        if (! $this->config->isFilenameSafe($newName)) {
+        if (! $this->config->isFilenameSafe($newName)
+            || ($targetExtension !== '' && ! $this->config->isExtensionAllowed($targetExtension))
+            || $this->config->isHiddenFile(basename($path))
+            || $this->config->isHiddenFile($newName)
+            || ($targetExtension !== '' && $this->config->isHiddenExtension($targetExtension))
+        ) {
             return $this->ok(trans('filemanager::filemanager.wrong extension'));
         }
 
@@ -227,8 +246,14 @@ class ExecuteController extends Controller
 
         $extension = pathinfo($path, PATHINFO_EXTENSION);
         $newName = $extension !== '' ? "{$name}.{$extension}" : $name;
+        $targetExtension = pathinfo($newName, PATHINFO_EXTENSION);
 
-        if (! $this->config->isFilenameSafe($newName)) {
+        if (! $this->config->isFilenameSafe($newName)
+            || ($targetExtension !== '' && ! $this->config->isExtensionAllowed($targetExtension))
+            || $this->config->isHiddenFile(basename($path))
+            || $this->config->isHiddenFile($newName)
+            || ($targetExtension !== '' && $this->config->isHiddenExtension($targetExtension))
+        ) {
             return $this->ok(trans('filemanager::filemanager.wrong extension'));
         }
 
@@ -286,6 +311,17 @@ class ExecuteController extends Controller
 
         if (! $this->files->exists($path)) {
             return $this->ok(trans('filemanager::filemanager.File_Not_Found'));
+        }
+
+        $name = basename($path);
+        $extension = mb_strtolower(pathinfo($name, PATHINFO_EXTENSION));
+
+        if (! $this->config->isEditableTextExtension($extension)
+            || ! $this->config->isFilenameSafe($name)
+            || $this->config->isHiddenFile($name)
+            || $this->config->isHiddenExtension($extension)
+        ) {
+            return $this->ok(trans('filemanager::filemanager.File_Open_Edit_Not_Allowed'));
         }
 
         $this->files->put($path, (string) $request->input('new_content', ''));
@@ -355,14 +391,26 @@ class ExecuteController extends Controller
         $targetPath = $path;
         if ($nameNew !== '') {
             $sanitizedName = $this->names->sanitize($nameNew);
-            $dir = dirname($path);
-            $dir = ($dir === '.' || $dir === '/') ? '' : $dir;
-            $newExt = pathinfo($sanitizedName, PATHINFO_EXTENSION);
+            $newExt = strtolower(pathinfo($sanitizedName, PATHINFO_EXTENSION));
             if ($newExt === '') {
                 $sanitizedName .= '.' . $extension;
+                $newExt = $extension;
             }
+
+            if (! in_array($newExt, config('filemanager.extensions.image', []), true)
+                || in_array($newExt, ['svg', 'ico'], true)
+                || ! $this->config->isExtensionAllowed($newExt)
+                || ! $this->config->isFilenameSafe($sanitizedName)
+            ) {
+                return $this->ok(trans('filemanager::filemanager.wrong extension'));
+            }
+
+            $dir = dirname($path);
+            $dir = ($dir === '.' || $dir === '/') ? '' : $dir;
             $targetPath = $this->join($dir, $sanitizedName);
         }
+
+        PathGuard::assertInsideBaseFolder($targetPath, $this->config->baseFolder());
 
         $tmp = tempnam(sys_get_temp_dir(), 'rfmCrop');
         file_put_contents($tmp, $decoded);
@@ -379,9 +427,9 @@ class ExecuteController extends Controller
 
         try {
             app(ThumbnailGenerator::class)->make(
-                config('filemanager.storage_disk', 'public'),
+                $this->config->disk(),
                 $targetPath,
-                config('filemanager.thumbs_disk', 'public'),
+                $this->config->thumbsDisk(),
                 $targetPath
             );
         } catch (\Throwable) {
