@@ -1,0 +1,40 @@
+# ----------------------------------------------------------------------
+# Normalisasi akhir baris
+# ----------------------------------------------------------------------
+* text=auto eol=lf
+
+*.php   text eol=lf
+*.js    text eol=lf
+*.css   text eol=lf
+*.json  text eol=lf
+*.md    text eol=lf
+*.blade.php text eol=lf
+
+*.png  binary
+*.jpg  binary
+*.jpeg binary
+*.gif  binary
+*.ico  binary
+*.svg  binary
+*.woff binary
+*.woff2 binary
+*.ttf  binary
+*.eot  binary
+*.map  binary
+
+# ----------------------------------------------------------------------
+# Dikecualikan dari arsip rilis (composer archive / dist tarball Packagist)
+# ----------------------------------------------------------------------
+/.gitattributes   export-ignore
+/.gitignore       export-ignore
+/.phpunit.cache   export-ignore
+/.github          export-ignore
+/.editorconfig    export-ignore
+
+/tests            export-ignore
+/phpunit.xml      export-ignore
+/phpunit.xml.dist export-ignore
+
+/analisis.md      export-ignore
+/CHANGELOG.md     export-ignore
+/composer.lock    export-ignore
