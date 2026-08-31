@@ -4,6 +4,8 @@ namespace OpenSID\LaravelFilemanager\Services;
 
 use Illuminate\Contracts\Filesystem\Filesystem;
 use Illuminate\Support\Facades\Storage;
+use League\Flysystem\DirectoryAttributes;
+use League\Flysystem\FileAttributes;
 use OpenSID\LaravelFilemanager\Support\FilemanagerConfig;
 
 /**
@@ -106,7 +108,7 @@ class FilesystemManager
             $path = $item->path();
             $name = basename($path);
 
-            if ($item->isDir()) {
+            if ($item instanceof DirectoryAttributes) {
                 if ($this->config->isHiddenFolder($name)) {
                     continue;
                 }
@@ -119,7 +121,7 @@ class FilesystemManager
                     'date' => $item->lastModified() ?? 0,
                     'extension' => null,
                 ];
-            } elseif ($item->isFile()) {
+            } elseif ($item instanceof FileAttributes) {
                 if ($this->config->isHiddenFile($name)) {
                     continue;
                 }

@@ -1,0 +1,13 @@
+parameters:
+    level: 5
+    paths:
+        - src
+    treatPhpDocTypesAsCertain: false
+    ignoreErrors:
+        # Package views ("filemanager::...") can't be resolved by static
+        # analysis without a booted host app; the dialog view is exercised
+        # by DialogRouteTest instead.
+        -
+            identifier: argument.type
+            message: '#expects view-string\|null, string given#'
+            path: src/Http/Controllers/DialogController.php

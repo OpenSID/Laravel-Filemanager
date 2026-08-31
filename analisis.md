@@ -321,12 +321,20 @@ dengan query `type` (0 = file, 1 = image, 2 = link, 3 = media).
 
 ---
 
-## 10. Testing
+## 10. Testing & mutu kode
 
 ```bash
 composer install
-vendor/bin/phpunit
+composer test        # phpunit
+composer lint        # pint (perbaiki gaya)
+composer lint:test   # pint --test (cek saja, dipakai CI)
+composer analyse     # phpstan / larastan level 5
+composer check       # ketiganya sekaligus
 ```
+
+CI (`.github/workflows/ci.yml`) menjalankan matriks PHP 8.2/8.3/8.4 ×
+`prefer-lowest`/`prefer-stable` untuk phpunit, plus satu job
+`pint --test` + `phpstan`. Dependabot memantau composer & github-actions.
 
 - **`orchestra/testbench`** — tidak butuh aplikasi Laravel lengkap.
 - `tests/TestCase.php` — set disk `filemanager`/`filemanager_thumbs` ke

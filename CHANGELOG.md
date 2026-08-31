@@ -46,9 +46,15 @@ RFM di OpenSID (`OpenSID/premium` #6937, #6976, #6985, #7008, #7011, #7012,
   (SEC-018).
 - Fitur crop gambar interaktif (Cropper.js), preview PDF/gambar via lightbox
   Featherlight, tampilan grid/list, copy/cut/paste, sort & filter realtime.
-- Dukungan PHP 8.1 – 8.4 dan Laravel 10 – 13.
-- `laravel/pint` + `pint.json` (preset `laravel`) dan skrip composer
-  `composer lint` / `composer lint:test` / `composer test`.
+- Dukungan PHP 8.2 – 8.4 dan Laravel 10 – 13.
+- Perkakas pengembangan:
+  - `laravel/pint` + `pint.json` (preset `laravel`).
+  - `larastan/larastan` (PHPStan level 5) + `phpstan.neon`.
+  - Skrip composer: `lint`, `lint:test`, `analyse`, `test`, `check`
+    (menjalankan ketiganya).
+  - GitHub Actions `ci.yml`: matriks uji PHP 8.2/8.3/8.4 ×
+    `prefer-lowest`/`prefer-stable`, plus job `pint --test` + `phpstan`.
+  - `.editorconfig` dan Dependabot (composer + github-actions, bulanan).
 
 ### Diubah
 
@@ -61,6 +67,11 @@ RFM di OpenSID (`OpenSID/premium` #6937, #6976, #6985, #7008, #7011, #7012,
   - archive: **kosong** (dulu `zip, rar, gz, tar`) — aktifkan manual bila perlu.
 - `FilenameSanitizer` kini hanya memangkas titik/spasi di **akhir** nama
   (`shell.php.` → `shell.php`), titik di depan dipertahankan untuk nama folder.
+- `require.php` dikoreksi `^8.1|…` → `^8.2|^8.3|^8.4` — `spatie/image ^3`
+  (dependensi wajib) memang membutuhkan PHP 8.2, jadi 8.1 tak pernah bisa
+  dipasang.
+- Seluruh basis kode diformat ulang oleh Pint (LF, ordered imports, spasi
+  operator) — tanpa perubahan perilaku.
 
 ### Dihapus
 
@@ -120,5 +131,8 @@ RFM di OpenSID (`OpenSID/premium` #6937, #6976, #6985, #7008, #7011, #7012,
   membuat seluruh test suite gagal dijalankan.
 - `FilenameSanitizer` ikut menghapus titik di depan nama folder (`.git` →
   `git`) dan mengubah spasi di akhir menjadi `_` sebelum sempat dipangkas.
+- `FilesystemManager::list()` memakai `instanceof DirectoryAttributes` /
+  `FileAttributes` alih-alih `isDir()`/`isFile()` — penyempitan tipe yang
+  benar untuk `fileSize()` (temuan PHPStan).
 
 [1.0.0]: https://github.com/OpenSID/Laravel-Filemanager/releases/tag/v1.0.0

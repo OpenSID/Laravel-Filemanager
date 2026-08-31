@@ -10,14 +10,18 @@
         "filemanager"
     ],
     "require": {
-        "php": "^8.1|^8.2|^8.3|^8.4",
+        "php": "^8.2|^8.3|^8.4",
         "illuminate/contracts": "^10.0|^11.0|^12.0|^13.0",
         "spatie/image": "^3.0",
         "spatie/laravel-package-tools": "^1.16|^1.92"
     },
     "require-dev": {
+        "larastan/larastan": "^3.0",
         "laravel/pint": "^1.18",
-        "orchestra/testbench": "^8.0|^9.0|^10.0|^11.0"
+        "orchestra/testbench": "^8.0|^9.0|^10.0|^11.0",
+        "phpstan/extension-installer": "^1.4",
+        "phpstan/phpstan": "^2.1",
+        "phpstan/phpstan-deprecation-rules": "^2.0"
     },
     "autoload": {
         "psr-4": {
@@ -42,11 +46,20 @@
     "minimum-stability": "dev",
     "prefer-stable": true,
     "config": {
-        "sort-packages": true
+        "sort-packages": true,
+        "allow-plugins": {
+            "phpstan/extension-installer": true
+        }
     },
     "scripts": {
         "lint": "pint",
         "lint:test": "pint --test",
-        "test": "phpunit"
+        "analyse": "phpstan analyse",
+        "test": "phpunit",
+        "check": [
+            "@lint:test",
+            "@analyse",
+            "@test"
+        ]
     }
 }

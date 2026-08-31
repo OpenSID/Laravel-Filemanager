@@ -31,6 +31,8 @@
 /.github          export-ignore
 /.editorconfig    export-ignore
 /pint.json        export-ignore
+/phpstan.neon     export-ignore
+/phpstan-baseline.neon export-ignore
 
 /tests            export-ignore
 /phpunit.xml      export-ignore
