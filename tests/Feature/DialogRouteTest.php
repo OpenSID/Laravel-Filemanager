@@ -2,6 +2,9 @@
 
 namespace OpenSID\LaravelFilemanager\Tests\Feature;
 
+use Illuminate\Auth\Middleware\Authenticate;
+use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Route;
 use OpenSID\LaravelFilemanager\Tests\TestCase;
 use PHPUnit\Framework\Attributes\Test;
 
@@ -13,7 +16,7 @@ class DialogRouteTest extends TestCase
         // A stand-in for the host app's real login route — this isolated
         // package doesn't ship one, but Auth's redirect-to-login needs
         // *something* named "login" to resolve a target URL for.
-        \Illuminate\Support\Facades\Route::get('login', fn () => 'login')->name('login');
+        Route::get('login', fn () => 'login')->name('login');
 
         $this->get(route('filemanager.dialog'))->assertRedirect(route('login'));
     }
@@ -39,10 +42,23 @@ class DialogRouteTest extends TestCase
     }
 
     #[Test]
+    public function a_guest_is_blocked_even_when_the_auth_middleware_is_absent(): void
+    {
+        // Defence-in-depth: if a host trims `auth` out of
+        // config('filemanager.middleware'), EnsureFilemanagerAccess must
+        // still refuse an unauthenticated request rather than fall through
+        // to the always-true default `filemanager.access` gate.
+        $this->withoutMiddleware(Authenticate::class);
+        $this->allowAllFilemanagerAbilities();
+
+        $this->get(route('filemanager.dialog'))->assertStatus(401);
+    }
+
+    #[Test]
     public function an_authenticated_user_without_the_access_ability_is_forbidden(): void
     {
         $this->actingAsUser();
-        \Illuminate\Support\Facades\Gate::define('filemanager.access', fn () => false);
+        Gate::define('filemanager.access', fn () => false);
 
         $this->get(route('filemanager.dialog'))->assertForbidden();
     }
