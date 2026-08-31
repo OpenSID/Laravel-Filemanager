@@ -15,9 +15,7 @@ use OpenSID\LaravelFilemanager\Services\PathGuard;
  */
 class DownloadController extends Controller
 {
-    public function __construct(protected FilesystemManager $files)
-    {
-    }
+    public function __construct(protected FilesystemManager $files) {}
 
     public function stream(Request $request)
     {
@@ -36,7 +34,7 @@ class DownloadController extends Controller
             abort(400, trans('filemanager::filemanager.wrong path'));
         }
 
-        $fullPath = trim($path . '/' . $name, '/');
+        $fullPath = trim($path.'/'.$name, '/');
 
         if (! $this->files->exists($fullPath)) {
             abort(404, trans('filemanager::filemanager.File_Not_Found'));

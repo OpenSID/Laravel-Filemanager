@@ -2,6 +2,7 @@
 
 namespace OpenSID\LaravelFilemanager\Tests\Feature;
 
+use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Support\Facades\Storage;
 use OpenSID\LaravelFilemanager\Tests\TestCase;
 use PHPUnit\Framework\Attributes\Test;
@@ -17,7 +18,7 @@ class DownloadRouteTest extends TestCase
 
         $this->actingAsUser();
         $this->allowAllFilemanagerAbilities();
-        $this->withoutMiddleware(\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class);
+        $this->withoutMiddleware(VerifyCsrfToken::class);
     }
 
     #[Test]

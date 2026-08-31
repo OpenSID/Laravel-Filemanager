@@ -47,6 +47,8 @@ RFM di OpenSID (`OpenSID/premium` #6937, #6976, #6985, #7008, #7011, #7012,
 - Fitur crop gambar interaktif (Cropper.js), preview PDF/gambar via lightbox
   Featherlight, tampilan grid/list, copy/cut/paste, sort & filter realtime.
 - Dukungan PHP 8.1 – 8.4 dan Laravel 10 – 13.
+- `laravel/pint` + `pint.json` (preset `laravel`) dan skrip composer
+  `composer lint` / `composer lint:test` / `composer test`.
 
 ### Diubah
 
@@ -108,6 +110,9 @@ RFM di OpenSID (`OpenSID/premium` #6937, #6976, #6985, #7008, #7011, #7012,
 - `FilenameSanitizer` membatasi panjang nama ≤ 255 byte (ekstensi
   dipertahankan) agar nama sangat panjang ditolak rapi, bukan jadi exception
   penulisan filesystem.
+- `EnsureFilemanagerAccess` kini menolak permintaan tanpa autentikasi (`401`)
+  walau `auth` dilepas dari `config('filemanager.middleware')` — filemanager
+  tidak pernah menjadi permukaan publik.
 
 ### Diperbaiki
 

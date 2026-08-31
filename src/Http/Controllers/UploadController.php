@@ -46,8 +46,7 @@ class UploadController extends Controller
         protected ThumbnailGenerator $thumbnails,
         protected FilemanagerConfig $config,
         protected FileContentValidator $contentValidator,
-    ) {
-    }
+    ) {}
 
     public function index(Request $request)
     {
@@ -62,7 +61,7 @@ class UploadController extends Controller
             $folder = trim(str_replace('\\', '/', (string) $request->input('fldr', '')), '/');
 
             // Strip absolute disk root / media path prefix if mistakenly passed
-            $diskConfig = config('filesystems.disks.' . $this->config->disk(), []);
+            $diskConfig = config('filesystems.disks.'.$this->config->disk(), []);
             $diskRoot = trim(str_replace('\\', '/', (string) ($diskConfig['root'] ?? '')), '/');
             $basePath = trim(str_replace('\\', '/', (string) base_path()), '/');
             $relativeDiskRoot = str_starts_with($diskRoot, $basePath)
@@ -174,7 +173,7 @@ class UploadController extends Controller
         }
 
         $disk = $this->files->disk();
-        $path = $this->uniquePath($disk, trim($folder . '/' . $originalName, '/'));
+        $path = $this->uniquePath($disk, trim($folder.'/'.$originalName, '/'));
 
         $stream = fopen($localPath, 'r');
         $disk->put($path, $stream);
@@ -210,7 +209,7 @@ class UploadController extends Controller
 
     protected function stagingPath(string $folder, string $name): string
     {
-        return storage_path('app/filemanager-chunks/' . sha1($folder . '|' . $name));
+        return storage_path('app/filemanager-chunks/'.sha1($folder.'|'.$name));
     }
 
     protected function uniquePath($disk, string $path): string
@@ -220,8 +219,8 @@ class UploadController extends Controller
         }
 
         $info = pathinfo($path);
-        $dir = $info['dirname'] === '.' ? '' : $info['dirname'] . '/';
-        $extension = isset($info['extension']) ? '.' . $info['extension'] : '';
+        $dir = $info['dirname'] === '.' ? '' : $info['dirname'].'/';
+        $extension = isset($info['extension']) ? '.'.$info['extension'] : '';
         $i = 1;
 
         do {

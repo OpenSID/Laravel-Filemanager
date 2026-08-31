@@ -15,7 +15,7 @@ class FilemanagerConfigTest extends TestCase
     {
         parent::setUp();
 
-        $this->config = new FilemanagerConfig();
+        $this->config = new FilemanagerConfig;
 
         config([
             'filemanager.extensions' => [

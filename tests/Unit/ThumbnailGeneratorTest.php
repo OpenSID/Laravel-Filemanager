@@ -15,7 +15,7 @@ class ThumbnailGeneratorTest extends TestCase
     {
         parent::setUp();
 
-        $this->generator = new ThumbnailGenerator();
+        $this->generator = new ThumbnailGenerator;
 
         config(['filemanager.extensions.image' => ['jpg', 'jpeg', 'png', 'gif', 'svg', 'ico', 'webp']]);
     }

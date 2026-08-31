@@ -16,7 +16,7 @@ class FileContentValidatorTest extends TestCase
     {
         parent::setUp();
 
-        $this->validator = new FileContentValidator();
+        $this->validator = new FileContentValidator;
 
         config(['filemanager.extensions.image' => ['jpg', 'jpeg', 'png', 'gif', 'svg', 'ico', 'webp']]);
     }
@@ -92,7 +92,7 @@ class FileContentValidatorTest extends TestCase
     #[Test]
     public function rejects_html_smuggling_in_raster_images(): void
     {
-        $path = $this->tempFile("<!DOCTYPE html><html><body><script>alert(1)</script></body></html>");
+        $path = $this->tempFile('<!DOCTYPE html><html><body><script>alert(1)</script></body></html>');
 
         $this->assertFalse($this->validator->isValidUpload($path, 'jpg'));
     }
@@ -113,7 +113,7 @@ class FileContentValidatorTest extends TestCase
     public function accepts_a_non_image_with_a_valid_signature(): void
     {
         $pdf = $this->tempFile("%PDF-1.4\n1 0 obj<< >>endobj\ntrailer<< >>\n%%EOF");
-        $zip = $this->tempFile("PK\x03\x04" . str_repeat("\x00", 26));
+        $zip = $this->tempFile("PK\x03\x04".str_repeat("\x00", 26));
 
         $this->assertTrue($this->validator->isValidUpload($pdf, 'pdf'));
         $this->assertTrue($this->validator->isValidUpload($zip, 'zip'));
@@ -140,7 +140,7 @@ class FileContentValidatorTest extends TestCase
         $bytes = ob_get_clean();
         imagedestroy($image);
 
-        $path = $this->tempFile($bytes . "\n<? echo `id`; ?>");
+        $path = $this->tempFile($bytes."\n<? echo `id`; ?>");
 
         $this->assertFalse($this->validator->isValidUpload($path, 'jpg'));
     }

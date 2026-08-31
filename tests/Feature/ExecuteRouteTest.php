@@ -2,6 +2,8 @@
 
 namespace OpenSID\LaravelFilemanager\Tests\Feature;
 
+use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
 use OpenSID\LaravelFilemanager\Tests\TestCase;
 use PHPUnit\Framework\Attributes\Test;
@@ -35,7 +37,7 @@ class ExecuteRouteTest extends TestCase
     #[Test]
     public function create_folder_then_delete_folder_round_trips_on_the_real_disk(): void
     {
-        $this->withoutMiddleware(\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class);
+        $this->withoutMiddleware(VerifyCsrfToken::class);
 
         $this->post(route('filemanager.execute'), [
             'action' => 'create_folder',
@@ -56,7 +58,7 @@ class ExecuteRouteTest extends TestCase
     #[Test]
     public function create_folder_rejects_a_path_traversal_attempt_without_touching_the_disk(): void
     {
-        $this->withoutMiddleware(\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class);
+        $this->withoutMiddleware(VerifyCsrfToken::class);
 
         $this->post(route('filemanager.execute'), [
             'action' => 'create_folder',
@@ -76,7 +78,7 @@ class ExecuteRouteTest extends TestCase
     #[Test]
     public function unknown_action_returns_a_friendly_error_body_not_a_crash(): void
     {
-        $this->withoutMiddleware(\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class);
+        $this->withoutMiddleware(VerifyCsrfToken::class);
 
         $response = $this->post(route('filemanager.execute'), ['action' => 'not_a_real_action']);
 
@@ -87,8 +89,8 @@ class ExecuteRouteTest extends TestCase
     #[Test]
     public function delete_is_denied_without_the_delete_ability(): void
     {
-        $this->withoutMiddleware(\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class);
-        \Illuminate\Support\Facades\Gate::define('filemanager.delete', fn () => false);
+        $this->withoutMiddleware(VerifyCsrfToken::class);
+        Gate::define('filemanager.delete', fn () => false);
 
         Storage::disk('filemanager')->makeDirectory('protected-folder');
 
@@ -103,7 +105,7 @@ class ExecuteRouteTest extends TestCase
     #[Test]
     public function delete_file_rejects_deleting_hidden_files(): void
     {
-        $this->withoutMiddleware(\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class);
+        $this->withoutMiddleware(VerifyCsrfToken::class);
 
         Storage::disk('filemanager')->put('.htaccess', 'deny from all');
 
@@ -118,7 +120,7 @@ class ExecuteRouteTest extends TestCase
     #[Test]
     public function save_text_file_rejects_overwriting_non_editable_or_hidden_files(): void
     {
-        $this->withoutMiddleware(\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class);
+        $this->withoutMiddleware(VerifyCsrfToken::class);
 
         config(['filemanager.text_editing_enabled' => true]);
 
@@ -145,7 +147,7 @@ class ExecuteRouteTest extends TestCase
     #[Test]
     public function rename_file_rejects_renaming_to_disallowed_extension_or_hidden_file(): void
     {
-        $this->withoutMiddleware(\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class);
+        $this->withoutMiddleware(VerifyCsrfToken::class);
 
         Storage::disk('filemanager')->put('readme', 'hello world');
 
@@ -162,7 +164,7 @@ class ExecuteRouteTest extends TestCase
     #[Test]
     public function crop_image_rejects_dangerous_new_extension(): void
     {
-        $this->withoutMiddleware(\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class);
+        $this->withoutMiddleware(VerifyCsrfToken::class);
 
         Storage::disk('filemanager')->put('original.jpg', 'img-data');
 
@@ -170,7 +172,7 @@ class ExecuteRouteTest extends TestCase
             'action' => 'crop_image',
             'path' => 'original.jpg',
             'name_new' => 'payload.php',
-            'image_data' => 'data:image/jpeg;base64,' . base64_encode('fake image bytes'),
+            'image_data' => 'data:image/jpeg;base64,'.base64_encode('fake image bytes'),
         ])->assertOk();
 
         Storage::disk('filemanager')->assertMissing('payload.php');

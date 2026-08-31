@@ -36,8 +36,8 @@ class ThumbnailGenerator
         $source = Storage::disk($sourceDisk);
         $extension = pathinfo($sourcePath, PATHINFO_EXTENSION) ?: 'jpg';
 
-        $tmpIn = tempnam(sys_get_temp_dir(), 'rfmIn') . '.' . $extension;
-        $tmpOut = tempnam(sys_get_temp_dir(), 'rfmOut') . '.' . $extension;
+        $tmpIn = tempnam(sys_get_temp_dir(), 'rfmIn').'.'.$extension;
+        $tmpOut = tempnam(sys_get_temp_dir(), 'rfmOut').'.'.$extension;
 
         try {
             file_put_contents($tmpIn, $source->get($sourcePath));

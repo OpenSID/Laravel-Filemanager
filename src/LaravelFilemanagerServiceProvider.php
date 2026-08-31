@@ -30,7 +30,7 @@ class LaravelFilemanagerServiceProvider extends PackageServiceProvider
      */
     protected function loadFilemanagerTranslations(): void
     {
-        $this->loadTranslationsFrom(__DIR__ . '/../resources/lang', 'filemanager');
+        $this->loadTranslationsFrom(__DIR__.'/../resources/lang', 'filemanager');
     }
 
     /**
@@ -44,22 +44,22 @@ class LaravelFilemanagerServiceProvider extends PackageServiceProvider
 
         // Publish Config: php artisan vendor:publish --tag=filemanager-config
         $this->publishes([
-            __DIR__ . '/../config/filemanager.php' => config_path('filemanager.php'),
+            __DIR__.'/../config/filemanager.php' => config_path('filemanager.php'),
         ], 'filemanager-config');
 
         // Publish Assets: php artisan vendor:publish --tag=filemanager-assets
         $this->publishes([
-            __DIR__ . '/../resources/dist' => base_path(config('filemanager.assets_path', 'assets/vendor/filemanager')),
+            __DIR__.'/../resources/dist' => base_path(config('filemanager.assets_path', 'assets/vendor/filemanager')),
         ], 'filemanager-assets');
 
         // Publish Lang: php artisan vendor:publish --tag=filemanager-lang
         $this->publishes([
-            __DIR__ . '/../resources/lang' => lang_path('vendor/filemanager'),
+            __DIR__.'/../resources/lang' => lang_path('vendor/filemanager'),
         ], 'filemanager-lang');
 
         // Publish Views: php artisan vendor:publish --tag=filemanager-views
         $this->publishes([
-            __DIR__ . '/../resources/views' => resource_path('views/vendor/filemanager'),
+            __DIR__.'/../resources/views' => resource_path('views/vendor/filemanager'),
         ], 'filemanager-views');
     }
 

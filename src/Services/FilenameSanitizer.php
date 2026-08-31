@@ -11,7 +11,7 @@ class FilenameSanitizer
     public function sanitize(string $name, bool $isFolder = false): string
     {
         // Strip null bytes, control characters, and Windows Alternate Data Streams
-        $name = str_replace(["\0", "%00", '::$DATA'], '', $name);
+        $name = str_replace(["\0", '%00', '::$DATA'], '', $name);
         $name = preg_replace('/[\x00-\x1F\x7F]/u', '', $name) ?? $name;
 
         // Surrounding whitespace goes first, before space->replace_with
@@ -40,7 +40,7 @@ class FilenameSanitizer
         // unsupported-script filename becoming ".jpg") gets a "file" prefix
         // instead of silently producing a hidden dotfile.
         if (! $isFolder && str_starts_with($name, '.')) {
-            $name = 'file' . $name;
+            $name = 'file'.$name;
         }
 
         // Strip TRAILING dots/whitespace only (Windows silently drops them,
@@ -66,12 +66,12 @@ class FilenameSanitizer
         }
 
         $extension = pathinfo($name, PATHINFO_EXTENSION);
-        $suffix = $extension !== '' ? '.' . $extension : '';
+        $suffix = $extension !== '' ? '.'.$extension : '';
         $stem = substr($name, 0, strlen($name) - strlen($suffix));
 
         $stem = substr($stem, 0, max(1, $max - strlen($suffix)));
 
-        return rtrim($stem, " .\t\n\r\0\x0B") . $suffix;
+        return rtrim($stem, " .\t\n\r\0\x0B").$suffix;
     }
 
     protected function stripDangerousMarkup(string $str): string

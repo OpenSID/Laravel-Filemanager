@@ -24,7 +24,7 @@ class FilesystemManager
 
     public function __construct(?FilemanagerConfig $config = null)
     {
-        $this->config = $config ?? new FilemanagerConfig();
+        $this->config = $config ?? new FilemanagerConfig;
     }
 
     public function disk(): Filesystem
@@ -259,13 +259,13 @@ Options -ExecCGI -Indexes
 </IfModule>
 HTACCESS;
 
-        $indexContent = '<!DOCTYPE html><html><head><title>403 Forbidden</title></head><body><h1>Directory Access is Forbidden</h1></body></html>' . PHP_EOL;
+        $indexContent = '<!DOCTYPE html><html><head><title>403 Forbidden</title></head><body><h1>Directory Access is Forbidden</h1></body></html>'.PHP_EOL;
 
         try {
             $disk = $isThumbDisk ? $this->thumbsDisk() : $this->disk();
             $base = trim($path, '/');
-            $htaccessPath = $base === '' ? '.htaccess' : $base . '/.htaccess';
-            $indexPath = $base === '' ? 'index.html' : $base . '/index.html';
+            $htaccessPath = $base === '' ? '.htaccess' : $base.'/.htaccess';
+            $indexPath = $base === '' ? 'index.html' : $base.'/index.html';
 
             $disk->put($htaccessPath, $htaccessContent);
             $disk->put($indexPath, $indexContent);
@@ -405,6 +405,6 @@ HTACCESS;
             $unit++;
         }
 
-        return number_format($bytes, 0) . ' ' . $units[$unit];
+        return number_format($bytes, 0).' '.$units[$unit];
     }
 }

@@ -33,8 +33,7 @@ class AjaxController extends Controller
     public function __construct(
         protected FilesystemManager $files,
         protected ClipboardManager $clipboard,
-    ) {
-    }
+    ) {}
 
     public function handle(Request $request): Response
     {
@@ -149,7 +148,7 @@ class AjaxController extends Controller
 
         $content = e($this->files->get($path));
 
-        return $this->ok('<textarea id="textfile_edit_area" style="width:100%;height:300px;">' . $content . '</textarea>');
+        return $this->ok('<textarea id="textfile_edit_area" style="width:100%;height:300px;">'.$content.'</textarea>');
     }
 
     protected function ok(string $body = ''): Response

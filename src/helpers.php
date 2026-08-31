@@ -41,7 +41,7 @@ if (! function_exists('filemanager_asset')) {
     {
         $base = trim((string) config('filemanager.assets_url_path', 'assets/vendor/filemanager'), '/');
 
-        $url = url($base . '/' . ltrim($path, '/'));
+        $url = url($base.'/'.ltrim($path, '/'));
 
         return str_replace('/index.php', '', $url);
     }

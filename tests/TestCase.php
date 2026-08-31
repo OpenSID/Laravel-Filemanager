@@ -4,8 +4,8 @@ namespace OpenSID\LaravelFilemanager\Tests;
 
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Support\Facades\Gate;
-use Orchestra\Testbench\TestCase as Orchestra;
 use OpenSID\LaravelFilemanager\LaravelFilemanagerServiceProvider;
+use Orchestra\Testbench\TestCase as Orchestra;
 
 class TestCase extends Orchestra
 {
@@ -18,7 +18,7 @@ class TestCase extends Orchestra
 
     public function getEnvironmentSetUp($app): void
     {
-        $app['config']->set('app.key', 'base64:' . base64_encode(random_bytes(32)));
+        $app['config']->set('app.key', 'base64:'.base64_encode(random_bytes(32)));
 
         $app['config']->set('filesystems.disks.filemanager', [
             'driver' => 'local',

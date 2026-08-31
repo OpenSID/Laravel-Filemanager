@@ -3,6 +3,7 @@
 namespace OpenSID\LaravelFilemanager\Tests\Feature;
 
 use Illuminate\Support\Facades\Storage;
+use OpenSID\LaravelFilemanager\Services\FilesystemManager;
 use OpenSID\LaravelFilemanager\Tests\TestCase;
 use PHPUnit\Framework\Attributes\Test;
 
@@ -40,7 +41,7 @@ class HardenUploadsCommandTest extends TestCase
     #[Test]
     public function creating_a_folder_through_the_package_protects_it_immediately(): void
     {
-        app(\OpenSID\LaravelFilemanager\Services\FilesystemManager::class)->makeDirectory('baru');
+        app(FilesystemManager::class)->makeDirectory('baru');
 
         Storage::disk('filemanager')->assertExists('baru/.htaccess');
         Storage::disk('filemanager')->assertExists('baru/index.html');

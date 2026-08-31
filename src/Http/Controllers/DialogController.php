@@ -22,8 +22,7 @@ class DialogController extends Controller
         protected FilesystemManager $files,
         protected ClipboardManager $clipboard,
         protected FilemanagerConfig $config,
-    ) {
-    }
+    ) {}
 
     public function show(Request $request)
     {
@@ -204,7 +203,7 @@ class DialogController extends Controller
             return [];
         }
 
-        $relativeSubdir = $baseFolder !== '' && str_starts_with($subdir, $baseFolder . '/')
+        $relativeSubdir = $baseFolder !== '' && str_starts_with($subdir, $baseFolder.'/')
             ? substr($subdir, strlen($baseFolder) + 1)
             : $subdir;
 
@@ -217,7 +216,7 @@ class DialogController extends Controller
                 continue;
             }
 
-            $accumulated = trim($accumulated . '/' . $segment, '/');
+            $accumulated = trim($accumulated.'/'.$segment, '/');
             $crumbs[] = ['name' => $segment, 'path' => $accumulated];
         }
 

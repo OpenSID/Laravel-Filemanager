@@ -22,11 +22,11 @@ class FilemanagerConfig
         }
 
         try {
-            $diskConfig = config('filesystems.disks.' . $this->disk(), []);
+            $diskConfig = config('filesystems.disks.'.$this->disk(), []);
             $diskRoot = trim(str_replace('\\', '/', (string) ($diskConfig['root'] ?? '')), '/');
 
             // If the disk root already points to or ends with base_folder, relative baseFolder is disk root ('')
-            if ($diskRoot !== '' && ($diskRoot === $baseFolder || str_ends_with($diskRoot, '/' . $baseFolder))) {
+            if ($diskRoot !== '' && ($diskRoot === $baseFolder || str_ends_with($diskRoot, '/'.$baseFolder))) {
                 return '';
             }
 
@@ -63,7 +63,7 @@ class FilemanagerConfig
     {
         $exts = $this->allowedExtensionsForType($type);
 
-        return implode(',', array_map(fn ($ext) => '.' . ltrim($ext, '.'), $exts));
+        return implode(',', array_map(fn ($ext) => '.'.ltrim($ext, '.'), $exts));
     }
 
     public function isExtensionBlacklisted(string $extension): bool

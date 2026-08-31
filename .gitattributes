@@ -30,6 +30,7 @@
 /.phpunit.cache   export-ignore
 /.github          export-ignore
 /.editorconfig    export-ignore
+/pint.json        export-ignore
 
 /tests            export-ignore
 /phpunit.xml      export-ignore

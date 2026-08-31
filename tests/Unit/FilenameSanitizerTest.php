@@ -14,7 +14,7 @@ class FilenameSanitizerTest extends TestCase
     {
         parent::setUp();
 
-        $this->sanitizer = new FilenameSanitizer();
+        $this->sanitizer = new FilenameSanitizer;
 
         config([
             'filemanager.convert_spaces' => true,
@@ -27,7 +27,7 @@ class FilenameSanitizerTest extends TestCase
     #[Test]
     public function clamps_an_over_long_name_to_255_bytes_keeping_the_extension(): void
     {
-        $long = str_repeat('a', 400) . '.jpg';
+        $long = str_repeat('a', 400).'.jpg';
 
         $result = $this->sanitizer->sanitize($long);
 
@@ -92,7 +92,7 @@ class FilenameSanitizerTest extends TestCase
     public function strips_null_bytes_and_ads(): void
     {
         $this->assertSame('photo.jpg', $this->sanitizer->sanitize("photo\0.jpg"));
-        $this->assertSame('photo.jpg', $this->sanitizer->sanitize("photo%00.jpg"));
+        $this->assertSame('photo.jpg', $this->sanitizer->sanitize('photo%00.jpg'));
         $this->assertSame('photo.jpg', $this->sanitizer->sanitize('photo.jpg::$DATA'));
     }
 

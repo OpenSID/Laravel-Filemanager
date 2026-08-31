@@ -37,8 +37,7 @@ class ExecuteController extends Controller
         protected FilenameSanitizer $names,
         protected ClipboardManager $clipboard,
         protected FilemanagerConfig $config,
-    ) {
-    }
+    ) {}
 
     public function handle(Request $request): Response
     {
@@ -287,7 +286,7 @@ class ExecuteController extends Controller
         $destinationTrimmed = trim($destinationDir, '/');
 
         if ($sourceDir === $destinationTrimmed
-            || str_starts_with($destinationTrimmed . '/', trim($sourcePath, '/') . '/')
+            || str_starts_with($destinationTrimmed.'/', trim($sourcePath, '/').'/')
         ) {
             return $this->ok();
         }
@@ -393,7 +392,7 @@ class ExecuteController extends Controller
             $sanitizedName = $this->names->sanitize($nameNew);
             $newExt = strtolower(pathinfo($sanitizedName, PATHINFO_EXTENSION));
             if ($newExt === '') {
-                $sanitizedName .= '.' . $extension;
+                $sanitizedName .= '.'.$extension;
                 $newExt = $extension;
             }
 
@@ -419,6 +418,7 @@ class ExecuteController extends Controller
         $targetExt = pathinfo($targetPath, PATHINFO_EXTENSION) ?: $extension;
         if (! $validator->isValidUpload($tmp, $targetExt)) {
             @unlink($tmp);
+
             return $this->ok('File is dangerous');
         }
 

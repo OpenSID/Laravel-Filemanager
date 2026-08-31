@@ -2,6 +2,7 @@
 
 namespace OpenSID\LaravelFilemanager\Tests\Feature;
 
+use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use OpenSID\LaravelFilemanager\Tests\TestCase;
@@ -18,7 +19,7 @@ class UploadRouteTest extends TestCase
 
         $this->actingAsUser();
         $this->allowAllFilemanagerAbilities();
-        $this->withoutMiddleware(\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class);
+        $this->withoutMiddleware(VerifyCsrfToken::class);
 
         config([
             'filemanager.extensions.image' => ['jpg', 'jpeg', 'png'],
@@ -134,7 +135,7 @@ class UploadRouteTest extends TestCase
     #[Test]
     public function reassembles_a_chunked_upload_across_two_requests(): void
     {
-        $bytes = "PK\x03\x04" . str_repeat('A', 3 * 1024 * 1024 - 4); // 3MB, valid zip signature
+        $bytes = "PK\x03\x04".str_repeat('A', 3 * 1024 * 1024 - 4); // 3MB, valid zip signature
         $chunk1 = substr($bytes, 0, 2 * 1024 * 1024);
         $chunk2 = substr($bytes, 2 * 1024 * 1024);
 
@@ -172,7 +173,7 @@ class UploadRouteTest extends TestCase
         config(['filemanager.extensions' => array_merge(config('filemanager.extensions'), ['archive' => ['zip']])]);
 
         // Declares total = 1 MB, then tries to stream a 2 MB chunk into staging.
-        $oversized = "PK\x03\x04" . str_repeat('A', 2 * 1024 * 1024);
+        $oversized = "PK\x03\x04".str_repeat('A', 2 * 1024 * 1024);
         $tmp = tempnam(sys_get_temp_dir(), 'up');
         file_put_contents($tmp, $oversized);
         $file = new UploadedFile($tmp, 'bomb.zip', 'application/zip', null, true);

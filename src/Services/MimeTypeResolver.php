@@ -18,8 +18,8 @@ class MimeTypeResolver
 
     public function __construct()
     {
-        $this->contentDetector = new FinfoMimeTypeDetector();
-        $this->extensionDetector = new ExtensionMimeTypeDetector();
+        $this->contentDetector = new FinfoMimeTypeDetector;
+        $this->extensionDetector = new ExtensionMimeTypeDetector;
     }
 
     public function detectFromPath(string $absolutePath): ?string

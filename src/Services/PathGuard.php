@@ -53,7 +53,7 @@ class PathGuard
             return true;
         }
 
-        return str_starts_with($path, $baseFolder . '/');
+        return str_starts_with($path, $baseFolder.'/');
     }
 
     public static function assertInsideBaseFolder(?string $path, ?string $baseFolder): void

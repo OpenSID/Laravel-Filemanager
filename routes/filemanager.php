@@ -1,5 +1,6 @@
 <?php
 
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use OpenSID\LaravelFilemanager\Http\Controllers\AjaxController;
 use OpenSID\LaravelFilemanager\Http\Controllers\DialogController;
@@ -36,7 +37,7 @@ Route::prefix(config('filemanager.route_prefix', 'filemanager'))
         Route::post('execute', [ExecuteController::class, 'handle'])
             ->name('filemanager.execute');
 
-        Route::match(['get', 'post'], 'upload', function (\Illuminate\Http\Request $request, UploadController $controller) {
+        Route::match(['get', 'post'], 'upload', function (Request $request, UploadController $controller) {
             return $request->isMethod('GET')
                 ? $controller->index($request)
                 : $controller->store($request);
