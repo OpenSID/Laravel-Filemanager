@@ -380,8 +380,8 @@ class ExecuteController extends Controller
 
         if (preg_match('/^data:image\/(\w+);base64,/', $dataUrl)) {
             $data = substr($dataUrl, strpos($dataUrl, ',') + 1);
-            $decoded = base64_decode($data);
-            if ($decoded === false) {
+            $decoded = base64_decode(preg_replace('/\s+/', '', $data), true);
+            if ($decoded === false || $decoded === '') {
                 return $this->ok(trans('filemanager::filemanager.Upload_error'));
             }
         } else {

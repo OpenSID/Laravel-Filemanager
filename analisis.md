@@ -180,8 +180,11 @@ Logika non-sepele: `baseFolder()` menyelaraskan `base_folder` config dengan
   butuh konfigurasi server (README §Keamanan Web Server).
 
 ### `Services\ThumbnailGenerator`
-- `spatie/image` (driver GD default). SVG/ICO **tidak** dibuatkan thumbnail
-  (GD tak bisa rasterisasi) — `isImage()` mengembalikan `false`.
+- `spatie/image`, driver **di-pin** lewat `config('filemanager.image_driver')`
+  (default `gd`). Sengaja tidak membiarkan `spatie/image` auto-pilih Imagick
+  — berkas unggahan tak boleh masuk ke coder/delegate ImageMagick.
+- SVG/ICO **tidak** dibuatkan thumbnail (GD tak bisa rasterisasi) —
+  `isImage()` mengembalikan `false`.
 - Kegagalan thumbnail **tidak pernah** menggagalkan operasi induk
   (upload/rename sudah sukses saat thumbnail dibuat).
 
@@ -382,6 +385,8 @@ menyeluruh RFM (dan siap patch ulang URL).
 | Sanitasi SVG berbasis regex (bila di-*enable* lagi) | Bisa dilewati | Integrasikan `enshrined/svg-sanitize` + header CSP/attachment |
 | `.htaccess` tidak berlaku di Nginx/OLS native | Butuh langkah manual admin | Generator config server, atau sajikan berkas non-gambar lewat controller |
 | Validasi byte hanya di `finalize()` upload & crop | `create_file`/`save_text_file` hanya cek ekstensi teks | Cukup untuk saat ini (teks + `text_editing_enabled` default mati) |
+| Gambar disimpan apa adanya (tidak di-*re-encode*) | Payload polyglot/EXIF hanya dijaring regex, bukan dihancurkan | Opsi config untuk re-encode raster lewat GD saat unggah |
+| Chunk staging tidak dibersihkan otomatis kalau chunk terakhir tak pernah dikirim | Berkas ≤ `max_upload_size` per (folder,nama) menumpuk di `storage/app/filemanager-chunks/` | Command/schedule pembersih berkas staging tua |
 | `directoryStats()` / `humanFileSize()` iterasi `allFiles` | Lambat di direktori sangat besar pada disk remote | Cache, atau batasi kedalaman |
 | Field `version` di `composer.json` | Composer menyarankan pakai tag git saja | Hapus saat mulai rilis via tag Packagist |
 | `hidden_files` menyertakan `index.htm`/`index.html` | Berkas HTML sah bernama itu ikut tersembunyi | Terima (trade-off kecil) |

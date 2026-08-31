@@ -42,7 +42,15 @@ class ThumbnailGenerator
         try {
             file_put_contents($tmpIn, $source->get($sourcePath));
 
-            Image::load($tmpIn)
+            // Pin the driver (default: GD). spatie/image otherwise auto-
+            // selects Imagick whenever ext-imagick is present, and running
+            // freshly-uploaded, only-loosely-validated files through
+            // ImageMagick's coder/delegate stack is exactly the surface
+            // behind ImageTragick & the Ghostscript delegate RCEs. A host
+            // that has hardened its ImageMagick policy.xml can opt back in
+            // via config('filemanager.image_driver').
+            Image::useImageDriver((string) config('filemanager.image_driver', 'gd'))
+                ->loadFile($tmpIn)
                 ->fit(Fit::Crop, $width, $height)
                 ->save($tmpOut);
 

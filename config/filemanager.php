@@ -125,6 +125,11 @@ return [
     'thumbnail_width' => 122,
     'thumbnail_height' => 91,
 
+    // Image driver spatie/image uses for thumbnails/crop: 'gd' (default,
+    // safest for untrusted uploads), 'imagick', or 'vips'. Only switch away
+    // from GD if your ImageMagick policy.xml is hardened.
+    'image_driver' => env('FILEMANAGER_IMAGE_DRIVER', 'gd'),
+
     /*
     |--------------------------------------------------------------------------
     | Filename handling

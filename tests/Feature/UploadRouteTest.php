@@ -163,4 +163,46 @@ class UploadRouteTest extends TestCase
         Storage::disk('filemanager')->assertExists('bigfile.zip');
         $this->assertSame($bytes, Storage::disk('filemanager')->get('bigfile.zip'));
     }
+
+    #[Test]
+    public function chunked_upload_rejects_chunks_whose_total_bytes_exceed_the_declared_size(): void
+    {
+        config(['filemanager.max_upload_size' => 8]);
+        config(['filemanager.extensions.archive' => ['zip']]);
+        config(['filemanager.extensions' => array_merge(config('filemanager.extensions'), ['archive' => ['zip']])]);
+
+        // Declares total = 1 MB, then tries to stream a 2 MB chunk into staging.
+        $oversized = "PK\x03\x04" . str_repeat('A', 2 * 1024 * 1024);
+        $tmp = tempnam(sys_get_temp_dir(), 'up');
+        file_put_contents($tmp, $oversized);
+        $file = new UploadedFile($tmp, 'bomb.zip', 'application/zip', null, true);
+
+        $response = $this->call('POST', route('filemanager.upload'), ['fldr' => ''], [], ['files' => [$file]], [
+            'HTTP_Content-Range' => 'bytes 0-2097156/1048576',
+        ]);
+
+        $response->assertOk();
+        $this->assertArrayHasKey('error', $response->json()['files'][0]);
+        Storage::disk('filemanager')->assertMissing('bomb.zip');
+    }
+
+    #[Test]
+    public function chunked_upload_rejects_a_non_contiguous_chunk(): void
+    {
+        config(['filemanager.extensions.archive' => ['zip']]);
+        config(['filemanager.extensions' => array_merge(config('filemanager.extensions'), ['archive' => ['zip']])]);
+
+        // Second chunk (offset 2 MB) with no first chunk ever sent.
+        $tmp = tempnam(sys_get_temp_dir(), 'up');
+        file_put_contents($tmp, str_repeat('B', 1024));
+        $file = new UploadedFile($tmp, 'gappy.zip', 'application/zip', null, true);
+
+        $response = $this->call('POST', route('filemanager.upload'), ['fldr' => ''], [], ['files' => [$file]], [
+            'HTTP_Content-Range' => 'bytes 2097152-2098175/3145728',
+        ]);
+
+        $response->assertOk();
+        $this->assertArrayHasKey('error', $response->json()['files'][0]);
+        Storage::disk('filemanager')->assertMissing('gappy.zip');
+    }
 }

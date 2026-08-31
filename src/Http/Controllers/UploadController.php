@@ -124,9 +124,31 @@ class UploadController extends Controller
         $stagingPath = $this->stagingPath($folder, $originalName);
         File::ensureDirectoryExists(dirname($stagingPath));
 
+        // Chunks must arrive in order and be contiguous: the new chunk has
+        // to start exactly where the staging file currently ends. This
+        // stops a client from (a) piling far more bytes into staging than
+        // `total` claims — an 8 MB "total" streamed as 50×8 MB chunks would
+        // otherwise fill the disk — and (b) rewinding/overlapping an
+        // already-validated region.
+        clearstatcache(true, $stagingPath);
+        $currentSize = ($start > 0 && is_file($stagingPath)) ? (int) filesize($stagingPath) : 0;
+
+        if ($start !== $currentSize) {
+            @unlink($stagingPath);
+
+            return ['name' => $originalName, 'error' => trans('filemanager::filemanager.wrong path')];
+        }
+
         $chunk = fopen($stagingPath, $start === 0 ? 'wb' : 'ab');
         fwrite($chunk, file_get_contents($file->getRealPath()));
         fclose($chunk);
+
+        clearstatcache(true, $stagingPath);
+        if (filesize($stagingPath) > min($total, $this->config->maxUploadSizeBytes())) {
+            @unlink($stagingPath);
+
+            return ['name' => $originalName, 'error' => trans('filemanager::filemanager.max_size_reached')];
+        }
 
         if ($end + 1 < $total) {
             return ['name' => $originalName, 'size' => $end + 1];

@@ -63,7 +63,9 @@ class FileContentValidator
         if (in_array($extension, config('filemanager.extensions.image', []), true)) {
             return match ($extension) {
                 'svg' => $this->isSafeSvg($localPath),
-                'ico', 'bmp' => $this->isSafeRasterImage($localPath, false),
+                // getimagesize() has no reliable .ico decoder across PHP
+                // builds; every other raster type must parse as an image.
+                'ico' => $this->isSafeRasterImage($localPath, false),
                 default => $this->isSafeRasterImage($localPath, true),
             };
         }

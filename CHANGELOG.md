@@ -76,6 +76,26 @@ RFM di OpenSID (`OpenSID/premium` #6937, #6976, #6985, #7008, #7011, #7012,
 - `chmod` lewat filemanager.
 - Upload via URL (tidak diimplementasikan) — menutup vektor SSRF (#5724).
 
+- `image_driver` — driver `spatie/image` yang dipakai untuk thumbnail &
+  crop (`gd` default / `imagick` / `vips`).
+
+### Keamanan
+
+- **Upload chunked**: potongan (*chunk*) kini wajib berurutan & kontigu
+  (offset chunk = ukuran berkas staging saat ini), dan total byte staging
+  dibatasi `min(total, max_upload_size)`. Sebelumnya klien bisa
+  membanjiri `storage/app/filemanager-chunks/` jauh melebihi ukuran yang
+  dideklarasikan → disk penuh / DoS.
+- **Thumbnail & crop di-*pin* ke driver GD** (`config('filemanager.
+  image_driver')`). `spatie/image` sebelumnya otomatis memilih Imagick
+  bila `ext-imagick` ada — menjalankan berkas unggahan yang baru lolos
+  validasi longgar lewat *coder/delegate* ImageMagick adalah permukaan di
+  balik ImageTragick & RCE delegate Ghostscript.
+- `crop_image`: `base64_decode()` kini mode *strict* (tolak karakter non-
+  base64) dan menolak hasil kosong.
+- Validasi konten `.bmp` kini lewat `getimagesize()` (sebelumnya hanya
+  pemindaian polyglot).
+
 ### Diperbaiki
 
 - Parse error `return [` yang hilang di `tests/Unit/PathGuardTest.php` yang
