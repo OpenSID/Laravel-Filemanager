@@ -66,12 +66,16 @@ class FilemanagerConfig
         return implode(',', array_map(fn ($ext) => '.' . ltrim($ext, '.'), $exts));
     }
 
+    public function isExtensionBlacklisted(string $extension): bool
+    {
+        return in_array(mb_strtolower(ltrim($extension, '.')), config('filemanager.blacklisted_extensions', []), true);
+    }
+
     public function isExtensionAllowed(string $extension): bool
     {
         $extension = mb_strtolower(ltrim($extension, '.'));
 
-        $blacklist = config('filemanager.blacklisted_extensions', []);
-        if (in_array($extension, $blacklist, true)) {
+        if ($this->isExtensionBlacklisted($extension)) {
             return false;
         }
 

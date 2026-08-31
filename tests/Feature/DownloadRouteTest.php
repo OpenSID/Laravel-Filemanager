@@ -49,4 +49,17 @@ class DownloadRouteTest extends TestCase
             'name' => 'config.php',
         ])->assertForbidden();
     }
+
+    #[Test]
+    public function download_route_blocks_a_blacklisted_extension_not_in_hidden_extensions(): void
+    {
+        // .phar isn't in hidden_extensions but is blacklisted — a legacy
+        // file like this must not be downloadable.
+        Storage::disk('filemanager')->put('legacy.phar', 'PK payload');
+
+        $this->post(route('filemanager.download'), [
+            'path' => '',
+            'name' => 'legacy.phar',
+        ])->assertForbidden();
+    }
 }

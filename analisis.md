@@ -386,6 +386,7 @@ menyeluruh RFM (dan siap patch ulang URL).
 | `.htaccess` tidak berlaku di Nginx/OLS native | Butuh langkah manual admin | Generator config server, atau sajikan berkas non-gambar lewat controller |
 | Validasi byte hanya di `finalize()` upload & crop | `create_file`/`save_text_file` hanya cek ekstensi teks | Cukup untuk saat ini (teks + `text_editing_enabled` default mati) |
 | Gambar disimpan apa adanya (tidak di-*re-encode*) | Payload polyglot/EXIF hanya dijaring regex, bukan dihancurkan | Opsi config untuk re-encode raster lewat GD saat unggah |
+| `permissions.access` default `null` (semua admin terautentikasi boleh browse+unduh seluruh disk) | Media bersama antar-modul; bukan bug, tapi integrator harus sadar | Set ke `'b'` bila butuh isolasi per-modul |
 | Chunk staging tidak dibersihkan otomatis kalau chunk terakhir tak pernah dikirim | Berkas ≤ `max_upload_size` per (folder,nama) menumpuk di `storage/app/filemanager-chunks/` | Command/schedule pembersih berkas staging tua |
 | `directoryStats()` / `humanFileSize()` iterasi `allFiles` | Lambat di direktori sangat besar pada disk remote | Cache, atau batasi kedalaman |
 | Field `version` di `composer.json` | Composer menyarankan pakai tag git saja | Hapus saat mulai rilis via tag Packagist |

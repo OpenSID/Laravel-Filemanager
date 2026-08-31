@@ -48,7 +48,30 @@ class FilenameSanitizer
         // leading dot is deliberately kept here — for files it was already
         // neutralised by the "file" prefix above; for folders ".git"-style
         // names stay intact.
-        return rtrim($name, " .\t\n\r\0\x0B");
+        $name = rtrim($name, " .\t\n\r\0\x0B");
+
+        return $this->clampLength($name);
+    }
+
+    /**
+     * Keep the whole name within the common 255-byte filesystem limit
+     * (ext4/APFS/NTFS component cap) so an over-long name surfaces as a
+     * clean rejection upstream, not a filesystem write exception. The
+     * extension is preserved.
+     */
+    protected function clampLength(string $name, int $max = 255): string
+    {
+        if (strlen($name) <= $max) {
+            return $name;
+        }
+
+        $extension = pathinfo($name, PATHINFO_EXTENSION);
+        $suffix = $extension !== '' ? '.' . $extension : '';
+        $stem = substr($name, 0, strlen($name) - strlen($suffix));
+
+        $stem = substr($stem, 0, max(1, $max - strlen($suffix)));
+
+        return rtrim($stem, " .\t\n\r\0\x0B") . $suffix;
     }
 
     protected function stripDangerousMarkup(string $str): string

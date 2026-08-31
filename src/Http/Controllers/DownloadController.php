@@ -46,6 +46,7 @@ class DownloadController extends Controller
 
         if ($this->files->config()->isHiddenFile($name)
             || ($extension !== '' && $this->files->config()->isHiddenExtension($extension))
+            || ($extension !== '' && $this->files->config()->isExtensionBlacklisted($extension))
             || ! $this->files->config()->isFilenameSafe($name)
         ) {
             abort(403, trans('filemanager::filemanager.File_Permission_Not_Allowed'));

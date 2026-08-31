@@ -25,6 +25,17 @@ class FilenameSanitizerTest extends TestCase
     }
 
     #[Test]
+    public function clamps_an_over_long_name_to_255_bytes_keeping_the_extension(): void
+    {
+        $long = str_repeat('a', 400) . '.jpg';
+
+        $result = $this->sanitizer->sanitize($long);
+
+        $this->assertLessThanOrEqual(255, strlen($result));
+        $this->assertStringEndsWith('.jpg', $result);
+    }
+
+    #[Test]
     public function converts_spaces_to_the_configured_replacement(): void
     {
         $this->assertSame('my_photo.jpg', $this->sanitizer->sanitize('my photo.jpg'));

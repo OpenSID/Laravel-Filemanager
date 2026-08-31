@@ -56,9 +56,7 @@ RFM di OpenSID (`OpenSID/premium` #6937, #6976, #6985, #7008, #7011, #7012,
   - document: `doc, docx, pdf, xls, xlsx`
   - video: `mp4, m4v, mov, webm, avi`
   - audio: `mp3, m4a, ogg, wav`
-  - archive: `zip, rar, gz, tar`
-- `blacklisted_extensions` diperluas: `phtm, phps, pht, php7, php8, svg, cmd,
-  cgi, pl, py, htpasswd`.
+  - archive: **kosong** (dulu `zip, rar, gz, tar`) — aktifkan manual bila perlu.
 - `FilenameSanitizer` kini hanya memangkas titik/spasi di **akhir** nama
   (`shell.php.` → `shell.php`), titik di depan dipertahankan untuk nama folder.
 
@@ -95,6 +93,21 @@ RFM di OpenSID (`OpenSID/premium` #6937, #6976, #6985, #7008, #7011, #7012,
   base64) dan menolak hasil kosong.
 - Validasi konten `.bmp` kini lewat `getimagesize()` (sebelumnya hanya
   pemindaian polyglot).
+- **Unduhan** kini juga menolak ekstensi di `blacklisted_extensions`, bukan
+  hanya `hidden_extensions` — berkas warisan seperti `legacy.phar` tidak
+  bisa diunduh.
+- `editable_text_extensions` default dipangkas ke `txt, log, md, csv`.
+  `html`/`htm`/`js`/`xml` dihilangkan: membuat berkas seperti itu di folder
+  yang dilayani web (saat `text_editing_enabled`) = *stored XSS*.
+- `archive` (`zip`/`rar`/`gz`/`tar`) **tidak lagi** ada di whitelist
+  `extensions` default — tak berguna di pemilih media, hanya menambah
+  permukaan serang (tetap bisa diaktifkan manual).
+- `blacklisted_extensions` & `hidden_extensions` diperluas (`phtm`, `phps`,
+  `pht`, `phpt`, `inc`, `module`, `hphp`, `svgz`, `xhtml`, `shtml`, `com`,
+  `scr`, `bash`, `jsp`, `asp(x)`, `ini`, dll).
+- `FilenameSanitizer` membatasi panjang nama ≤ 255 byte (ekstensi
+  dipertahankan) agar nama sangat panjang ditolak rapi, bukan jadi exception
+  penulisan filesystem.
 
 ### Diperbaiki
 

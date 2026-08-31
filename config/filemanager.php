@@ -105,12 +105,21 @@ return [
         'document' => ['doc', 'docx', 'pdf', 'xls', 'xlsx'],
         'video' => ['mp4', 'm4v', 'mov', 'webm', 'avi'],
         'audio' => ['mp3', 'm4a', 'ogg', 'wav'],
-        'archive' => ['zip', 'rar', 'gz', 'tar'],
+
+        // Arsip (zip/rar/gz/tar) sengaja TIDAK diaktifkan secara default —
+        // tidak ada gunanya di pemilih media CMS dan hanya menambah
+        // permukaan serang. Tanda tangannya tetap dikenali
+        // FileContentValidator, jadi cukup tambahkan baris di bawah bila
+        // benar-benar perlu:
+        // 'archive' => ['zip', 'rar', 'gz', 'tar'],
     ],
 
-    'blacklisted_extensions' => ['php', 'phtml', 'phtm', 'phps', 'pht', 'php3', 'php4', 'php5', 'php7', 'php8', 'phar', 'svg', 'exe', 'sh', 'bat', 'cmd', 'cgi', 'pl', 'py', 'htaccess', 'htpasswd'],
+    'blacklisted_extensions' => ['php', 'phtml', 'phtm', 'phps', 'pht', 'phpt', 'php3', 'php4', 'php5', 'php7', 'php8', 'phar', 'pgif', 'inc', 'hphp', 'ctp', 'module', 'svg', 'svgz', 'xhtml', 'shtml', 'exe', 'com', 'scr', 'sh', 'bash', 'bat', 'cmd', 'cgi', 'pl', 'py', 'pyc', 'jsp', 'asp', 'aspx', 'htaccess', 'htpasswd', 'ini'],
 
-    'editable_text_extensions' => ['txt', 'log', 'xml', 'html', 'css', 'htm', 'js'],
+    // Hanya format teks yang benar-benar inert bila tersaji ke publik.
+    // html/htm/js/xml sengaja DIHILANGKAN — membuat berkas seperti itu di
+    // folder yang dilayani web = stored XSS.
+    'editable_text_extensions' => ['txt', 'log', 'md', 'csv'],
 
     // Off by default, matching this app's existing rfm/config/config.php
     // (preview_text_files/edit_text_files/create_text_files were hardcoded
@@ -191,5 +200,5 @@ return [
 
     'hidden_folders' => ['.git', '.svn', '__MACOSX'],
 
-    'hidden_extensions' => ['php', 'phtml', 'sh', 'bat', 'htaccess'],
+    'hidden_extensions' => ['php', 'phtml', 'phtm', 'phps', 'pht', 'phpt', 'php3', 'php4', 'php5', 'php7', 'php8', 'phar', 'inc', 'module', 'sh', 'bash', 'bat', 'cmd', 'cgi', 'pl', 'py', 'exe', 'htaccess', 'htpasswd'],
 ];
