@@ -14,6 +14,11 @@ class FilenameSanitizer
         $name = str_replace(["\0", "%00", '::$DATA'], '', $name);
         $name = preg_replace('/[\x00-\x1F\x7F]/u', '', $name) ?? $name;
 
+        // Surrounding whitespace goes first, before space->replace_with
+        // conversion can turn a trailing space into a "_" that trim can't
+        // reach later.
+        $name = trim($name);
+
         $name = $this->stripDangerousMarkup($name);
 
         if (config('filemanager.convert_spaces')) {
@@ -38,8 +43,12 @@ class FilenameSanitizer
             $name = 'file' . $name;
         }
 
-        // Trim whitespace, tabs, and trailing dots (Windows filesystem automatically strips trailing dots and spaces)
-        return trim($name, " .\t\n\r\0\x0B");
+        // Strip TRAILING dots/whitespace only (Windows silently drops them,
+        // which turns "shell.php." into an executable "shell.php"). A
+        // leading dot is deliberately kept here — for files it was already
+        // neutralised by the "file" prefix above; for folders ".git"-style
+        // names stay intact.
+        return rtrim($name, " .\t\n\r\0\x0B");
     }
 
     protected function stripDangerousMarkup(string $str): string

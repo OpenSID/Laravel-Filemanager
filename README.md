@@ -129,26 +129,61 @@ CKEDITOR.replace('editor', {
 
 ## 🛡️ Keamanan Web Server (Apache, OpenLiteSpeed, LiteSpeed, Nginx)
 
-Setiap pembuatan folder baru di filemanager secara otomatis menyertakan berkas `.htaccess` dan `index.html` yang telah diperkuat (*hardened*) untuk memblokir eksekusi skrip PHP, CGI, ASP, shell, dan indeks direktori.
+Setiap pembuatan folder baru di filemanager secara otomatis menyertakan berkas `.htaccess` dan `index.html` yang telah diperkuat (*hardened*) untuk memblokir eksekusi skrip PHP, CGI, ASP, shell, HTML/SVG, dan indeks direktori. Berkas `.htaccess` **hanya satu lapis** — Nginx & OpenLiteSpeed mode native mengabaikannya, jadi konfigurasi server tetap wajib (lihat di bawah).
 
-### 1. Apache & OpenLiteSpeed / LiteSpeed
-Konfigurasi `.htaccess` otomatis aktif pada Apache dan OpenLiteSpeed (OLS) dengan aturan:
-- `<FilesMatch>` dengan `Require all denied` & `Deny from all`
+### 1. Instalasi lama / folder yang dibuat di luar package
+
+`.htaccess` hanya ditulis saat folder dibuat **oleh package ini**. Untuk instalasi hasil migrasi dari `rfm/` lama, atau folder yang dibuat manual, jalankan sekali:
+
+```bash
+php artisan filemanager:harden
+```
+
+Perintah ini menimpa `.htaccess` + `index.html` di root disk dan **seluruh** sub-folder (disk utama & disk thumbnail). Aman diulang — selalu menimpa, tidak menambah.
+
+### 2. Apache & OpenLiteSpeed / LiteSpeed
+Konfigurasi `.htaccess` otomatis aktif dengan aturan:
+- `<FilesMatch>` case-insensitive `(?i)` mencakup `php`, `php[0-9]*`, `phtml`, `phtm`, `phps`, `pht`, `phar`, `inc`, `module`, `htm(l)`, `svg`, shell/CGI — dengan `Require all denied` & `Deny from all`
 - `RewriteRule` penolakan instan `[F,L]`
-- `RemoveHandler` dan `SetHandler None`
+- `RemoveHandler` + `RemoveType` + `AddType text/plain`, `SetHandler None`, `ForceType text/plain`
 - `Options -ExecCGI -Indexes`
-- `php_flag engine off`
+- `php_flag engine off` (mod_php 5/7/8)
+- `X-Content-Type-Options: nosniff` untuk semua berkas; `Content-Disposition: attachment` + `Content-Security-Policy` untuk `.svg`/`.xml`/`.html`
 
-### 2. Nginx
-Pada Nginx (karena Nginx tidak membaca `.htaccess`), tambahkan blok aturan berikut pada konfigurasi `server` Nginx Anda untuk memblokir eksekusi skrip di folder berkas unggahan:
+### 3. Nginx
+Nginx tidak membaca `.htaccess`. Tambahkan pada blok `server` situs Anda, dan pastikan `location ~ \.php$` **hanya** meng-*cover* root aplikasi, bukan folder unggahan:
 
 ```nginx
-# Blokir eksekusi skrip berbahaya di direktori kelola_file / storage
-location ~* /(kelola_file|storage)/.*\.(php|phtml|php[0-9]|phar|sh|cgi|pl|py|exe|bat|cmd|env)$ {
-    deny all;
-    return 403;
+# Tolak eksekusi & sniffing skrip di seluruh pohon unggahan
+location ~* ^/(desa/upload|assets|storage)/ {
+    add_header X-Content-Type-Options "nosniff" always;
+
+    location ~* \.(php|php[0-9]*|phtml|phtm|phps|pht|phar|inc|module|pl|py|cgi|sh|bash|asp|aspx|jsp|exe|bat|cmd|env|htaccess|htpasswd)$ {
+        deny all;
+        return 403;
+    }
+
+    # SVG/HTML: paksa unduh, jangan render inline
+    location ~* \.(svg|svgz|xml|x?html?)$ {
+        add_header X-Content-Type-Options "nosniff" always;
+        add_header Content-Disposition "attachment" always;
+        add_header Content-Security-Policy "default-src 'none'; style-src 'unsafe-inline'; sandbox" always;
+    }
 }
 ```
+
+### 4. OpenLiteSpeed (panel / mode native)
+Selain `.htaccess`, di **Virtual Host → Context** tambahkan Static Context `/desa/upload/` dengan *Accessible: Yes* lalu **Rewrite** rule:
+
+```
+RewriteRule (?i)\.(php|php[0-9]*|phtml|phtm|phps|pht|phar|inc|module|pl|py|cgi|sh|asp|jsp|exe|bat|env)$ - [F,L]
+```
+
+### 5. Ekstensi berkas & SVG
+
+Whitelist `extensions` di `config/filemanager.php` sengaja dipangkas ke format yang dipakai desa **dan** yang tanda-tangan (*magic byte*)-nya bisa diverifikasi oleh `FileContentValidator`. Menambah ekstensi non-gambar yang tidak punya *signature* akan otomatis **ditolak** saat unggah.
+
+`svg` **tidak** ada di whitelist bawaan (risiko *stored XSS* — SVG adalah dokumen XML yang bisa memuat `<script>`/`<style>`/*event handler*). Jika benar-benar butuh SVG, tambahkan pustaka sanitasi khusus (`enshrined/svg-sanitize`) dan pastikan header `nosniff` + `Content-Disposition: attachment` aktif untuk folder media.
 
 ---
 

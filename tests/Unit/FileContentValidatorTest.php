@@ -98,14 +98,61 @@ class FileContentValidatorTest extends TestCase
     }
 
     #[Test]
-    public function non_image_extensions_are_not_content_checked_at_all(): void
+    public function rejects_a_non_image_whose_bytes_dont_match_its_claimed_signature(): void
     {
-        // This validator's job is specifically "claims to be an image but
-        // isn't" — a .pdf/.docx/.zip claiming to be one of those isn't its
-        // concern (isExtensionAllowed()/the blacklist handle that surface).
+        // A webshell renamed shell.pdf: no %PDF- header -> rejected before
+        // the content scan even runs.
         $path = $this->tempFile("<?php system(\$_GET['cmd']); ?>");
 
-        $this->assertTrue($this->validator->isValidUpload($path, 'pdf'));
+        $this->assertFalse($this->validator->isValidUpload($path, 'pdf'));
+        $this->assertFalse($this->validator->isValidUpload($path, 'zip'));
+        $this->assertFalse($this->validator->isValidUpload($path, 'docx'));
+    }
+
+    #[Test]
+    public function accepts_a_non_image_with_a_valid_signature(): void
+    {
+        $pdf = $this->tempFile("%PDF-1.4\n1 0 obj<< >>endobj\ntrailer<< >>\n%%EOF");
+        $zip = $this->tempFile("PK\x03\x04" . str_repeat("\x00", 26));
+
+        $this->assertTrue($this->validator->isValidUpload($pdf, 'pdf'));
+        $this->assertTrue($this->validator->isValidUpload($zip, 'zip'));
+    }
+
+    #[Test]
+    public function rejects_a_non_image_extension_with_no_verifiable_signature(): void
+    {
+        // "can't verify" == "don't trust": an allowed extension absent from
+        // KNOWN_SIGNATURES never passes.
+        $path = $this->tempFile('anything at all');
+
+        $this->assertFalse($this->validator->isValidUpload($path, 'psd'));
+    }
+
+    #[Test]
+    public function rejects_a_bare_php_short_tag_appended_to_a_valid_image(): void
+    {
+        // Valid JPEG (passes getimagesize) with a bare "<?" (no "php")
+        // trailer — dangerous when short_open_tag=On, missed by /<\?php/.
+        $image = imagecreatetruecolor(10, 10);
+        ob_start();
+        imagejpeg($image);
+        $bytes = ob_get_clean();
+        imagedestroy($image);
+
+        $path = $this->tempFile($bytes . "\n<? echo `id`; ?>");
+
+        $this->assertFalse($this->validator->isValidUpload($path, 'jpg'));
+    }
+
+    #[Test]
+    public function rejects_an_svg_with_a_style_import_or_animated_href(): void
+    {
+        $style = $this->tempFile('<svg xmlns="http://www.w3.org/2000/svg"><style>@import url(//evil.com/x.css)</style></svg>');
+        $animate = $this->tempFile('<svg xmlns="http://www.w3.org/2000/svg"><set attributeName="href" to="javascript:alert(1)"/></svg>');
+
+        $this->assertFalse($this->validator->isValidUpload($style, 'svg'));
+        $this->assertFalse($this->validator->isValidUpload($animate, 'svg'));
     }
 
     protected function realJpeg(): string

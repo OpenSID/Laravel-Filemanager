@@ -21,6 +21,7 @@ class PathGuardTest extends TestCase
 
     public static function unsafePaths(): array
     {
+        return [
             'parent dir' => ['../etc/passwd'],
             'parent dir mid-path' => ['foo/../../etc/passwd'],
             'current dir marker' => ['./foo'],

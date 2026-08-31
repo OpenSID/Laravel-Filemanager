@@ -86,16 +86,29 @@ return [
     |--------------------------------------------------------------------------
     | Allowed extensions, by category
     |--------------------------------------------------------------------------
+    |
+    | Deliberately trimmed to formats a desa operator actually uses AND whose
+    | file signature the FileContentValidator can verify against the claimed
+    | extension. Adding an extension here is only half the job — if it isn't
+    | an image and has no signature in FileContentValidator::KNOWN_SIGNATURES,
+    | every upload of it is rejected as "unverifiable" by design.
+    |
+    | SVG is intentionally absent: it is an XML document that can carry
+    | <script>/<style>/event-handler XSS, and regex sanitisation of SVG is
+    | historically bypassable. Re-add it only alongside a real sanitiser
+    | (enshrined/svg-sanitize) plus nosniff + attachment response headers on
+    | the upload folder.
+    |
     */
     'extensions' => [
-        'image' => ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'svg', 'ico', 'webp'],
+        'image' => ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'ico', 'webp'],
         'document' => ['doc', 'docx', 'pdf', 'xls', 'xlsx'],
-        'video' => ['mov', 'mpeg', 'm4v', 'mp4', 'avi', 'mpg', 'wma', 'flv', 'webm'],
-        'audio' => ['mp3', 'mpga', 'm4a', 'ac3', 'aiff', 'mid', 'ogg', 'wav'],
-        'archive' => ['zip', 'rar', 'gz', 'tar', 'iso', 'dmg'],
+        'video' => ['mp4', 'm4v', 'mov', 'webm', 'avi'],
+        'audio' => ['mp3', 'm4a', 'ogg', 'wav'],
+        'archive' => ['zip', 'rar', 'gz', 'tar'],
     ],
 
-    'blacklisted_extensions' => ['php', 'phtml', 'php3', 'php4', 'php5', 'phar', 'exe', 'sh', 'bat', 'htaccess'],
+    'blacklisted_extensions' => ['php', 'phtml', 'phtm', 'phps', 'pht', 'php3', 'php4', 'php5', 'php7', 'php8', 'phar', 'svg', 'exe', 'sh', 'bat', 'cmd', 'cgi', 'pl', 'py', 'htaccess', 'htpasswd'],
 
     'editable_text_extensions' => ['txt', 'log', 'xml', 'html', 'css', 'htm', 'js'],
 

@@ -183,7 +183,12 @@ class FilesystemManager
     /**
      * Places a hardened .htaccess file and index.html inside the directory
      * to prevent script execution (PHP, CGI, ASP, shell scripts, etc.) and
-     * directory listing across Apache, OpenLiteSpeed, LiteSpeed, and Nginx.
+     * directory listing on Apache, OpenLiteSpeed, and LiteSpeed.
+     *
+     * Nginx ignores .htaccess entirely — for Nginx/OLS-native setups the
+     * host MUST also add the server-level location block documented in the
+     * package README ("Keamanan Web Server"). This file is one layer, not
+     * the whole defence.
      */
     public function protectDirectory(string $path, bool $isThumbDisk = false): void
     {
@@ -191,7 +196,7 @@ class FilesystemManager
 # ----------------------------------------------------------------------
 # 1. Block Access to Dangerous Files (Apache 2.2, 2.4, OpenLiteSpeed, LiteSpeed)
 # ----------------------------------------------------------------------
-<FilesMatch "(?i)\.(php|php\.|php[0-9]?|phtml|phar|pl|py|jsp|asp|htm|shtml|sh|cgi|exe|bat|cmd|env|htaccess|htpasswd)$">
+<FilesMatch "(?i)\.(php|php\.|php[0-9]*|phtml|phtm|phps|pht|phpt|phar|pgif|hphp|ctp|module|inc|pl|py|pyc|jsp|asp|aspx|htm|html|shtml|xhtml|sh|bash|cgi|exe|bat|cmd|com|scr|env|htaccess|htpasswd|ini)$">
     <IfModule !mod_authz_core.c>
         Order allow,deny
         Deny from all
@@ -206,25 +211,39 @@ class FilesystemManager
 # ----------------------------------------------------------------------
 <IfModule mod_rewrite.c>
     RewriteEngine On
-    RewriteRule (?i)\.(php|php\.|php[0-9]?|phtml|phar|pl|py|jsp|asp|htm|shtml|sh|cgi|exe|bat|cmd|env|htaccess|htpasswd)$ - [F,L]
+    RewriteRule (?i)\.(php|php\.|php[0-9]*|phtml|phtm|phps|pht|phpt|phar|pgif|hphp|ctp|module|inc|pl|py|pyc|jsp|asp|aspx|htm|html|shtml|xhtml|sh|bash|cgi|exe|bat|cmd|com|scr|env|htaccess|htpasswd|ini)$ - [F,L]
 </IfModule>
 
 # ----------------------------------------------------------------------
 # 3. Disable Script Handlers & Force Plain Handling
 # ----------------------------------------------------------------------
 <IfModule mod_mime.c>
-    RemoveHandler .php .phtml .php3 .php4 .php5 .php7 .php8 .phar .cgi .pl .py
-    RemoveType .php .phtml .php3 .php4 .php5 .php7 .php8 .phar .cgi .pl .py
+    RemoveHandler .php .php3 .php4 .php5 .php7 .php8 .phtml .phtm .phps .pht .phpt .phar .pgif .cgi .pl .py .inc .module
+    RemoveType .php .php3 .php4 .php5 .php7 .php8 .phtml .phtm .phps .pht .phpt .phar .pgif .cgi .pl .py .inc .module
+    AddType text/plain .php .php3 .php4 .php5 .php7 .php8 .phtml .phtm .phps .pht .phpt .phar .inc .module
 </IfModule>
 
-<FilesMatch "(?i)\.(php|phtml|phar)$">
+<FilesMatch "(?i)\.(php|php[0-9]*|phtml|phtm|phps|pht|phpt|phar|pgif|hphp|ctp|module|inc)$">
     SetHandler None
+    ForceType text/plain
 </FilesMatch>
 
 # ----------------------------------------------------------------------
 # 4. Disable CGI Execution & Directory Indexing
 # ----------------------------------------------------------------------
 Options -ExecCGI -Indexes
+
+# ----------------------------------------------------------------------
+# 4b. Stop MIME sniffing (an uploaded .svg / polyglot won't be re-typed
+#     as HTML/JS by the browser) and neutralise inline rendering.
+# ----------------------------------------------------------------------
+<IfModule mod_headers.c>
+    Header set X-Content-Type-Options "nosniff"
+    <FilesMatch "(?i)\.(svg|svgz|xml|html?|xht|xhtml)$">
+        Header set Content-Disposition "attachment"
+        Header set Content-Security-Policy "default-src 'none'; style-src 'unsafe-inline'; sandbox"
+    </FilesMatch>
+</IfModule>
 
 # ----------------------------------------------------------------------
 # 5. Disable PHP Engine Execution (mod_php)
@@ -253,6 +272,43 @@ HTACCESS;
         } catch (\Throwable) {
             // ignore if storage disk is remote/S3 or read-only
         }
+    }
+
+    /**
+     * Re-stamps the hardened .htaccess / index.html into the disk root and
+     * every existing sub-directory (both the main disk and the thumbs
+     * disk), overwriting any old/weak file. For installs that predate the
+     * per-makeDirectory() protection, or whose upload tree was created
+     * outside this package. Driven by the `filemanager:harden` command.
+     *
+     * @return array{disk:int, thumbs:int} directories processed per disk
+     */
+    public function hardenAllDirectories(): array
+    {
+        $base = $this->config->baseFolder();
+        $counts = ['disk' => 0, 'thumbs' => 0];
+
+        $this->protectDirectory($base);
+        $counts['disk']++;
+
+        foreach ($this->disk()->allDirectories($base) as $dir) {
+            $this->protectDirectory($dir);
+            $counts['disk']++;
+        }
+
+        try {
+            $this->protectDirectory($base, isThumbDisk: true);
+            $counts['thumbs']++;
+
+            foreach ($this->thumbsDisk()->allDirectories($base) as $dir) {
+                $this->protectDirectory($dir, isThumbDisk: true);
+                $counts['thumbs']++;
+            }
+        } catch (\Throwable) {
+            // thumbs disk may be remote/read-only — main disk is what matters
+        }
+
+        return $counts;
     }
 
     public function deleteFile(string $path): bool

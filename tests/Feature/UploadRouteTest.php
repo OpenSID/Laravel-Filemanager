@@ -134,7 +134,7 @@ class UploadRouteTest extends TestCase
     #[Test]
     public function reassembles_a_chunked_upload_across_two_requests(): void
     {
-        $bytes = str_repeat('A', 3 * 1024 * 1024); // 3MB
+        $bytes = "PK\x03\x04" . str_repeat('A', 3 * 1024 * 1024 - 4); // 3MB, valid zip signature
         $chunk1 = substr($bytes, 0, 2 * 1024 * 1024);
         $chunk2 = substr($bytes, 2 * 1024 * 1024);
 
