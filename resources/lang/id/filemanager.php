@@ -136,7 +136,7 @@ return [
     'no file' => 'No file',
     'view type number missing' => 'View type number missing',
     'Not enough Memory' => 'Not enough Memory',
-    'max_size_reached' => 'Your image folder has reach its maximale size of %d MB.',
+    'max_size_reached' => 'Ukuran berkas melebihi batas maksimal :size MB.',
     'B' => 'B',
     'KB' => 'KB',
     'MB' => 'MB',

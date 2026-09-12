@@ -5,6 +5,24 @@ Semua perubahan penting pada `opensid/laravel-filemanager` didokumentasikan di b
 Format mengikuti [Keep a Changelog](https://keepachangelog.com/id/1.1.0/),
 dan proyek ini memakai [Semantic Versioning](https://semver.org/lang/id/).
 
+## [Unreleased]
+
+### Diperbaiki
+
+- `FileContentValidator`: alternatif `<?=` dan `<?` polos pada pemindaian
+  polyglot hanya 2-3 byte literal, sehingga cocok secara kebetulan pada data
+  biner terkompresi gambar raster asli (PNG/JPEG/WebP) dan menolak unggahan
+  gambar yang sah sebagai "wrong extension" — terutama pada gambar
+  berentropi tinggi seperti foto/tangkapan layar. Kedua alternatif sekarang
+  mensyaratkan rentetan byte yang tampak seperti kode sungguhan tepat
+  setelah penanda, yang selalu ada pada payload PHP asli namun nyaris tidak
+  pernah muncul pada data biner acak (`opensid/premium` #6987).
+- Pesan galat `max_size_reached` memakai placeholder gaya `sprintf` (`%d`)
+  yang tidak pernah disubstitusi oleh `trans()`, sehingga pengguna melihat
+  teks mentah "...maximale size of %d MB." alih-alih ukuran batas yang
+  sebenarnya. Sekarang memakai placeholder `:size` Laravel dan controller
+  menyertakan nilai `max_upload_size` yang terkonfigurasi.
+
 ## [1.0.0] - 2026-08-31
 
 Rilis stabil pertama. Penulisan ulang penuh Responsive Filemanager (RFM) v9.x

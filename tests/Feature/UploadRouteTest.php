@@ -48,6 +48,32 @@ class UploadRouteTest extends TestCase
     }
 
     #[Test]
+    public function reports_the_actual_size_limit_when_a_file_is_too_large(): void
+    {
+        // Regression: max_size_reached used to be an untranslated stock
+        // string with a raw "%d" that trans() never substitutes, so the
+        // user saw the literal text "...maximale size of %d MB." instead
+        // of the configured limit. 'id' is the locale OpenSID host apps
+        // actually run under (config/app.php: APP_LOCALE default 'id').
+        app()->setLocale('id');
+        config(['filemanager.max_upload_size' => 2]);
+
+        $file = UploadedFile::fake()->create('big.jpg', 3 * 1024)->size(3 * 1024 * 1024);
+
+        $response = $this->post(route('filemanager.upload'), [
+            'fldr' => '',
+            'files' => [$file],
+        ]);
+
+        $response->assertOk();
+        $error = $response->json()['files'][0]['error'];
+
+        $this->assertStringContainsString('2', $error);
+        $this->assertStringNotContainsString('%d', $error);
+        $this->assertStringNotContainsString(':size', $error);
+    }
+
+    #[Test]
     public function rejects_a_disallowed_extension_without_storing_anything(): void
     {
         $file = UploadedFile::fake()->create('shell.php', 10);

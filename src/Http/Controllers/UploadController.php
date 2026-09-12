@@ -108,7 +108,7 @@ class UploadController extends Controller
 
         if ($range === null) {
             if ($file->getSize() > $this->config->maxUploadSizeBytes()) {
-                return ['name' => $originalName, 'error' => trans('filemanager::filemanager.max_size_reached')];
+                return ['name' => $originalName, 'error' => trans('filemanager::filemanager.max_size_reached', ['size' => $this->config->maxUploadSizeMb()])];
             }
 
             return $this->finalize($file->getRealPath(), $originalName, $folder);
@@ -117,7 +117,7 @@ class UploadController extends Controller
         [$start, $end, $total] = $range;
 
         if ($total > $this->config->maxUploadSizeBytes()) {
-            return ['name' => $originalName, 'error' => trans('filemanager::filemanager.max_size_reached')];
+            return ['name' => $originalName, 'error' => trans('filemanager::filemanager.max_size_reached', ['size' => $this->config->maxUploadSizeMb()])];
         }
 
         $stagingPath = $this->stagingPath($folder, $originalName);
@@ -146,7 +146,7 @@ class UploadController extends Controller
         if (filesize($stagingPath) > min($total, $this->config->maxUploadSizeBytes())) {
             @unlink($stagingPath);
 
-            return ['name' => $originalName, 'error' => trans('filemanager::filemanager.max_size_reached')];
+            return ['name' => $originalName, 'error' => trans('filemanager::filemanager.max_size_reached', ['size' => $this->config->maxUploadSizeMb()])];
         }
 
         if ($end + 1 < $total) {
