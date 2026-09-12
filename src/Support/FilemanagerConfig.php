@@ -131,7 +131,12 @@ class FilemanagerConfig
 
     public function maxUploadSizeBytes(): int
     {
-        return (int) config('filemanager.max_upload_size', 8) * 1024 * 1024;
+        return $this->maxUploadSizeMb() * 1024 * 1024;
+    }
+
+    public function maxUploadSizeMb(): int
+    {
+        return (int) config('filemanager.max_upload_size', 8);
     }
 
     public function maxTotalSizeBytes(): int|false

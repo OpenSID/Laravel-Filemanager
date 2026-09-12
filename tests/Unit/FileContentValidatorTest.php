@@ -30,6 +30,27 @@ class FileContentValidatorTest extends TestCase
     }
 
     #[Test]
+    public function accepts_real_noisy_pngs_without_false_positives(): void
+    {
+        // Regression: the compressed IDAT stream of a real, high-entropy PNG
+        // (a photo-like screenshot, not a flat GD test swatch) contains
+        // effectively random bytes. The old POLYGLOT_PATTERN's bare `<?`
+        // and `<?=` alternatives were only 2-3 literal bytes, so they
+        // matched by pure chance often enough that legitimate PNG uploads
+        // were rejected as "wrong extension" (reported: PNG uploads failing
+        // unpredictably). Run several noisy images since any single one is
+        // probabilistic; none should be rejected after the fix.
+        for ($i = 0; $i < 20; $i++) {
+            $path = $this->noisyPng();
+
+            $this->assertTrue(
+                $this->validator->isValidUpload($path, 'png'),
+                "Iteration {$i}: a clean noisy PNG was rejected (false positive)."
+            );
+        }
+    }
+
+    #[Test]
     public function rejects_a_php_payload_disguised_with_an_image_extension(): void
     {
         // The exact attack the check exists for: a webshell renamed to
@@ -160,6 +181,26 @@ class FileContentValidatorTest extends TestCase
         $image = imagecreatetruecolor(10, 10);
         ob_start();
         imagejpeg($image);
+        $bytes = ob_get_clean();
+        imagedestroy($image);
+
+        return $this->tempFile($bytes);
+    }
+
+    protected function noisyPng(): string
+    {
+        $width = random_int(200, 500);
+        $height = random_int(200, 500);
+        $image = imagecreatetruecolor($width, $height);
+
+        for ($x = 0; $x < $width; $x += 2) {
+            for ($y = 0; $y < $height; $y += 2) {
+                imagesetpixel($image, $x, $y, random_int(0, 0xFFFFFF));
+            }
+        }
+
+        ob_start();
+        imagepng($image);
         $bytes = ob_get_clean();
         imagedestroy($image);
 
