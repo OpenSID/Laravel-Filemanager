@@ -141,6 +141,57 @@ class FileContentValidatorTest extends TestCase
     }
 
     #[Test]
+    public function accepts_the_legacy_rfm_media_and_archive_formats_with_a_valid_signature(): void
+    {
+        $samples = [
+            'mpeg' => "\x00\x00\x01\xBA".str_repeat("\x00", 60),
+            'mpg' => "\x00\x00\x01\xB3".str_repeat("\x00", 60),
+            'wma' => "\x30\x26\xB2\x75\x8E\x66\xCF\x11\xA6\xD9\x00\xAA\x00\x62\xCE\x6C".str_repeat("\x00", 48),
+            'flv' => "FLV\x01\x05\x00\x00\x00\x09".str_repeat("\x00", 55),
+            'mpga' => 'ID3'.str_repeat("\x00", 61),
+            'm4a' => "\x00\x00\x00\x20ftypM4A ".str_repeat("\x00", 52),
+            'ac3' => "\x0B\x77".str_repeat("\x00", 62),
+            'aiff' => "FORM\x00\x00\x00\x40AIFF".str_repeat("\x00", 52),
+            'mid' => "MThd\x00\x00\x00\x06".str_repeat("\x00", 56),
+            'iso' => str_repeat("\x00", 32769).'CD001'.str_repeat("\x00", 64),
+            'dmg' => str_repeat("\x00", 1024).'koly'.str_repeat("\x00", 508),
+        ];
+
+        foreach ($samples as $extension => $bytes) {
+            $this->assertTrue($this->validator->isValidUpload($this->tempFile($bytes), $extension), "{$extension} asli harus diterima");
+        }
+    }
+
+    #[Test]
+    public function rejects_a_php_payload_disguised_as_a_legacy_rfm_format(): void
+    {
+        $path = $this->tempFile("<?php system(\$_GET['cmd']); ?>");
+
+        foreach (['mpeg', 'mpg', 'wma', 'flv', 'mpga', 'm4a', 'ac3', 'aiff', 'mid', 'iso', 'dmg'] as $extension) {
+            $this->assertFalse($this->validator->isValidUpload($path, $extension), "{$extension} palsu harus ditolak");
+        }
+    }
+
+    #[Test]
+    public function rejects_a_valid_signature_carrying_an_embedded_php_payload(): void
+    {
+        $flv = $this->tempFile("FLV\x01\x05\x00\x00\x00\x09<?php system(\$_GET['cmd']); ?>");
+        $dmg = $this->tempFile("<?php system(\$_GET['cmd']); ?>".str_repeat("\x00", 1024).'koly'.str_repeat("\x00", 508));
+
+        $this->assertFalse($this->validator->isValidUpload($flv, 'flv'));
+        $this->assertFalse($this->validator->isValidUpload($dmg, 'dmg'));
+    }
+
+    #[Test]
+    public function rejects_a_file_too_short_to_hold_a_deep_or_trailing_signature(): void
+    {
+        $path = $this->tempFile('koly');
+
+        $this->assertFalse($this->validator->isValidUpload($path, 'dmg'));
+        $this->assertFalse($this->validator->isValidUpload($path, 'iso'));
+    }
+
+    #[Test]
     public function rejects_a_non_image_extension_with_no_verifiable_signature(): void
     {
         // "can't verify" == "don't trust": an allowed extension absent from
