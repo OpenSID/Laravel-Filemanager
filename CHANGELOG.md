@@ -7,6 +7,14 @@ dan proyek ini memakai [Semantic Versioning](https://semver.org/lang/id/).
 
 ## [Unreleased]
 
+### Ditambahkan
+
+- `FileContentValidator`: tanda tangan *magic-byte* untuk ekstensi yang dulu
+  diterima RFM tetapi belum bisa diverifikasi: mpeg, mpg, wma, flv, mpga, m4a,
+  ac3, aiff, mid, iso, dmg. Pencocokan kini mendukung offset jauh (iso di
+  32769) dan offset negatif dari akhir berkas (trailer `koly` milik dmg)
+  (`OpenSID/OpenSID` #12025).
+
 ### Diperbaiki
 
 - `FileContentValidator`: alternatif `<?=` dan `<?` polos pada pemindaian
