@@ -7,6 +7,8 @@ dan proyek ini memakai [Semantic Versioning](https://semver.org/lang/id/).
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-10-23
+
 ### Ditambahkan
 
 - `FileContentValidator`: tanda tangan *magic-byte* untuk ekstensi yang dulu
@@ -161,4 +163,6 @@ RFM di OpenSID (`OpenSID/premium` #6937, #6976, #6985, #7008, #7011, #7012,
   `FileAttributes` alih-alih `isDir()`/`isFile()` — penyempitan tipe yang
   benar untuk `fileSize()` (temuan PHPStan).
 
+[Unreleased]: https://github.com/OpenSID/Laravel-Filemanager/compare/v1.1.0...HEAD
+[1.1.0]: https://github.com/OpenSID/Laravel-Filemanager/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/OpenSID/Laravel-Filemanager/releases/tag/v1.0.0
