@@ -54,15 +54,14 @@ class AjaxController extends Controller
             return $this->ok(trans('filemanager::filemanager.view type number missing'));
         }
 
-        Session::put('filemanager.view_type', (int) $request->input('type'));
+        Session::put('filemanager.view_type', $this->files->config()->sanitizeViewType($request->input('type')));
 
         return $this->ok();
     }
 
     protected function filter(Request $request): Response
     {
-        $filter = (string) $request->input('type', '');
-        Session::put('filemanager.filter', $filter);
+        Session::put('filemanager.filter', $this->files->config()->sanitizeFilter($request->input('type', '')));
 
         return $this->ok();
     }
@@ -70,7 +69,7 @@ class AjaxController extends Controller
     protected function sort(Request $request): Response
     {
         if ($request->filled('sort_by')) {
-            Session::put('filemanager.sort_by', $request->input('sort_by'));
+            Session::put('filemanager.sort_by', $this->files->config()->sanitizeSortBy($request->input('sort_by')));
         }
 
         if ($request->filled('descending')) {
@@ -151,8 +150,17 @@ class AjaxController extends Controller
         return $this->ok('<textarea id="textfile_edit_area" style="width:100%;height:300px;">'.$content.'</textarea>');
     }
 
+    /**
+     * nosniff: the body is an error string (or the escaped text-editor
+     * textarea) and must never be re-typed by the browser. no-store: these
+     * responses reflect per-session state and file contents.
+     */
     protected function ok(string $body = ''): Response
     {
-        return response($body, 200)->header('Content-Type', 'text/html; charset=UTF-8');
+        return response($body, 200)->withHeaders([
+            'Content-Type' => 'text/html; charset=UTF-8',
+            'X-Content-Type-Options' => 'nosniff',
+            'Cache-Control' => 'no-store, private',
+        ]);
     }
 }

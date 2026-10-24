@@ -2,6 +2,8 @@
 
 namespace OpenSID\LaravelFilemanager\Services;
 
+use OpenSID\LaravelFilemanager\Support\FilemanagerConfig;
+
 /**
  * Cross-checks uploaded bytes against the extension they claim to be —
  * FilemanagerConfig::isExtensionAllowed()/isFilenameSafe() only look at the
@@ -124,11 +126,37 @@ class FileContentValidator
 
     protected function isSafeRasterImage(string $localPath, bool $checkImageSize): bool
     {
-        if ($checkImageSize && @getimagesize($localPath) === false) {
+        if ($checkImageSize && (@getimagesize($localPath) === false || $this->exceedsPixelLimit($localPath))) {
             return false;
         }
 
         return $this->isFreeOfEmbeddedScript($localPath);
+    }
+
+    /**
+     * Decompression-bomb guard: true when the image header declares more
+     * pixels than config('filemanager.max_image_pixels'). Reads only the
+     * header (getimagesize), never decodes the bitmap, so it is safe to
+     * run on hostile input before GD ever touches it — GD running out of
+     * memory is a fatal error that `catch (\Throwable)` cannot stop.
+     * Files getimagesize() can't parse return false here; whether they are
+     * acceptable at all is decided elsewhere.
+     */
+    public function exceedsPixelLimit(string $localPath): bool
+    {
+        $limit = (new FilemanagerConfig)->maxImagePixels();
+
+        if ($limit <= 0) {
+            return false;
+        }
+
+        $size = @getimagesize($localPath);
+
+        if ($size === false) {
+            return false;
+        }
+
+        return (int) $size[0] * (int) $size[1] > $limit;
     }
 
     /**
