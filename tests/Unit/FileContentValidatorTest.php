@@ -218,6 +218,64 @@ class FileContentValidatorTest extends TestCase
     }
 
     #[Test]
+    public function rejects_a_space_less_php_short_tag_appended_to_a_valid_image(): void
+    {
+        // Regression #17: with short_open_tag=On PHP executes "<?system(...)"
+        // and "<?`...`" without any whitespace after "<?"; the old pattern
+        // only knew "<?php", "<?=" and "<?" + whitespace, so these passed.
+        $payloads = [
+            $this->shortTag('system('.$this->superglobal().');?>'),
+            $this->shortTag('`'.$this->superglobal().'`;?>'),
+            $this->shortTag('SYSTEM('.$this->superglobal().');?>'),
+            $this->shortTag('php system('.$this->superglobal().');'),
+            $this->shortTag('= `'.$this->superglobal().'`; ?>'),
+        ];
+
+        foreach ($payloads as $payload) {
+            $this->assertFalse(
+                $this->validator->isValidUpload($this->tempFile($this->jpegBytes().$payload), 'jpg'),
+                "JPEG + {$payload} harus ditolak"
+            );
+        }
+    }
+
+    #[Test]
+    public function rejects_a_pdf_carrying_a_space_less_php_short_tag(): void
+    {
+        $payload = $this->shortTag('system('.$this->superglobal().');?>');
+        $pdf = $this->tempFile("%PDF-1.4\n1 0 obj<< >>endobj\n{$payload}\ntrailer<< >>\n%%EOF");
+
+        $this->assertFalse($this->validator->isValidUpload($pdf, 'pdf'));
+    }
+
+    #[Test]
+    public function rejects_an_svg_carrying_a_space_less_php_short_tag(): void
+    {
+        $payload = $this->shortTag('system('.$this->superglobal().');?>');
+        $path = $this->tempFile('<?xml version="1.0"?><svg xmlns="http://www.w3.org/2000/svg">'.$payload.'</svg>');
+
+        $this->assertFalse($this->validator->isValidUpload($path, 'svg'));
+    }
+
+    #[Test]
+    public function accepts_legitimate_xml_processing_instructions(): void
+    {
+        // XMP metadata in a real JPEG/PDF and the XML declaration in an SVG
+        // are "<?" sequences that must not be mistaken for PHP.
+        $xmp = '<?xpacket begin="'."\xEF\xBB\xBF".'" id="W5M0MpCehiHzreSzNTczkc9d"?>'
+            .'<?adobe-xap-filters esc="CRLF"?>'
+            .'<x:xmpmeta xmlns:x="adobe:ns:meta/"><rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"/></x:xmpmeta>'
+            .'<?xpacket end="w"?>';
+        $jpeg = $this->tempFile($this->jpegBytes().$xmp);
+        $svg = $this->tempFile('<?xml version="1.0" encoding="UTF-8"?><?xml-stylesheet type="text/css" href="a.css"?><svg xmlns="http://www.w3.org/2000/svg" width="10" height="10"/>');
+        $pdf = $this->tempFile("%PDF-1.4\n1 0 obj<< /Type /Metadata >>stream\n<?XML version=\"1.0\"?>{$xmp}\nendstream endobj\n%%EOF");
+
+        $this->assertTrue($this->validator->isValidUpload($jpeg, 'jpg'));
+        $this->assertTrue($this->validator->isValidUpload($svg, 'svg'));
+        $this->assertTrue($this->validator->isValidUpload($pdf, 'pdf'));
+    }
+
+    #[Test]
     public function rejects_an_svg_with_a_style_import_or_animated_href(): void
     {
         $style = $this->tempFile('<svg xmlns="http://www.w3.org/2000/svg"><style>@import url(//evil.com/x.css)</style></svg>');
@@ -229,13 +287,33 @@ class FileContentValidatorTest extends TestCase
 
     protected function realJpeg(): string
     {
+        return $this->tempFile($this->jpegBytes());
+    }
+
+    protected function jpegBytes(): string
+    {
         $image = imagecreatetruecolor(10, 10);
         ob_start();
         imagejpeg($image);
         $bytes = ob_get_clean();
         imagedestroy($image);
 
-        return $this->tempFile($bytes);
+        return $bytes;
+    }
+
+    /**
+     * Webshell payloads are assembled at runtime: a literal "<?system($_GET"
+     * in this source file is quarantined by antivirus scanners (Windows
+     * Defender SCRIPT0009), which would make the test file unreadable.
+     */
+    protected function shortTag(string $code): string
+    {
+        return '<'.'?'.$code;
+    }
+
+    protected function superglobal(): string
+    {
+        return '$_'.'GET[c]';
     }
 
     protected function noisyPng(): string

@@ -7,6 +7,11 @@ dan proyek ini memakai [Semantic Versioning](https://semver.org/lang/id/).
 
 ## [Unreleased]
 
+### Keamanan
+
+- `FileContentValidator`: pemindaian polyglot kini menganggap setiap `<?` (selain `<?xml`, `<?xpacket`, `<?adobe-xap-filters`) sebagai penanda PHP, sehingga *short tag* tanpa spasi seperti `<?system(...)` dan ``<?`...` `` di dalam JPEG/PDF/SVG tidak lagi lolos (#17).
+- README: dokumentasi `short_open_tag = Off` dan pemisahan folder unggahan dari handler PHP (#17).
+
 ## [1.1.0] - 2026-10-23
 
 ### Ditambahkan
