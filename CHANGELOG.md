@@ -7,6 +7,15 @@ dan proyek ini memakai [Semantic Versioning](https://semver.org/lang/id/).
 
 ## [Unreleased]
 
+### Keamanan
+
+- `DownloadController`: `path` kosong kini diarahkan ke `base_folder` (bukan root disk) dan `fullPath` dicek ulang terhadap `base_folder` (#7).
+- Unduhan memakai whitelist ekstensi (`extensions`, plus `editable_text_extensions` saat penyuntingan teks aktif); `.env`, `.sql`, `.log`, `.pem`, dst. ditolak (#7).
+- `copy_cut` dan `paste_clipboard` menerapkan aturan yang sama dengan hapus/ganti nama: berkas pelindung (`.htaccess`, `index.html`), folder tersembunyi, dan ekstensi di luar whitelist ditolak, baik di sumber maupun tujuan (#7).
+- `get_file` menolak berkas tersembunyi/ekstensi tersembunyi meskipun berekstensi teks yang dapat disunting (#7).
+- `FileContentValidator`: `isFreeOfEmbeddedScript` dan `isSafeSvg` kini *fail-closed* bila `preg_match()` galat (#7).
+- Peringatan log (maks. sekali sehari) bila root disk filemanager sama dengan `base_path()` dan `base_folder` kosong; README dan komentar config diperjelas (#7).
+
 ## [1.1.0] - 2026-10-23
 
 ### Ditambahkan

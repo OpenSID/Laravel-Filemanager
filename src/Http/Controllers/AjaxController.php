@@ -105,6 +105,13 @@ class AjaxController extends Controller
             return $this->ok(trans('filemanager::filemanager.wrong path'));
         }
 
+        // Same rules as delete/rename: cutting .htaccess / index.html out of
+        // a folder would strip its protection, and non-whitelisted files
+        // must not be relocated either. Re-checked on paste.
+        if (! $this->files->config()->isClipboardSourceAllowed($path, $this->files->isDirectory($path))) {
+            return $this->ok(trans('filemanager::filemanager.File_Permission_Not_Allowed'));
+        }
+
         $this->clipboard->set($path, $subAction);
 
         return $this->ok();
@@ -142,7 +149,10 @@ class AjaxController extends Controller
         }
 
         $extension = mb_strtolower(pathinfo($path, PATHINFO_EXTENSION));
-        if (! $this->files->config()->isEditableTextExtension($extension)) {
+        $name = basename($path);
+        if (! $this->files->config()->isEditableTextExtension($extension)
+            || ! $this->files->config()->isFileAccessible($name)
+        ) {
             return $this->ok(trans('filemanager::filemanager.File_Open_Edit_Not_Allowed'));
         }
 

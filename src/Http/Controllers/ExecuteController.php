@@ -273,8 +273,23 @@ class ExecuteController extends Controller
         }
 
         $destinationDir = $this->safePath($request->input('path', ''));
-        $sourcePath = $this->clipboard->path();
+        $sourcePath = (string) $this->clipboard->path();
         $action = $this->clipboard->action();
+
+        // Re-check both ends: the clipboard may have been filled before
+        // copy_cut enforced these rules, and the target folder must not be
+        // a hidden one. The pasted entry keeps its basename, so the source
+        // check also covers the destination file name.
+        PathGuard::assertSafe($sourcePath);
+        PathGuard::assertInsideBaseFolder($sourcePath, $this->config->baseFolder());
+
+        if (! $this->config->isClipboardSourceAllowed($sourcePath, $this->files->isDirectory($sourcePath))
+            || ($destinationDir !== '' && $this->config->isHiddenFolder(basename($destinationDir)))
+        ) {
+            $this->clipboard->clear();
+
+            return $this->ok(trans('filemanager::filemanager.File_Permission_Not_Allowed'));
+        }
 
         $newPath = $this->join($destinationDir, basename($sourcePath));
         PathGuard::assertInsideBaseFolder($newPath, $this->config->baseFolder());

@@ -119,7 +119,8 @@ class FileContentValidator
 
         $pattern = '/(<\s*script|<\s*object|<\s*iframe|<\s*embed|<\s*foreignObject|<\s*meta|<\s*link|<\s*form|<\s*base|<\s*applet|<\s*style|<\s*set\b|<\s*animate|<!entity|<!doctype|javascript\s*:|data\s*:\s*text\/html|\b(on[a-zA-Z]+)\s*=|xlink\s*:\s*href|xmlns\s*:\s*script|<\?php|<\?=|<\?[\s\r\n])/i';
 
-        return ! preg_match($pattern, $contents);
+        // === 0, not ! preg_match(): a PCRE error (false) must fail closed.
+        return preg_match($pattern, $contents) === 0;
     }
 
     protected function isSafeRasterImage(string $localPath, bool $checkImageSize): bool
@@ -143,7 +144,8 @@ class FileContentValidator
             return false;
         }
 
-        return ! preg_match(self::POLYGLOT_PATTERN, $contents);
+        // === 0, not ! preg_match(): a PCRE error (false) must fail closed.
+        return preg_match(self::POLYGLOT_PATTERN, $contents) === 0;
     }
 
     /**

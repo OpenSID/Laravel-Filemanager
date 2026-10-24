@@ -19,35 +19,42 @@ class DownloadController extends Controller
 
     public function stream(Request $request)
     {
+        $baseFolder = $this->files->config()->baseFolder();
         $path = trim((string) $request->input('path', ''), '/');
         $name = (string) $request->input('name', '');
 
-        try {
-            PathGuard::assertSafe($path);
-            PathGuard::assertSafe($name);
-            PathGuard::assertInsideBaseFolder($path, $this->files->config()->baseFolder());
-        } catch (UnsafePathException) {
-            abort(400, trans('filemanager::filemanager.wrong path'));
+        // An empty path means "the filemanager root", i.e. base_folder — NOT
+        // the disk root. PathGuard::isInsideBaseFolder('') is true, so without
+        // this a file sitting outside base_folder could be downloaded (same
+        // substitution ExecuteController::safePath() does).
+        if ($path === '') {
+            $path = $baseFolder;
         }
 
-        if (str_contains($name, '/')) {
+        if ($name === '' || str_contains($name, '/') || str_contains($name, '\\')) {
             abort(400, trans('filemanager::filemanager.wrong path'));
         }
 
         $fullPath = trim($path.'/'.$name, '/');
 
-        if (! $this->files->exists($fullPath)) {
-            abort(404, trans('filemanager::filemanager.File_Not_Found'));
+        try {
+            PathGuard::assertSafe($path);
+            PathGuard::assertSafe($name);
+            PathGuard::assertInsideBaseFolder($path, $baseFolder);
+            PathGuard::assertInsideBaseFolder($fullPath, $baseFolder);
+        } catch (UnsafePathException) {
+            abort(400, trans('filemanager::filemanager.wrong path'));
         }
 
-        $extension = mb_strtolower(pathinfo($name, PATHINFO_EXTENSION));
-
-        if ($this->files->config()->isHiddenFile($name)
-            || ($extension !== '' && $this->files->config()->isHiddenExtension($extension))
-            || ($extension !== '' && $this->files->config()->isExtensionBlacklisted($extension))
-            || ! $this->files->config()->isFilenameSafe($name)
-        ) {
+        // Whitelist, not just a blacklist: ".env", ".sql", ".log", ".pem" …
+        // are not blacklisted but must never be served. Checked before
+        // exists() so a refused name can't be used to probe the disk.
+        if (! $this->files->config()->isFileAccessible($name)) {
             abort(403, trans('filemanager::filemanager.File_Permission_Not_Allowed'));
+        }
+
+        if (! $this->files->exists($fullPath)) {
+            abort(404, trans('filemanager::filemanager.File_Not_Found'));
         }
 
         return $this->files->disk()->download($fullPath, basename($fullPath));

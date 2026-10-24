@@ -75,6 +75,16 @@ return [
 ];
 ```
 
+> [!WARNING]
+> **Selalu batasi cakupan filemanager.** Semua operasi (unduh, hapus, ganti nama, salin/potong) hanya dibatasi oleh `base_folder`. Bila `base_folder` dikosongkan (`''`), seluruh isi root disk dapat dijangkau — `hidden_folders` hanya mencocokkan nama persis (`.git`, dst.), bukan subpohon. Jadi:
+>
+> - isi `FILEMANAGER_BASE_FOLDER` (mis. `desa/upload`), **atau**
+> - arahkan `root` disk filemanager di `config/filesystems.php` langsung ke folder unggahan khusus.
+>
+> Jangan pernah memakai disk yang root-nya `base_path()` dengan `base_folder` kosong: berkas seperti `.env`, `vendor/`, dan `storage/` ikut terjangkau. Paket akan menulis peringatan ke log (maksimal sekali sehari) bila mendeteksi konfigurasi tersebut.
+>
+> Unduhan serta salin/potong/tempel hanya mengizinkan ekstensi di `extensions` (ditambah `editable_text_extensions` saat `text_editing_enabled` aktif); berkas pelindung seperti `.htaccess` dan `index.html` tidak dapat diunduh, disalin, maupun dipindahkan.
+
 ---
 
 ## 🚀 Penggunaan
