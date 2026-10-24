@@ -63,4 +63,17 @@ class DownloadRouteTest extends TestCase
             'name' => 'legacy.phar',
         ])->assertForbidden();
     }
+
+    #[Test]
+    public function download_of_a_folder_name_is_a_404_not_a_server_error(): void
+    {
+        // disk()->exists() is true for directories too; download() on a
+        // directory would then throw.
+        Storage::disk('filemanager')->makeDirectory('album');
+
+        $this->post(route('filemanager.download'), [
+            'path' => '',
+            'name' => 'album',
+        ])->assertNotFound();
+    }
 }
