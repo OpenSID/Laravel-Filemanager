@@ -185,6 +185,13 @@ Whitelist `extensions` di `config/filemanager.php` sengaja dipangkas ke format y
 
 `svg` **tidak** ada di whitelist bawaan (risiko *stored XSS* — SVG adalah dokumen XML yang bisa memuat `<script>`/`<style>`/*event handler*). Jika benar-benar butuh SVG, tambahkan pustaka sanitasi khusus (`enshrined/svg-sanitize`) dan pastikan header `nosniff` + `Content-Disposition: attachment` aktif untuk folder media.
 
+### 6. PHP `short_open_tag` & pemisahan eksekusi
+
+`FileContentValidator` menolak berkas yang memuat penanda PHP mana pun (`<?php`, `<?=`, `<? `, maupun bentuk tanpa spasi seperti `<?system(...)`), kecuali instruksi XML sah (`<?xml`, `<?xpacket`). Validasi isi tetap hanya **satu lapis**; lapisan berikutnya ada di server:
+
+- Matikan `short_open_tag` di `php.ini` (`short_open_tag = Off`). Tanpa `php.ini`, nilai bawaan PHP adalah `On`, sehingga `<?...` tanpa kata `php` ikut dieksekusi bila berkas unggahan sampai ke interpreter PHP.
+- Pastikan folder unggahan **tidak pernah** diteruskan ke PHP-FPM/handler PHP (aturan Nginx/OpenLiteSpeed di atas, atau sajikan unggahan dari host/subdomain statis tanpa PHP).
+
 ---
 
 ## 🤝 Berkontribusi
