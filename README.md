@@ -150,6 +150,28 @@ Konfigurasi `.htaccess` otomatis aktif dengan aturan:
 - `php_flag engine off` (mod_php 5/7/8)
 - `X-Content-Type-Options: nosniff` untuk semua berkas; `Content-Disposition: attachment` + `Content-Security-Policy` untuk `.svg`/`.xml`/`.html`
 
+#### Syarat `AllowOverride` (Apache)
+
+`.htaccess` di folder unggahan memakai direktif `Options`, `FilesMatch`/`Require`, `RewriteRule`, `AddType`/`RemoveHandler`, `Header`, dan `php_flag`. Virtual host harus mengizinkannya, misalnya:
+
+```apache
+<Directory /var/www/opensid/desa/upload>
+    AllowOverride FileInfo AuthConfig Limit Options=ExecCGI,Indexes
+</Directory>
+```
+
+Bila `AllowOverride` **tidak** memuat `Options` (mis. hanya `AllowOverride FileInfo`), Apache menjawab **HTTP 500 untuk semua berkas** di folder tersebut, dan baris `Options` tidak bisa dibungkus `<IfModule>`. Pada server seperti itu matikan baris tersebut lalu tulis ulang `.htaccess`:
+
+```dotenv
+FILEMANAGER_HTACCESS_OPTIONS=false
+```
+
+```bash
+php artisan filemanager:harden
+```
+
+Setelah itu nonaktifkan CGI & indeks direktori di level vhost (`Options -ExecCGI -Indexes` di blok `<Directory>`).
+
 ### 3. Nginx
 Nginx tidak membaca `.htaccess`. Tambahkan pada blok `server` situs Anda, dan pastikan `location ~ \.php$` **hanya** meng-*cover* root aplikasi, bukan folder unggahan:
 
@@ -184,6 +206,41 @@ RewriteRule (?i)\.(php|php[0-9]*|phtml|phtm|phps|pht|phar|inc|module|pl|py|cgi|s
 Whitelist `extensions` di `config/filemanager.php` sengaja dipangkas ke format yang dipakai desa **dan** yang tanda-tangan (*magic byte*)-nya bisa diverifikasi oleh `FileContentValidator`. Menambah ekstensi non-gambar yang tidak punya *signature* akan otomatis **ditolak** saat unggah.
 
 `svg` **tidak** ada di whitelist bawaan (risiko *stored XSS* — SVG adalah dokumen XML yang bisa memuat `<script>`/`<style>`/*event handler*). Jika benar-benar butuh SVG, tambahkan pustaka sanitasi khusus (`enshrined/svg-sanitize`) dan pastikan header `nosniff` + `Content-Disposition: attachment` aktif untuk folder media.
+
+### 6. URL berkas & Host header
+
+Untuk disk lokal, URL berkas dibangun ulang dari **host request saat ini** (`url()`), agar mengikuti domain/port yang dipakai admin. Host tersebut berasal dari header `Host` kiriman klien: tanpa middleware `TrustHosts`, Host yang dimanipulasi bisa membuat URL yang disisipkan TinyMCE ke artikel mengarah ke domain lain. Pilih salah satu:
+
+- Aktifkan `TrustHosts` di aplikasi host (Laravel 11+: `->withMiddleware(fn ($m) => $m->trustHosts())` di `bootstrap/app.php`; Laravel 10: aktifkan `\App\Http\Middleware\TrustHosts::class` di `Kernel`), **atau**
+- Pakai `APP_URL` sebagai sumber skema/host/port URL berkas:
+
+```dotenv
+APP_URL=https://desa-anda.id
+FILEMANAGER_USE_APP_URL=true
+```
+
+### 7. Aset frontend sebagai symlink
+
+`vendor:publish --tag=filemanager-assets` **menyalin** aset. Bila aset justru di-*symlink* ke `vendor/opensid/laravel-filemanager/resources/dist` (mis. lewat `ln -s` atau perintah publikasi aplikasi host yang membuat tautan):
+
+- Apache harus mengizinkan `Options FollowSymLinks` (atau `SymLinksIfOwnerMatch` dengan pemilik berkas yang sama) pada folder aset — sekaligus berarti `AllowOverride`/vhost harus mengizinkan `Options` tersebut.
+- `open_basedir` PHP (bila diset) harus mencakup direktori `vendor/` maupun direktori aset, agar PHP dapat membaca target tautan.
+- Nginx: `disable_symlinks` harus `off` (bawaan) atau `if_not_owner` dengan pemilik yang sama.
+
+Bila salah satu syarat tidak terpenuhi, gunakan penyalinan biasa (`vendor:publish`).
+
+---
+
+## 🧾 Jejak Audit & Ketahanan Storage
+
+Setiap aksi yang mengubah berkas — unggah, hapus, ubah nama, tempel (*paste*), buat folder/berkas, duplikasi, crop, simpan teks — memicu event `OpenSID\LaravelFilemanager\Events\FilemanagerActionPerformed` (`action`, `paths`, `userId`, `ip`) dan menulis satu baris `Log::info('filemanager.<aksi>', ...)`. Aplikasi host dapat mendengarkan event tersebut untuk log aktivitasnya sendiri.
+
+```dotenv
+FILEMANAGER_AUDIT_LOG=true            # false = hanya event, tanpa Log::info
+FILEMANAGER_AUDIT_LOG_CHANNEL=daily   # kosong = channel log bawaan aplikasi
+```
+
+Pada disk yang dikonfigurasi `'throw' => true` (S3, SFTP, dll.), kegagalan storage tidak lagi menjadi HTTP 500: galat dilaporkan lewat `report()` (log aplikasi) dan pengguna menerima pesan generik `storage_error` dengan HTTP 200, sesuai kontrak frontend lama.
 
 ---
 
