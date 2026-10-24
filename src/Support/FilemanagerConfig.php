@@ -22,27 +22,70 @@ class FilemanagerConfig
         }
 
         try {
-            $diskConfig = config('filesystems.disks.'.$this->disk(), []);
-            $diskRoot = trim(str_replace('\\', '/', (string) ($diskConfig['root'] ?? '')), '/');
+            $diskRoot = $this->diskRoot();
 
             // If the disk root already points to or ends with base_folder, relative baseFolder is disk root ('')
             if ($diskRoot !== '' && ($diskRoot === $baseFolder || str_ends_with($diskRoot, '/'.$baseFolder))) {
                 return '';
             }
 
-            // If base_folder starts with part of diskRoot (e.g. diskRoot='desa/upload', base_folder='desa/upload/media')
-            $basePath = trim(str_replace('\\', '/', (string) base_path()), '/');
-            $relativeDiskRoot = str_starts_with($diskRoot, $basePath)
-                ? trim(substr($diskRoot, strlen($basePath)), '/')
-                : $diskRoot;
-
-            if ($relativeDiskRoot !== '' && str_starts_with($baseFolder, $relativeDiskRoot)) {
-                return trim(substr($baseFolder, strlen($relativeDiskRoot)), '/');
+            // If base_folder was written relative to base_path() and starts with the disk root
+            // (e.g. disk root base_path('desa/upload'), base_folder='desa/upload/media' => 'media').
+            // Matched on whole segments: disk root '.../media' must not eat 'media-extra/x'.
+            $relativeDiskRoot = $this->relativeDiskRoot();
+            if ($relativeDiskRoot !== '') {
+                $stripped = self::stripPathPrefix($baseFolder, $relativeDiskRoot);
+                if ($stripped !== null) {
+                    return $stripped;
+                }
             }
         } catch (\Throwable) {
         }
 
         return $baseFolder;
+    }
+
+    /**
+     * Disk root relative to base_path() (or the full root when the disk lives
+     * outside the project), '/'-separated without surrounding slashes. Lets a
+     * path written relative to the project be mapped onto the disk.
+     */
+    public function relativeDiskRoot(): string
+    {
+        $diskRoot = $this->diskRoot();
+        $basePath = trim(str_replace('\\', '/', (string) base_path()), '/');
+
+        return self::stripPathPrefix($diskRoot, $basePath) ?? $diskRoot;
+    }
+
+    /**
+     * Remainder of $path below $prefix, or null when $path is neither $prefix
+     * itself nor inside it. Matches on whole segments only, so prefix 'desa'
+     * does not match 'desa2' and 'media' does not match 'media-extra/x'.
+     */
+    public static function stripPathPrefix(string $path, string $prefix): ?string
+    {
+        $path = trim($path, '/');
+        $prefix = trim($prefix, '/');
+
+        if ($prefix === '') {
+            return $path;
+        }
+
+        if ($path === $prefix) {
+            return '';
+        }
+
+        return str_starts_with($path, $prefix.'/')
+            ? substr($path, strlen($prefix) + 1)
+            : null;
+    }
+
+    protected function diskRoot(): string
+    {
+        $diskConfig = config('filesystems.disks.'.$this->disk(), []);
+
+        return trim(str_replace('\\', '/', (string) ($diskConfig['root'] ?? '')), '/');
     }
 
     public function allowedExtensions(): array

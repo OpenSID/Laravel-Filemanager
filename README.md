@@ -61,7 +61,11 @@ return [
     |--------------------------------------------------------------------------
     | Base Folder
     |--------------------------------------------------------------------------
-    | Folder dasar di dalam disk tempat file akan dikelola.
+    | Folder dasar di dalam disk tempat file akan dikelola, relatif terhadap
+    | root disk. Demi kompatibilitas, path relatif base_path() juga diterima
+    | bila diawali root disk (root base_path('desa/upload') + 'desa/upload/media'
+    | => 'media'); nilai yang sudah menjadi akhiran root disk berarti seluruh
+    | disk. Prefiks dicocokkan per segmen path utuh ('desa' ≠ 'desa2').
     */
     'base_folder' => env('FILEMANAGER_BASE_FOLDER', 'desa/upload'),
 

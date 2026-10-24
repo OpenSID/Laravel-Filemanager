@@ -4,6 +4,7 @@ namespace OpenSID\LaravelFilemanager\Tests\Unit;
 
 use OpenSID\LaravelFilemanager\Services\FilenameSanitizer;
 use OpenSID\LaravelFilemanager\Tests\TestCase;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
 
 class FilenameSanitizerTest extends TestCase
@@ -51,12 +52,67 @@ class FilenameSanitizerTest extends TestCase
     }
 
     #[Test]
-    public function html_escapes_markup_instead_of_letting_it_through_raw(): void
+    public function strips_markup_without_storing_html_entities(): void
     {
-        $result = $this->sanitizer->sanitize('<script>alert(1)</script>.jpg');
+        $this->assertSame('alert(1).jpg', $this->sanitizer->sanitize('<script>alert(1)</script>.jpg'));
+    }
 
-        $this->assertStringNotContainsString('<script>', $result);
-        $this->assertStringContainsString('&lt;script&gt;', $result);
+    #[Test]
+    #[DataProvider('htmlSpecialNames')]
+    public function drops_html_special_characters_instead_of_encoding_them(string $input, string $expected): void
+    {
+        $result = $this->sanitizer->sanitize($input);
+
+        $this->assertSame($expected, $result);
+        $this->assertDoesNotMatchRegularExpression('/[&<>"\';#]/', $result);
+    }
+
+    public static function htmlSpecialNames(): array
+    {
+        return [
+            'ampersand' => ['Laporan & Data.pdf', 'Laporan__Data.pdf'],
+            'quotes and ampersand' => ["Surat Keterangan 'Usaha' & Izin.pdf", 'Surat_Keterangan_Usaha__Izin.pdf'],
+            'unclosed less-than keeps the extension' => ['a<b.jpg', 'ab.jpg'],
+            'greater-than' => ['a>b.jpg', 'ab.jpg'],
+            'entity-looking text' => ['a&amp;b#1;.jpg', 'aampb1.jpg'],
+        ];
+    }
+
+    #[Test]
+    #[DataProvider('longMultibyteNames')]
+    public function clamps_a_long_multibyte_name_without_breaking_utf8(string $input): void
+    {
+        $result = $this->sanitizer->sanitize($input);
+
+        $this->assertLessThanOrEqual(255, strlen($result));
+        $this->assertStringEndsWith('.jpg', $result);
+        $this->assertTrue(mb_check_encoding($result, 'UTF-8'));
+        $this->assertNotFalse(json_encode($result));
+    }
+
+    public static function longMultibyteNames(): array
+    {
+        return [
+            '2-byte é' => [str_repeat('é', 200).'.jpg'],
+            '3-byte 日' => [str_repeat('日', 100).'.jpg'],
+            '4-byte emoji' => [str_repeat('😀', 80).'.jpg'],
+        ];
+    }
+
+    #[Test]
+    public function strips_invisible_unicode_format_characters(): void
+    {
+        // U+202E right-to-left override would display this as "photoexe.jpg"
+        $this->assertSame('photogpj.exe', $this->sanitizer->sanitize("photo\u{202E}gpj.exe"));
+        $this->assertSame('photo.jpg', $this->sanitizer->sanitize("pho\u{200B}to\u{FEFF}.jpg"));
+    }
+
+    #[Test]
+    public function keeps_zero_width_joiners_needed_by_some_scripts(): void
+    {
+        $name = "\u{0645}\u{06CC}\u{200C}\u{062E}\u{0648}\u{0627}\u{0647}\u{0645}.jpg";
+
+        $this->assertSame($name, $this->sanitizer->sanitize($name));
     }
 
     #[Test]
