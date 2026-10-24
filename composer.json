@@ -10,7 +10,16 @@
     ],
     "require": {
         "php": "^8.2|^8.3|^8.4",
+        "ext-fileinfo": "*",
+        "ext-mbstring": "*",
+        "illuminate/console": "^10.0|^11.0|^12.0|^13.0",
         "illuminate/contracts": "^10.0|^11.0|^12.0|^13.0",
+        "illuminate/filesystem": "^10.0|^11.0|^12.0|^13.0",
+        "illuminate/http": "^10.0|^11.0|^12.0|^13.0",
+        "illuminate/routing": "^10.0|^11.0|^12.0|^13.0",
+        "illuminate/support": "^10.0|^11.0|^12.0|^13.0",
+        "league/flysystem": "^3.0",
+        "league/mime-type-detection": "^1.0",
         "spatie/image": "^3.0",
         "spatie/laravel-package-tools": "^1.16|^1.92"
     },
@@ -21,6 +30,11 @@
         "phpstan/extension-installer": "^1.4",
         "phpstan/phpstan": "^2.1",
         "phpstan/phpstan-deprecation-rules": "^2.0"
+    },
+    "suggest": {
+        "ext-gd": "Driver gambar bawaan (filemanager.image_driver = gd) untuk thumbnail dan crop",
+        "ext-imagick": "Driver gambar alternatif (filemanager.image_driver = imagick)",
+        "ext-intl": "Transliterasi nama berkas non-Latin (filemanager.transliterate = true)"
     },
     "autoload": {
         "psr-4": {
@@ -42,8 +56,6 @@
             ]
         }
     },
-    "minimum-stability": "dev",
-    "prefer-stable": true,
     "config": {
         "sort-packages": true,
         "allow-plugins": {

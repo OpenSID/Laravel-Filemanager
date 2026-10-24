@@ -153,13 +153,25 @@ return [
     |--------------------------------------------------------------------------
     | Language
     |--------------------------------------------------------------------------
+    |
+    | There is no language setting here on purpose: the dialog's strings are
+    | read via trans('filemanager::filemanager.*') and therefore follow the
+    | host application's locale (config('app.locale') / app()->setLocale()).
+    | Bundled translations: "id" and "en_EN" (resources/lang).
+    |
     */
-    'default_language' => 'id',
 
-    'languages' => [
-        'id' => 'Bahasa Indonesia',
-        'en_EN' => 'English',
-    ],
+    /*
+    |--------------------------------------------------------------------------
+    | Default view
+    |--------------------------------------------------------------------------
+    |
+    | Layout the dialog opens with until the user picks another one (the
+    | choice is then remembered in the session): 0 = boxes/thumbnails,
+    | 1 = detailed list, 2 = columns list.
+    |
+    */
+    'default_view' => 0,
 
     /*
     |--------------------------------------------------------------------------

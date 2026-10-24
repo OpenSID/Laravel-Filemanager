@@ -24,7 +24,14 @@ use OpenSID\LaravelFilemanager\Support\ResolvesFilemanagerContext;
  * Dropped vs. upstream rfm (per agreed scope trim): extract (zip/tar/gz),
  * cad_preview, media_preview (jPlayer), get_lang/change_lang (host app
  * drives locale via app()->setLocale()), save_img (was TUI-editor-only),
- * new_file_form (TUI-editor-only), chmod (already a dead stub upstream).
+ * chmod (already a dead stub upstream). The include.js code paths for
+ * those actions stay in the minified bundle but are unreachable: their
+ * triggers (#change_lang_btn, #extract_files=1, #chmod_files_allowed,
+ * the URL-upload tab) are never rendered by the dialog views.
+ *
+ * new_file_form IS kept: the toolbar renders .create-file-btn whenever
+ * text_editing_enabled is on, and include.js loads the create-file dialog
+ * body from it before posting execute?action=create_file.
  */
 class AjaxController extends Controller
 {
@@ -44,6 +51,7 @@ class AjaxController extends Controller
             'copy_cut' => $this->copyCut($request),
             'clear_clipboard' => $this->clearClipboard(),
             'get_file' => $this->getFile($request),
+            'new_file_form' => $this->newFileForm(),
             default => $this->ok(trans('filemanager::filemanager.no action passed')),
         };
     }
@@ -149,6 +157,31 @@ class AjaxController extends Controller
         $content = e($this->files->get($path));
 
         return $this->ok('<textarea id="textfile_edit_area" style="width:100%;height:300px;">'.$content.'</textarea>');
+    }
+
+    /**
+     * Body of the "New File" bootbox dialog — include.js reads
+     * #create_text_file_name, #create_text_file_extension and
+     * #textfile_create_area from it, then posts execute?action=create_file
+     * (which re-checks the same gate and extension list server-side).
+     */
+    protected function newFileForm(): Response
+    {
+        if (! config('filemanager.text_editing_enabled') || ! Gate::allows('filemanager.upload', $this->filemanagerContext())) {
+            return $this->ok(trans('filemanager::filemanager.File_Open_Edit_Not_Allowed'));
+        }
+
+        $options = '';
+        foreach (config('filemanager.editable_text_extensions', []) as $extension) {
+            $options .= '<option value=".'.e($extension).'">.'.e($extension).'</option>';
+        }
+
+        return $this->ok(
+            e(trans('filemanager::filemanager.Filename')).': '
+            .'<input type="text" id="create_text_file_name" style="height:30px"> '
+            .'<select id="create_text_file_extension" style="margin:0;width:auto;">'.$options.'</select>'
+            .'<br><hr><textarea id="textfile_create_area" style="width:100%;height:150px;"></textarea>'
+        );
     }
 
     protected function ok(string $body = ''): Response
