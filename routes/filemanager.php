@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Http\Request;
+use Illuminate\Routing\Middleware\ThrottleRequests;
 use Illuminate\Support\Facades\Route;
 use OpenSID\LaravelFilemanager\Http\Controllers\AjaxController;
 use OpenSID\LaravelFilemanager\Http\Controllers\DialogController;
@@ -26,22 +27,29 @@ use OpenSID\LaravelFilemanager\Http\Middleware\EnsureFilemanagerAccess;
 |
 */
 
+// Rate limit for the two state-changing endpoints (upload + execute).
+// "maxAttempts,decayMinutes" per authenticated user; null/false disables.
+// Chunked uploads count one hit per 2 MB chunk, so keep this generous.
+$throttle = config('filemanager.throttle', '120,1');
+$writeMiddleware = $throttle ? [ThrottleRequests::class.':'.$throttle] : [];
+
 Route::prefix(config('filemanager.route_prefix', 'filemanager'))
     ->middleware(array_merge(config('filemanager.middleware', ['web', 'auth']), [EnsureFilemanagerAccess::class]))
-    ->group(function (): void {
+    ->group(function () use ($writeMiddleware): void {
         Route::get('/', [DialogController::class, 'show'])->name('filemanager.dialog');
 
         Route::match(['get', 'post'], 'ajax', [AjaxController::class, 'handle'])
             ->name('filemanager.ajax');
 
         Route::post('execute', [ExecuteController::class, 'handle'])
+            ->middleware($writeMiddleware)
             ->name('filemanager.execute');
 
         Route::match(['get', 'post'], 'upload', function (Request $request, UploadController $controller) {
             return $request->isMethod('GET')
                 ? $controller->index($request)
                 : $controller->store($request);
-        })->name('filemanager.upload');
+        })->middleware($writeMiddleware)->name('filemanager.upload');
 
         Route::post('download', [DownloadController::class, 'stream'])
             ->name('filemanager.download');

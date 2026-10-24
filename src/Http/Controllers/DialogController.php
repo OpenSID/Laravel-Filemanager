@@ -29,10 +29,14 @@ class DialogController extends Controller
         $subdir = $this->resolveSubdir($request);
         $context = $this->resolveContext();
 
-        $viewType = $this->rememberedOrRequested($request, 'view', 'filemanager.view_type', (int) config('filemanager.default_view', 0));
-        $sortBy = $this->rememberedOrRequested($request, 'sort_by', 'filemanager.sort_by', 'name');
-        $descending = (bool) $this->rememberedOrRequested($request, 'descending', 'filemanager.descending', true);
-        $filter = (string) $request->query('filter', Session::get('filemanager.filter', ''));
+        // Both the query value and whatever is already in the session are
+        // normalised: a session poisoned before this check existed (e.g.
+        // sort_by[]=x via the ajax "sort" action) must not keep 500-ing.
+        $defaultView = $this->config->sanitizeViewType(config('filemanager.default_view', 0));
+        $viewType = $this->config->sanitizeViewType($this->rememberedOrRequested($request, 'view', 'filemanager.view_type', $defaultView, fn ($v) => $this->config->sanitizeViewType($v, $defaultView)), $defaultView);
+        $sortBy = $this->config->sanitizeSortBy($this->rememberedOrRequested($request, 'sort_by', 'filemanager.sort_by', 'name', fn ($v) => $this->config->sanitizeSortBy($v)));
+        $descending = (bool) $this->rememberedOrRequested($request, 'descending', 'filemanager.descending', true, fn ($v) => is_scalar($v) && (bool) $v);
+        $filter = $this->config->sanitizeFilter($request->query('filter', Session::get('filemanager.filter', '')));
 
         $fieldId = $this->sanitizeIdentifier((string) $request->query('field_id', ''));
         $editor = $this->sanitizeIdentifier((string) $request->query('editor', ''));
@@ -163,10 +167,13 @@ class DialogController extends Controller
         return $fldr;
     }
 
-    protected function rememberedOrRequested(Request $request, string $queryKey, string $sessionKey, mixed $default): mixed
+    /**
+     * @param  callable(mixed): mixed  $sanitize  applied before the value is persisted
+     */
+    protected function rememberedOrRequested(Request $request, string $queryKey, string $sessionKey, mixed $default, callable $sanitize): mixed
     {
         if ($request->has($queryKey)) {
-            $value = $request->query($queryKey);
+            $value = $sanitize($request->query($queryKey));
             Session::put($sessionKey, $value);
 
             return $value;

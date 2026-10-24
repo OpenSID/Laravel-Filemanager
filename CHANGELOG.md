@@ -7,6 +7,16 @@ dan proyek ini memakai [Semantic Versioning](https://semver.org/lang/id/).
 
 ## [Unreleased]
 
+### Keamanan
+
+- Staging unggahan *chunk* kini diikat ke session + user, dan perintah terjadwal (per jam) `filemanager:prune-chunks` menghapus staging terbengkalai > `chunk_ttl_minutes` (#8).
+- `max_total_size` kini ditegakkan saat unggah & crop; `crop_image` menerapkan `max_upload_size`; `delete_files` dibatasi `max_batch_paths` (bawaan 200); rute `upload`/`execute` diberi `throttle` (bawaan `120,1`) (#8).
+- Pencegahan *image bomb*: gambar dengan lebar × tinggi > `max_image_pixels` (bawaan 25 MP) ditolak saat unggah/crop dan tidak dibuatkan thumbnail (#8).
+- `sort_by`/`view`/`filter` di-*whitelist* sebelum disimpan ke session — `sort_by[]=x` tidak lagi memicu HTTP 500 (#8).
+- Respons `ok()` Execute/Ajax memakai `X-Content-Type-Options: nosniff` dan `Cache-Control: no-store` (#8).
+- `.htaccess` hasil `protectDirectory()` & contoh Nginx di README memaksa `Content-Disposition: attachment` untuk PDF/Office (#8).
+- Dokumentasi risiko `permissions.access = null` dan bahwa konteks modul bukan batas keamanan (#8).
+
 ## [1.1.0] - 2026-10-23
 
 ### Ditambahkan

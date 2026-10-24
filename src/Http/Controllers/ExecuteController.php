@@ -85,7 +85,16 @@ class ExecuteController extends Controller
             return $this->ok(trans('filemanager::filemanager.File_Permission_Not_Allowed'));
         }
 
-        foreach ((array) $request->input('paths', []) as $path) {
+        $paths = (array) $request->input('paths', []);
+
+        // Each entry costs a PathGuard pass plus up to two disk deletes
+        // (file + thumbnail); an unbounded list is a cheap way to pin a
+        // worker. Reject the whole request rather than half-apply it.
+        if (count($paths) > $this->config->maxBatchPaths()) {
+            return $this->ok(trans('filemanager::filemanager.too_many_paths', ['max' => $this->config->maxBatchPaths()]));
+        }
+
+        foreach ($paths as $path) {
             $safePath = $this->safePath((string) $path);
             if (! $this->config->isHiddenFile(basename($safePath))) {
                 $this->files->deleteFile($safePath);
@@ -377,6 +386,17 @@ class ExecuteController extends Controller
             return $this->ok(trans('filemanager::filemanager.wrong extension'));
         }
 
+        // Without this the only cap on image_data was PHP's post_max_size.
+        // Base64 inflates by 4/3, so bound the raw string before decoding
+        // (no point allocating the decoded copy of an oversized body), then
+        // re-check the exact decoded size below.
+        $maxBytes = $this->config->maxUploadSizeBytes();
+        $sizeError = trans('filemanager::filemanager.max_size_reached', ['size' => $this->config->maxUploadSizeMb()]);
+
+        if (strlen($dataUrl) > intdiv($maxBytes * 4, 3) + 1024) {
+            return $this->ok($sizeError);
+        }
+
         if (preg_match('/^data:image\/(\w+);base64,/', $dataUrl)) {
             $data = substr($dataUrl, strpos($dataUrl, ',') + 1);
             $decoded = base64_decode(preg_replace('/\s+/', '', $data), true);
@@ -385,6 +405,10 @@ class ExecuteController extends Controller
             }
         } else {
             return $this->ok(trans('filemanager::filemanager.Upload_error'));
+        }
+
+        if (strlen($decoded) > $maxBytes) {
+            return $this->ok($sizeError);
         }
 
         $targetPath = $path;
@@ -415,11 +439,31 @@ class ExecuteController extends Controller
         file_put_contents($tmp, $decoded);
 
         $validator = app(FileContentValidator::class);
+
+        if ($validator->exceedsPixelLimit($tmp)) {
+            @unlink($tmp);
+
+            return $this->ok(trans('filemanager::filemanager.image_too_large', ['pixels' => $this->config->maxImageMegapixelsLabel()]));
+        }
+
         $targetExt = pathinfo($targetPath, PATHINFO_EXTENSION) ?: $extension;
         if (! $validator->isValidUpload($tmp, $targetExt)) {
             @unlink($tmp);
 
             return $this->ok('File is dangerous');
+        }
+
+        // max_total_size: an overwrite only adds the size difference.
+        $totalLimit = $this->config->maxTotalSizeBytes();
+        if ($totalLimit !== false) {
+            [$used] = $this->files->directoryStats($this->config->baseFolder());
+            $replaced = $this->files->exists($targetPath) ? (int) $this->files->disk()->size($targetPath) : 0;
+
+            if ($used - $replaced + strlen($decoded) > $totalLimit) {
+                @unlink($tmp);
+
+                return $this->ok(trans('filemanager::filemanager.max_total_size_reached', ['size' => (int) config('filemanager.max_total_size')]));
+            }
         }
 
         $this->files->put($targetPath, $decoded);
@@ -439,8 +483,16 @@ class ExecuteController extends Controller
         return $this->ok();
     }
 
+    /**
+     * nosniff: the body is a plain error string and must never be re-typed
+     * by the browser. no-store: per-session results, never worth caching.
+     */
     protected function ok(string $body = ''): Response
     {
-        return response($body, 200)->header('Content-Type', 'text/html; charset=UTF-8');
+        return response($body, 200)->withHeaders([
+            'Content-Type' => 'text/html; charset=UTF-8',
+            'X-Content-Type-Options' => 'nosniff',
+            'Cache-Control' => 'no-store, private',
+        ]);
     }
 }

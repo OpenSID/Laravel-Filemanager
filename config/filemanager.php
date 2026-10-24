@@ -11,6 +11,11 @@ return [
 
     'middleware' => ['web', 'auth'],
 
+    // Rate limit for the upload + execute routes, as "maxAttempts,decayMinutes"
+    // per user (Laravel's ThrottleRequests). Every 2 MB upload chunk is one
+    // hit. null/false disables.
+    'throttle' => env('FILEMANAGER_THROTTLE', '120,1'),
+
     /*
     |--------------------------------------------------------------------------
     | Permissions
@@ -24,6 +29,19 @@ return [
     | always allow regardless of module context (e.g. 'access' => null lets
     | any authenticated admin browse, matching upstream rfm's always-on
     | download_files).
+    |
+    | RISK of 'access' => null: EVERY authenticated user of the host app
+    | (any role, any module) can open the dialog and browse/download the
+    | whole disk — the module context is ignored. Kept as the default only
+    | for backward compatibility; set it to 'b' to require read access on
+    | the module stamped by filemanager_authorize() (a request without any
+    | stamped context is still let through, as before).
+    |
+    | The module context is NOT a security boundary: it is one session key
+    | ("filemanager.context"), overwritten by whichever page last called
+    | filemanager_authorize() — with two tabs open, the dialog in tab A
+    | runs under tab B's module. All modules also share one disk/base
+    | folder, so per-module rights gate actions, not which files are seen.
     |
     | To use a different permission system entirely, override the
     | Gate::define('filemanager.access'|'upload'|'delete', ...) calls
@@ -80,7 +98,22 @@ return [
     */
     'max_upload_size' => 8,
 
+    // Total size of everything under base_folder (MB). Enforced on upload
+    // and crop; computing it walks the whole tree, so only enable it on
+    // trees of reasonable size.
     'max_total_size' => false, // false = no limit
+
+    // Decompression-bomb guard: raster images whose header declares more
+    // than this many pixels (width x height) are rejected on upload/crop
+    // and never thumbnailed. GD needs ~5 bytes/pixel, so 25 MP ~ 125 MB.
+    'max_image_pixels' => 25_000_000,
+
+    // Max entries in one bulk action (delete_files paths[]).
+    'max_batch_paths' => 200,
+
+    // Abandoned chunk-upload staging files (storage/app/filemanager-chunks)
+    // older than this are removed by the hourly filemanager:prune-chunks.
+    'chunk_ttl_minutes' => 60,
 
     /*
     |--------------------------------------------------------------------------

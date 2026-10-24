@@ -4,6 +4,16 @@ namespace OpenSID\LaravelFilemanager\Support;
 
 class FilemanagerConfig
 {
+    /**
+     * Whitelist for the user-controlled list state stored in the session.
+     * Anything else (including array input like sort_by[]=x, which used to
+     * reach DialogController::sortEntries(string) and fatal with a 500)
+     * collapses to the default.
+     */
+    public const SORT_FIELDS = ['name', 'date', 'size', 'extension'];
+
+    public const VIEW_TYPES = [0, 1, 2];
+
     public function disk(): string
     {
         return (string) config('filemanager.disk', 'filemanager');
@@ -143,6 +153,75 @@ class FilemanagerConfig
     {
         $mb = config('filemanager.max_total_size', false);
 
-        return $mb === false ? false : ((int) $mb * 1024 * 1024);
+        return ($mb === false || $mb === null) ? false : ((int) $mb * 1024 * 1024);
+    }
+
+    /**
+     * Upper bound on width × height for any raster image the package will
+     * decode (thumbnail, crop, upload validation). GD allocates ~4-5 bytes
+     * per pixel, so a tiny highly-compressed PNG declaring 30000×30000
+     * pixels would need ~4 GB — a fatal "Allowed memory size exhausted"
+     * that no try/catch can intercept. 0/false disables the check.
+     */
+    public function maxImagePixels(): int
+    {
+        return (int) config('filemanager.max_image_pixels', 25_000_000);
+    }
+
+    /**
+     * maxImagePixels() as a human "25" / "12.5" megapixel label for
+     * error messages.
+     */
+    public function maxImageMegapixelsLabel(): string
+    {
+        return rtrim(rtrim(number_format($this->maxImagePixels() / 1_000_000, 1, '.', ''), '0'), '.');
+    }
+
+    /**
+     * Maximum number of entries accepted by a single bulk action
+     * (delete_files' paths[]).
+     */
+    public function maxBatchPaths(): int
+    {
+        return max(1, (int) config('filemanager.max_batch_paths', 200));
+    }
+
+    /**
+     * Abandoned chunk-upload staging files older than this are removed by
+     * `filemanager:prune-chunks`.
+     */
+    public function chunkTtlMinutes(): int
+    {
+        return max(1, (int) config('filemanager.chunk_ttl_minutes', 60));
+    }
+
+    /**
+     * Local directory where chunked uploads are reassembled before they
+     * are validated and handed to the configured disk.
+     */
+    public function chunkStagingDirectory(): string
+    {
+        return storage_path('app/filemanager-chunks');
+    }
+
+    public function sanitizeSortBy(mixed $value): string
+    {
+        return is_string($value) && in_array($value, self::SORT_FIELDS, true) ? $value : 'name';
+    }
+
+    public function sanitizeViewType(mixed $value, int $default = 0): int
+    {
+        $default = in_array($default, self::VIEW_TYPES, true) ? $default : 0;
+
+        if (! is_scalar($value) || ! is_numeric($value)) {
+            return $default;
+        }
+
+        return in_array((int) $value, self::VIEW_TYPES, true) ? (int) $value : $default;
+    }
+
+    public function sanitizeFilter(mixed $value): string
+    {
+        return is_scalar($value) ? mb_substr((string) $value, 0, 100) : '';
     }
 }
