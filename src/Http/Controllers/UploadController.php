@@ -2,9 +2,14 @@
 
 namespace OpenSID\LaravelFilemanager\Http\Controllers;
 
+use Illuminate\Contracts\Cache\LockProvider;
+use Illuminate\Contracts\Cache\LockTimeoutException;
+use Illuminate\Contracts\Filesystem\Filesystem;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Routing\Controller;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Gate;
 use OpenSID\LaravelFilemanager\Exceptions\UnsafePathException;
@@ -48,12 +53,12 @@ class UploadController extends Controller
         protected FileContentValidator $contentValidator,
     ) {}
 
-    public function index(Request $request)
+    public function index(Request $request): JsonResponse
     {
         return response()->json(['files' => []]);
     }
 
-    public function store(Request $request)
+    public function store(Request $request): JsonResponse
     {
         Gate::authorize('filemanager.upload', $this->filemanagerContext());
 
@@ -92,6 +97,9 @@ class UploadController extends Controller
         return response()->json(['files' => $results]);
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     protected function handleUpload(Request $request, UploadedFile $file, string $folder): array
     {
         $originalName = $this->names->sanitize($file->getClientOriginalName());
@@ -159,6 +167,9 @@ class UploadController extends Controller
         return $result;
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     protected function finalize(string $localPath, string $originalName, string $folder): array
     {
         $extension = mb_strtolower(pathinfo($originalName, PATHINFO_EXTENSION));
@@ -173,13 +184,23 @@ class UploadController extends Controller
         }
 
         $disk = $this->files->disk();
-        $path = $this->uniquePath($disk, trim($folder.'/'.$originalName, '/'));
+        $target = trim($folder.'/'.$originalName, '/');
 
-        $stream = fopen($localPath, 'r');
-        $disk->put($path, $stream);
-        if (is_resource($stream)) {
-            fclose($stream);
-        }
+        // uniquePath() + put() is check-then-act: two parallel uploads of
+        // the same name could both see "free" and overwrite each other.
+        // Serialise them per target path so the second one sees the first
+        // one's file and picks the next "_N" suffix instead.
+        $path = $this->withPathLock($target, function () use ($disk, $target, $localPath) {
+            $path = $this->uniquePath($disk, $target);
+
+            $stream = fopen($localPath, 'r');
+            $disk->put($path, $stream);
+            if (is_resource($stream)) {
+                fclose($stream);
+            }
+
+            return $path;
+        });
 
         $entry = [
             'name' => basename($path),
@@ -196,6 +217,9 @@ class UploadController extends Controller
         return $entry;
     }
 
+    /**
+     * @return array{int, int, int}|null
+     */
     protected function parseContentRange(Request $request): ?array
     {
         $header = $request->header('Content-Range');
@@ -212,7 +236,48 @@ class UploadController extends Controller
         return storage_path('app/filemanager-chunks/'.sha1($folder.'|'.$name));
     }
 
-    protected function uniquePath($disk, string $path): string
+    /**
+     * Runs $callback while holding a cache lock on $path when the default
+     * cache store supports atomic locks (file, redis, database, array…).
+     * If the store can't lock, or the lock can't be acquired in time, the
+     * callback still runs — unlocked, i.e. the pre-existing behaviour —
+     * rather than failing an otherwise valid upload.
+     *
+     * @template T
+     *
+     * @param  callable(): T  $callback
+     * @return T
+     */
+    protected function withPathLock(string $path, callable $callback): mixed
+    {
+        $store = Cache::getStore();
+
+        if (! $store instanceof LockProvider) {
+            return $callback();
+        }
+
+        $lock = $store->lock('filemanager:upload:'.sha1($this->config->disk().'|'.mb_strtolower($path)), 30);
+
+        try {
+            $lock->block(10);
+        } catch (LockTimeoutException) {
+            return $callback();
+        }
+
+        try {
+            return $callback();
+        } finally {
+            $lock->release();
+        }
+    }
+
+    /**
+     * Free name for $path: itself, or "name_N.ext" with the lowest free N.
+     * One exists() for the common no-collision case; on a collision the
+     * folder is listed once instead of probing exists() per candidate,
+     * which on a remote disk (S3/FTP) was one round-trip per "_N" tried.
+     */
+    protected function uniquePath(Filesystem $disk, string $path): string
     {
         if (! $disk->exists($path)) {
             return $path;
@@ -221,12 +286,16 @@ class UploadController extends Controller
         $info = pathinfo($path);
         $dir = $info['dirname'] === '.' ? '' : $info['dirname'].'/';
         $extension = isset($info['extension']) ? '.'.$info['extension'] : '';
+
+        // Compared case-insensitively so a case-insensitive disk (Windows,
+        // macOS) never gets "Foto_1.jpg" when "foto_1.jpg" already exists.
+        $taken = array_flip(array_map('mb_strtolower', $disk->files(rtrim($dir, '/'))));
         $i = 1;
 
         do {
             $candidate = "{$dir}{$info['filename']}_{$i}{$extension}";
             $i++;
-        } while ($disk->exists($candidate));
+        } while (isset($taken[mb_strtolower($candidate)]));
 
         return $candidate;
     }

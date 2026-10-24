@@ -7,6 +7,7 @@ use Illuminate\Routing\Controller;
 use OpenSID\LaravelFilemanager\Exceptions\UnsafePathException;
 use OpenSID\LaravelFilemanager\Services\FilesystemManager;
 use OpenSID\LaravelFilemanager\Services\PathGuard;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**
  * Replaces rfm/force_download.php. Storage::download() already streams with
@@ -17,7 +18,7 @@ class DownloadController extends Controller
 {
     public function __construct(protected FilesystemManager $files) {}
 
-    public function stream(Request $request)
+    public function stream(Request $request): StreamedResponse
     {
         $path = trim((string) $request->input('path', ''), '/');
         $name = (string) $request->input('name', '');

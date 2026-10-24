@@ -1092,6 +1092,28 @@
         </div>
     </div>
 
+    {{--
+        Satu form unduh untuk seluruh grid (dulu satu <form> + @csrf per
+        berkas, sehingga ribuan berkas = ribuan form & token). Tiap berkas
+        hanya membawa <div class="download-form"> + .name_download;
+        include.js (termasuk salinan hasil "duplicate") memanggil .submit()
+        pada div itu, lalu handler di bawah mengisi nama dan mengirim form ini.
+    --}}
+    <form id="download-form-shared" action="{{ route('filemanager.download') }}" method="post" style="display:none;">
+        @csrf
+        <input type="hidden" name="path" value="{{ $subdir }}">
+        <input type="hidden" name="name" value="">
+    </form>
+    <script>
+        $(document).on('submit', 'div.download-form', function () {
+            var $form = $('#download-form-shared');
+            $form.find('input[name="name"]').val($(this).find('.name_download').val() || '');
+            $form.get(0).submit();
+
+            return false;
+        });
+    </script>
+
     <div id="loading_container" style="display:none;">
         <div id="loading" style="background-color:#000; position:fixed; width:100%; height:100%; top:0px; left:0px;z-index:100000"></div>
         <img id="loading_animation" src="{{ filemanager_asset('img/storing_animation.gif') }}" alt="loading" style="z-index:10001; margin-left:-32px; margin-top:-32px; position:fixed; left:50%; top:50%">

@@ -2,8 +2,14 @@ name: CI
 
 on:
   push:
-    branches: [master]
+    # Juga branch kerja, supaya test jalan sebelum PR dibuka.
+    branches: [master, 'bug-fix/**', 'fitur/**']
   pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   tests:
@@ -55,6 +61,9 @@ jobs:
 
       - name: Install dependencies
         run: composer update --prefer-stable --prefer-dist --no-interaction --no-progress
+
+      - name: Audit dependencies (composer audit)
+        run: composer audit --no-interaction
 
       - name: Check code style (Pint)
         run: vendor/bin/pint --test

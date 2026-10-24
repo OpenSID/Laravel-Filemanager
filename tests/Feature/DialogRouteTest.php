@@ -5,6 +5,7 @@ namespace OpenSID\LaravelFilemanager\Tests\Feature;
 use Illuminate\Auth\Middleware\Authenticate;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Storage;
 use OpenSID\LaravelFilemanager\Tests\TestCase;
 use PHPUnit\Framework\Attributes\Test;
 
@@ -78,5 +79,43 @@ class DialogRouteTest extends TestCase
         $response->assertSee('value="alert1valid_callback"', false);
         $response->assertSee('value="scriptalert1script"', false);
         $response->assertDontSee('value="alert(1);//valid_callback"', false);
+    }
+
+    #[Test]
+    public function the_grid_renders_one_shared_download_form_instead_of_one_form_per_file(): void
+    {
+        // Regression (#12): grid.blade.php used to emit a <form> + @csrf
+        // token per file, so a folder with thousands of files shipped
+        // thousands of forms/tokens. Now there's exactly one form, filled
+        // in by JS from the clicked item's .name_download.
+        Storage::fake('filemanager');
+        Storage::fake('filemanager_thumbs');
+        $this->actingAsUser();
+        $this->allowAllFilemanagerAbilities();
+
+        foreach (['a.pdf', 'b.pdf', 'c.pdf', 'd.pdf', 'e.pdf'] as $name) {
+            Storage::disk('filemanager')->put($name, '%PDF-1.4');
+        }
+
+        $html = $this->get(route('filemanager.dialog'))->assertOk()->getContent();
+
+        $this->assertSame(1, substr_count($html, 'action="'.route('filemanager.download').'"'));
+        $this->assertSame(1, substr_count($html, 'id="download-form-shared"'));
+        $this->assertSame(5, substr_count($html, 'class="name_download"'));
+        $this->assertSame(0, substr_count($html, '<form action="'.route('filemanager.download').'"'));
+        $this->assertStringContainsString('value="e.pdf"', $html);
+    }
+
+    #[Test]
+    public function asset_urls_carry_a_cache_busting_version(): void
+    {
+        $this->actingAsUser();
+        $this->allowAllFilemanagerAbilities();
+        config(['filemanager.asset_version' => '9.9.9']);
+
+        $this->get(route('filemanager.dialog'))
+            ->assertOk()
+            ->assertSee('js/include.js?v=9.9.9', false)
+            ->assertSee('css/style.css?v=9.9.9', false);
     }
 }

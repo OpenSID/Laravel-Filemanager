@@ -59,6 +59,16 @@ return [
     'assets_url_path' => env('FILEMANAGER_ASSETS_URL_PATH', 'assets/vendor/filemanager'),
 
     /*
+    | Cache-busting suffix filemanager_asset() appends as "?v=<version>".
+    | null = automatic: the installed package version from Composer (a tag
+    | such as "v1.2.0", or a short commit hash for a dev-* install), so the
+    | URL changes exactly when the package — and thus its published assets —
+    | is updated, letting browsers/CDNs cache the files for a long time.
+    | Set a string to pin it manually, or '' to drop the suffix entirely.
+    */
+    'asset_version' => env('FILEMANAGER_ASSET_VERSION'),
+
+    /*
     |--------------------------------------------------------------------------
     | Filesystem disks
     |--------------------------------------------------------------------------

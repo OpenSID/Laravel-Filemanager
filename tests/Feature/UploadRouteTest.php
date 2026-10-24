@@ -2,11 +2,16 @@
 
 namespace OpenSID\LaravelFilemanager\Tests\Feature;
 
+use Illuminate\Contracts\Filesystem\Filesystem;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
+use Mockery;
+use OpenSID\LaravelFilemanager\Http\Controllers\UploadController;
 use OpenSID\LaravelFilemanager\Tests\TestCase;
 use PHPUnit\Framework\Attributes\Test;
+use ReflectionMethod;
 
 class UploadRouteTest extends TestCase
 {
@@ -156,6 +161,56 @@ class UploadRouteTest extends TestCase
 
         $this->assertNotSame('photo.jpg', $storedName);
         $this->assertSame('existing content', Storage::disk('filemanager')->get('photo.jpg'));
+    }
+
+    #[Test]
+    public function a_colliding_name_gets_the_lowest_free_suffix(): void
+    {
+        foreach (['album/photo.jpg', 'album/photo_1.jpg', 'album/Photo_2.jpg', 'album/photo_4.jpg'] as $existing) {
+            Storage::disk('filemanager')->put($existing, 'existing');
+        }
+
+        $response = $this->post(route('filemanager.upload'), [
+            'fldr' => 'album',
+            'files' => [UploadedFile::fake()->image('photo.jpg')],
+        ]);
+
+        // photo_2 is taken case-insensitively ("Photo_2.jpg"), so _3 is the first free one.
+        $this->assertSame('photo_3.jpg', $response->json()['files'][0]['name']);
+        $this->assertSame('existing', Storage::disk('filemanager')->get('album/photo_1.jpg'));
+    }
+
+    #[Test]
+    public function unique_path_lists_the_folder_once_instead_of_probing_exists_per_candidate(): void
+    {
+        // Regression (#12): on a remote disk every exists() is a network
+        // round-trip; the old loop called it once per "_N" candidate.
+        $disk = Mockery::mock(Filesystem::class);
+        $disk->shouldReceive('exists')->once()->with('album/photo.jpg')->andReturnTrue();
+        $disk->shouldReceive('files')->once()->with('album')->andReturn(
+            array_merge(['album/photo.jpg'], array_map(fn ($i) => "album/photo_{$i}.jpg", range(1, 50))),
+        );
+
+        $controller = app(UploadController::class);
+        $uniquePath = (new ReflectionMethod($controller, 'uniquePath'))->getClosure($controller);
+
+        $this->assertSame('album/photo_51.jpg', $uniquePath($disk, 'album/photo.jpg'));
+    }
+
+    #[Test]
+    public function the_name_pick_and_write_run_under_a_per_path_cache_lock_that_is_released_afterwards(): void
+    {
+        // Regression (#12): uniquePath() + put() is check-then-act, so two
+        // parallel uploads of the same name could overwrite each other.
+        $key = 'filemanager:upload:'.sha1('filemanager|album/photo.jpg');
+
+        $controller = app(UploadController::class);
+        $withPathLock = (new ReflectionMethod($controller, 'withPathLock'))->getClosure($controller);
+
+        $heldInside = $withPathLock('album/Photo.jpg', fn () => ! Cache::lock($key, 1)->get());
+
+        $this->assertTrue($heldInside, 'a concurrent upload must not be able to take the lock meanwhile');
+        $this->assertTrue(Cache::lock($key, 1)->get(), 'the lock must be released after the write');
     }
 
     #[Test]

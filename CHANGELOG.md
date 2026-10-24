@@ -7,6 +7,18 @@ dan proyek ini memakai [Semantic Versioning](https://semver.org/lang/id/).
 
 ## [Unreleased]
 
+### Ditambahkan
+
+- `filemanager_asset()` menambahkan `?v=<versi paket>` (konfigurasi baru `asset_version`) agar aset bisa di-cache lama dan tetap ter-refresh saat paket diperbarui (#12).
+- Test `AjaxController` (copy/cut, clipboard, `get_file`) (#12).
+- CI: langkah `composer audit`, PHPStan naik ke level 6, dan dipicu juga pada push ke branch `bug-fix/**`/`fitur/**` (#12).
+
+### Diperbaiki
+
+- Grid tidak lagi membuat satu `<form>` + token CSRF per berkas; unduhan memakai satu form bersama (#12).
+- `UploadController::uniquePath()` membaca isi folder sekali alih-alih memanggil `exists()` per kandidat nama (#12).
+- Unggahan paralel bernama sama tidak lagi saling menimpa: pemilihan nama + penulisan dikunci per path dengan `Cache::lock` (#12).
+
 ## [1.1.0] - 2026-10-23
 
 ### Ditambahkan
