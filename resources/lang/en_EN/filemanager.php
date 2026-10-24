@@ -142,4 +142,5 @@ return [
     'GB' => 'GB',
     'TB' => 'TB',
     'total size' => 'Total size',
+    'storage_error' => 'Storage operation failed. Please try again or contact the administrator.',
 ];

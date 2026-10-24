@@ -7,6 +7,7 @@ use Illuminate\Http\Response;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Gate;
 use OpenSID\LaravelFilemanager\Exceptions\UnsafePathException;
+use OpenSID\LaravelFilemanager\Services\AuditLogger;
 use OpenSID\LaravelFilemanager\Services\ClipboardManager;
 use OpenSID\LaravelFilemanager\Services\FileContentValidator;
 use OpenSID\LaravelFilemanager\Services\FilenameSanitizer;
@@ -58,6 +59,14 @@ class ExecuteController extends Controller
             };
         } catch (UnsafePathException) {
             return $this->ok(trans('filemanager::filemanager.wrong path'));
+        } catch (\Throwable $e) {
+            // Disks configured with 'throw' => true (S3/SFTP/...) raise
+            // instead of returning false. The legacy frontend only knows
+            // "HTTP 200, non-empty body = error", so a 500 would leave it
+            // hanging — report the real cause, show a generic message.
+            report($e);
+
+            return $this->ok(trans('filemanager::filemanager.storage_error'));
         }
     }
 
@@ -74,7 +83,9 @@ class ExecuteController extends Controller
             return $this->ok(trans('filemanager::filemanager.File_Permission_Not_Allowed'));
         }
 
-        $this->files->deleteFile($path);
+        if ($this->files->deleteFile($path)) {
+            $this->audit('delete_file', [$path]);
+        }
 
         return $this->ok();
     }
@@ -85,11 +96,17 @@ class ExecuteController extends Controller
             return $this->ok(trans('filemanager::filemanager.File_Permission_Not_Allowed'));
         }
 
+        $deleted = [];
+
         foreach ((array) $request->input('paths', []) as $path) {
             $safePath = $this->safePath((string) $path);
-            if (! $this->config->isHiddenFile(basename($safePath))) {
-                $this->files->deleteFile($safePath);
+            if (! $this->config->isHiddenFile(basename($safePath)) && $this->files->deleteFile($safePath)) {
+                $deleted[] = $safePath;
             }
+        }
+
+        if ($deleted !== []) {
+            $this->audit('delete_files', $deleted);
         }
 
         return $this->ok();
@@ -107,7 +124,9 @@ class ExecuteController extends Controller
             return $this->ok(trans('filemanager::filemanager.wrong path'));
         }
 
-        $this->files->deleteDirectory($path);
+        if ($this->files->deleteDirectory($path)) {
+            $this->audit('delete_folder', [$path]);
+        }
 
         return $this->ok();
     }
@@ -130,6 +149,8 @@ class ExecuteController extends Controller
         if (! $this->files->makeDirectory($newPath)) {
             return $this->ok(trans('filemanager::filemanager.Rename_existing_folder'));
         }
+
+        $this->audit('create_folder', [$newPath]);
 
         return $this->ok();
     }
@@ -157,6 +178,8 @@ class ExecuteController extends Controller
         if (! $this->files->move($path, $newPath)) {
             return $this->ok(trans('filemanager::filemanager.Rename_existing_folder'));
         }
+
+        $this->audit('rename_folder', ['from' => $path, 'to' => $newPath]);
 
         return $this->ok();
     }
@@ -190,6 +213,7 @@ class ExecuteController extends Controller
         }
 
         $this->files->put($newPath, (string) $request->input('new_content', ''));
+        $this->audit('create_file', [$newPath]);
 
         return $this->ok();
     }
@@ -227,6 +251,8 @@ class ExecuteController extends Controller
             return $this->ok(trans('filemanager::filemanager.Rename_existing_file'));
         }
 
+        $this->audit('rename_file', ['from' => $path, 'to' => $newPath]);
+
         return $this->ok();
     }
 
@@ -263,6 +289,8 @@ class ExecuteController extends Controller
             return $this->ok(trans('filemanager::filemanager.Rename_existing_file'));
         }
 
+        $this->audit('duplicate_file', ['from' => $path, 'to' => $newPath]);
+
         return $this->ok();
     }
 
@@ -297,6 +325,10 @@ class ExecuteController extends Controller
 
         $this->clipboard->clear();
 
+        if ($moved) {
+            $this->audit($action === 'copy' ? 'paste_copy' : 'paste_cut', ['from' => $sourcePath, 'to' => $newPath]);
+        }
+
         return $moved ? $this->ok() : $this->ok(trans('filemanager::filemanager.wrong action'));
     }
 
@@ -324,6 +356,7 @@ class ExecuteController extends Controller
         }
 
         $this->files->put($path, (string) $request->input('new_content', ''));
+        $this->audit('save_text_file', [$path]);
 
         return $this->ok();
     }
@@ -353,7 +386,10 @@ class ExecuteController extends Controller
 
     protected function join(string $dir, string $name): string
     {
+        // dirname() of a root-level path is "." — keep paths (and the audit
+        // log) as "name", not "./name"
         $dir = trim($dir, '/');
+        $dir = $dir === '.' ? '' : $dir;
 
         return $dir === '' ? $name : "{$dir}/{$name}";
     }
@@ -424,6 +460,7 @@ class ExecuteController extends Controller
 
         $this->files->put($targetPath, $decoded);
         @unlink($tmp);
+        $this->audit('crop_image', ['from' => $path, 'to' => $targetPath]);
 
         try {
             app(ThumbnailGenerator::class)->make(
@@ -437,6 +474,14 @@ class ExecuteController extends Controller
         }
 
         return $this->ok();
+    }
+
+    /**
+     * @param  array<string, string>|list<string>  $paths
+     */
+    protected function audit(string $action, array $paths): void
+    {
+        app(AuditLogger::class)->record($action, $paths);
     }
 
     protected function ok(string $body = ''): Response

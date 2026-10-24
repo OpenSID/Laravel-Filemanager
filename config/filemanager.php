@@ -75,6 +75,54 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Public file URLs
+    |--------------------------------------------------------------------------
+    |
+    | By default a local-disk file URL is rebuilt from the *current request*
+    | host (url()), so it follows whatever domain/port the admin is using.
+    | That host comes from the client's Host header: without the host app's
+    | TrustHosts middleware a forged Host makes the URL TinyMCE inserts into
+    | an article point at another domain. Set this to true to take the
+    | scheme/host/port from config('app.url') instead (only when app.url is
+    | set) — or enable TrustHosts in the host app. See README.
+    |
+    */
+    'use_app_url' => env('FILEMANAGER_USE_APP_URL', false),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Upload-folder .htaccess
+    |--------------------------------------------------------------------------
+    |
+    | protectDirectory() writes `Options -ExecCGI -Indexes` into every
+    | upload folder's .htaccess. Apache answers *every* request under that
+    | folder with HTTP 500 when the vhost's AllowOverride does not include
+    | Options (e.g. `AllowOverride FileInfo` only) — and an Options line
+    | can't be guarded by <IfModule>. Set to false on such servers to omit
+    | that line (disable indexes/CGI at vhost level instead), then re-run
+    | `php artisan filemanager:harden`.
+    |
+    */
+    'htaccess_options' => env('FILEMANAGER_HTACCESS_OPTIONS', true),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Audit log
+    |--------------------------------------------------------------------------
+    |
+    | Every mutating action (upload, delete, rename, paste, create, duplicate,
+    | crop, save) dispatches a FilemanagerActionPerformed event and, when
+    | enabled, writes one Log::info line with user id, action, path(s) and
+    | IP. "channel" null = the app's default log channel.
+    |
+    */
+    'audit_log' => [
+        'enabled' => env('FILEMANAGER_AUDIT_LOG', true),
+        'channel' => env('FILEMANAGER_AUDIT_LOG_CHANNEL'),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Size limits (MB)
     |--------------------------------------------------------------------------
     */

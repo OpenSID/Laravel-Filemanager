@@ -8,6 +8,7 @@ use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Gate;
 use OpenSID\LaravelFilemanager\Exceptions\UnsafePathException;
+use OpenSID\LaravelFilemanager\Services\AuditLogger;
 use OpenSID\LaravelFilemanager\Services\FileContentValidator;
 use OpenSID\LaravelFilemanager\Services\FilenameSanitizer;
 use OpenSID\LaravelFilemanager\Services\FilesystemManager;
@@ -86,7 +87,18 @@ class UploadController extends Controller
                 continue;
             }
 
-            $results[] = $this->handleUpload($request, $file, $folder);
+            try {
+                $results[] = $this->handleUpload($request, $file, $folder);
+            } catch (\Throwable $e) {
+                // Disks with 'throw' => true (S3/SFTP/...) raise instead of
+                // returning false; keep the blueimp contract (HTTP 200 +
+                // per-file "error") instead of a 500 the widget can't show.
+                report($e);
+                $results[] = [
+                    'name' => $this->names->sanitize($file->getClientOriginalName()),
+                    'error' => trans('filemanager::filemanager.storage_error'),
+                ];
+            }
         }
 
         return response()->json(['files' => $results]);
@@ -153,10 +165,11 @@ class UploadController extends Controller
             return ['name' => $originalName, 'size' => $end + 1];
         }
 
-        $result = $this->finalize($stagingPath, $originalName, $folder);
-        @unlink($stagingPath);
-
-        return $result;
+        try {
+            return $this->finalize($stagingPath, $originalName, $folder);
+        } finally {
+            @unlink($stagingPath);
+        }
     }
 
     protected function finalize(string $localPath, string $originalName, string $folder): array
@@ -176,10 +189,17 @@ class UploadController extends Controller
         $path = $this->uniquePath($disk, trim($folder.'/'.$originalName, '/'));
 
         $stream = fopen($localPath, 'r');
-        $disk->put($path, $stream);
+        $stored = $disk->put($path, $stream);
         if (is_resource($stream)) {
             fclose($stream);
         }
+
+        // 'throw' => false disks report failure by returning false
+        if ($stored === false) {
+            return ['name' => $originalName, 'error' => trans('filemanager::filemanager.storage_error')];
+        }
+
+        app(AuditLogger::class)->record('upload', [$path]);
 
         $entry = [
             'name' => basename($path),
