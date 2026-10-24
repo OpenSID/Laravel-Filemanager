@@ -3,6 +3,7 @@
 namespace OpenSID\LaravelFilemanager\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Session;
@@ -58,7 +59,9 @@ class DialogController extends Controller
             'callback' => $callback ?: null,
         ], fn ($value) => $value !== null && $value !== '');
 
-        return view('filemanager::dialog', [
+        $crossdomain = (bool) $request->query('crossdomain', false);
+
+        $response = response(view('filemanager::dialog', [
             'subdir' => $subdir,
             'breadcrumbs' => $this->breadcrumbs($subdir),
             'entries' => $entries,
@@ -71,7 +74,8 @@ class DialogController extends Controller
             'acceptTypes' => $this->config->acceptAttributeForType($type),
             'multiple' => $multiple,
             'popup' => (bool) $request->query('popup', false),
-            'crossdomain' => (bool) $request->query('crossdomain', false),
+            'crossdomain' => $crossdomain,
+            'targetOrigin' => $crossdomain ? $this->resolveTargetOrigin($request) : '',
             'callback' => $callback,
             'editor' => $editor,
             'relativeUrl' => (bool) $request->query('relative_url', false),
@@ -80,7 +84,57 @@ class DialogController extends Controller
             'canUpload' => Gate::allows('filemanager.upload', $context),
             'canDelete' => Gate::allows('filemanager.delete', $context),
             'apply' => $this->resolveApplyFunction($type, $fieldId, $multiple),
-        ]);
+        ]));
+
+        return $this->withSecurityHeaders($response);
+    }
+
+    /**
+     * Anti-clickjacking: only this app (plus config('filemanager.
+     * allowed_origins')) may frame the dialog, so a foreign site can't
+     * overlay a logged-in admin's picker and harvest the chosen file URL.
+     * X-Frame-Options is only sent when no extra origin is allowed —
+     * SAMEORIGIN would otherwise override the CSP list in older browsers.
+     */
+    protected function withSecurityHeaders(Response $response): Response
+    {
+        $origins = $this->config->allowedOrigins();
+
+        $response->headers->set('Content-Security-Policy', trim("frame-ancestors 'self' ".implode(' ', $origins)));
+        $response->headers->set('X-Content-Type-Options', 'nosniff');
+
+        if ($origins === []) {
+            $response->headers->set('X-Frame-Options', 'SAMEORIGIN');
+        }
+
+        return $response;
+    }
+
+    /**
+     * targetOrigin include.js passes to postMessage() in crossdomain mode
+     * (replaces upstream rfm's "*", which leaked the picked file URL to
+     * whatever page happened to host the dialog). The embedding page's
+     * origin is taken from Referer and only honoured when it is on the
+     * allow-list; with a single allowed origin that one is used even
+     * without a Referer. Empty string = include.js falls back to the
+     * dialog's own origin, so a non-allowed parent simply never receives
+     * the message.
+     */
+    protected function resolveTargetOrigin(Request $request): string
+    {
+        $allowed = $this->config->allowedOrigins();
+        $referer = (string) $request->headers->get('referer', '');
+        $parts = parse_url($referer);
+
+        if (is_array($parts) && isset($parts['scheme'], $parts['host'])) {
+            $origin = strtolower($parts['scheme'].'://'.$parts['host'].(isset($parts['port']) ? ':'.$parts['port'] : ''));
+
+            if (in_array($origin, $allowed, true)) {
+                return $origin;
+            }
+        }
+
+        return count($allowed) === 1 ? $allowed[0] : '';
     }
 
     protected function sanitizeIdentifier(string $value): string

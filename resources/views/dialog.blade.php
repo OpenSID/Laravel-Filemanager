@@ -9,8 +9,6 @@
 
     <link rel="stylesheet" href="{{ filemanager_asset('css/jquery.fileupload.css') }}">
     <link rel="stylesheet" href="{{ filemanager_asset('css/jquery.fileupload-ui.css') }}">
-    <noscript><link rel="stylesheet" href="{{ filemanager_asset('css/jquery.fileupload-noscript.css') }}"></noscript>
-    <noscript><link rel="stylesheet" href="{{ filemanager_asset('css/jquery.fileupload-ui-noscript.css') }}"></noscript>
     <link rel="stylesheet" href="{{ filemanager_asset('css/style.css') }}">
     <link rel="stylesheet" href="{{ filemanager_asset('css/cropper.min.css') }}">
 
@@ -23,6 +21,8 @@
     <script>
         var ext_img = @json(config('filemanager.extensions.image', []));
         var image_editor = false; {{-- TUI image editor dropped from this package; keep the guard include.js checks --}}
+        {{-- targetOrigin postMessage mode crossdomain: origin induk yang ada di allow-list, selain itu origin sendiri (tidak pernah "*") --}}
+        var rfm_target_origin = @json($targetOrigin) || window.location.origin;
     </script>
 
     <script src="{{ filemanager_asset('js/include.js') }}"></script>

@@ -13,6 +13,22 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Allowed embedding origins
+    |--------------------------------------------------------------------------
+    |
+    | Origin (scheme://host[:port], tanpa path) yang boleh membingkai dialog
+    | di <iframe> dan menerima URL berkas terpilih lewat postMessage pada mode
+    | `crossdomain=1`. Origin aplikasi sendiri ('self') selalu diizinkan.
+    | Kosong = dialog hanya bisa di-iframe oleh origin sendiri dan
+    | postMessage tidak pernah dikirim ke origin lain. Entri yang bukan
+    | origin valid diabaikan. Contoh .env:
+    |   FILEMANAGER_ALLOWED_ORIGINS="https://desa.example.id,https://cms.example.id"
+    |
+    */
+    'allowed_origins' => explode(',', (string) env('FILEMANAGER_ALLOWED_ORIGINS', '')),
+
+    /*
+    |--------------------------------------------------------------------------
     | Permissions
     |--------------------------------------------------------------------------
     |

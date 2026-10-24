@@ -45,6 +45,30 @@ class FilemanagerConfig
         return $baseFolder;
     }
 
+    /**
+     * Normalised config('filemanager.allowed_origins'): only well-formed
+     * "scheme://host[:port]" entries survive, lower-cased and without a
+     * trailing slash, so they are safe to drop verbatim into a
+     * Content-Security-Policy header and to compare against a request's
+     * Origin/Referer.
+     *
+     * @return list<string>
+     */
+    public function allowedOrigins(): array
+    {
+        $origins = [];
+
+        foreach ((array) config('filemanager.allowed_origins', []) as $origin) {
+            $origin = strtolower(rtrim(trim((string) $origin), '/'));
+
+            if (preg_match('#^https?://[a-z0-9.-]+(:\d{1,5})?$#', $origin)) {
+                $origins[] = $origin;
+            }
+        }
+
+        return array_values(array_unique($origins));
+    }
+
     public function allowedExtensions(): array
     {
         return array_merge(...array_values(config('filemanager.extensions', [])));
