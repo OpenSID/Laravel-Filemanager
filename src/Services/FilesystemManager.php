@@ -154,6 +154,15 @@ class FilesystemManager
         return $this->disk()->exists($path);
     }
 
+    /**
+     * exists() is Flysystem's has(): true for a file OR a directory. Use
+     * this wherever the path must be a file (e.g. before download/get()).
+     */
+    public function fileExists(string $path): bool
+    {
+        return $this->disk()->fileExists($path);
+    }
+
     public function isDirectory(string $path): bool
     {
         return $this->disk()->directoryExists($path);
@@ -356,10 +365,68 @@ HTACCESS;
             return false;
         }
 
+        // Flysystem's copy() is file-only (the local adapter's PHP copy()
+        // fails on a directory), yet the UI offers copy/paste for folders.
+        if ($this->isDirectory($from)) {
+            return $this->copyDirectory($from, $to);
+        }
+
         $ok = $this->disk()->copy($from, $to);
 
         if ($this->thumbsDisk()->exists($from)) {
             $this->thumbsDisk()->copy($from, $to);
+        }
+
+        return $ok;
+    }
+
+    /**
+     * Recursively copies a directory (and its mirrored thumbnails). Every
+     * target directory goes through makeDirectory(), so it gets a fresh
+     * hardened .htaccess/index.html; the source's copies of those files are
+     * skipped rather than allowed to overwrite them.
+     */
+    protected function copyDirectory(string $from, string $to): bool
+    {
+        $from = trim($from, '/');
+        $to = trim($to, '/');
+        $disk = $this->disk();
+
+        if (! $this->makeDirectory($to)) {
+            return false;
+        }
+
+        $relative = fn (string $path): string => ltrim(substr($path, strlen($from)), '/');
+
+        foreach ($disk->allDirectories($from) as $dir) {
+            $this->makeDirectory($to.'/'.$relative($dir));
+        }
+
+        $ok = true;
+
+        foreach ($disk->allFiles($from) as $file) {
+            if (in_array(basename($file), ['.htaccess', 'index.html'], true)) {
+                continue;
+            }
+
+            $ok = $disk->copy($file, $to.'/'.$relative($file)) && $ok;
+        }
+
+        // best-effort, like the single-file thumbnail copy
+        try {
+            $thumbs = $this->thumbsDisk();
+
+            if ($thumbs->directoryExists($from)) {
+                foreach ($thumbs->allFiles($from) as $file) {
+                    if (in_array(basename($file), ['.htaccess', 'index.html'], true)) {
+                        continue;
+                    }
+
+                    $thumbs->copy($file, $to.'/'.$relative($file));
+                }
+            }
+        } catch (\Throwable) {
+            // ignore
         }
 
         return $ok;
@@ -402,11 +469,21 @@ HTACCESS;
         $units = ['B', 'KB', 'MB', 'GB', 'TB'];
         $unit = 0;
 
-        while (round($bytes / 1024) > 0 && $unit < count($units) - 1) {
+        // Step up only once a full unit is reached — round($bytes / 1024) > 0
+        // used to turn 512 B into "1 KB".
+        while ($bytes >= 1024 && $unit < count($units) - 1) {
             $bytes /= 1024;
             $unit++;
         }
 
-        return number_format($bytes, 0).' '.$units[$unit];
+        if ($unit === 0) {
+            return number_format($bytes, 0).' '.$units[$unit];
+        }
+
+        // Up to 2 decimals for KB and above, without trailing zeros
+        // ("5.57 MB", "1.5 KB", "1 MB").
+        $formatted = rtrim(rtrim(number_format($bytes, 2), '0'), '.');
+
+        return $formatted.' '.$units[$unit];
     }
 }

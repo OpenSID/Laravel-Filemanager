@@ -36,7 +36,7 @@ class DownloadController extends Controller
 
         $fullPath = trim($path.'/'.$name, '/');
 
-        if (! $this->files->exists($fullPath)) {
+        if (! $this->files->fileExists($fullPath)) {
             abort(404, trans('filemanager::filemanager.File_Not_Found'));
         }
 

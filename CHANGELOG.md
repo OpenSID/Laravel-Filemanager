@@ -7,6 +7,16 @@ dan proyek ini memakai [Semantic Versioning](https://semver.org/lang/id/).
 
 ## [Unreleased]
 
+### Diperbaiki
+
+- `ThumbnailGenerator` tidak lagi meninggalkan 2 berkas `rfmIn*`/`rfmOut*` di direktori temp setiap pembuatan thumbnail (#14).
+- Kunci terjemahan `Upload_error` dan `Refresh` ditambahkan, `Upload_message` disinkronkan ke `en_EN`; test baru menjaga kunci yang dipakai kode selalu ada di kedua bahasa (#14).
+- `humanFileSize()` baru naik satuan pada 1024 (512 B tidak lagi tampil "1 KB") dan menampilkan hingga 2 desimal (#14).
+- Unggahan yang ditolak PHP (`UPLOAD_ERR_*`) kini dilaporkan dengan pesan galat, bukan dibuang diam-diam (#14).
+- Unggah ke folder yang belum ada ditolak agar folder tidak dibuat tanpa `.htaccess`/`index.html` (#14).
+- Unduh dengan nama folder menghasilkan 404, bukan galat 500 (`fileExists()` menggantikan `exists()`) (#14).
+- Salin/tempel folder kini menyalin isinya secara rekursif (termasuk thumbnail) alih-alih gagal dengan "wrong action" (#14).
+
 ## [1.1.0] - 2026-10-23
 
 ### Ditambahkan

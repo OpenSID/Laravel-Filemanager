@@ -91,4 +91,46 @@ class ThumbnailGeneratorTest extends TestCase
         $this->assertSame(122, imagesx($thumb));
         $this->assertSame(91, imagesy($thumb));
     }
+
+    #[Test]
+    public function make_leaves_no_temp_files_behind_on_success_or_failure(): void
+    {
+        // tempnam() creates its own file; the old code appended an
+        // extension to that name and only ever deleted the suffixed path,
+        // leaking 2 rfm* files into the temp dir per thumbnail. Point the
+        // generator at a private temp dir so a concurrently running suite
+        // can't skew the count.
+        $tempDir = sys_get_temp_dir().DIRECTORY_SEPARATOR.'rfm-test-'.bin2hex(random_bytes(6));
+        mkdir($tempDir);
+
+        $generator = new class($tempDir) extends ThumbnailGenerator
+        {
+            public function __construct(private string $dir) {}
+
+            protected function tempDirectory(): string
+            {
+                return $this->dir;
+            }
+        };
+
+        Storage::fake('filemanager');
+        Storage::fake('filemanager_thumbs');
+
+        $image = imagecreatetruecolor(50, 50);
+        ob_start();
+        imagejpeg($image);
+        Storage::disk('filemanager')->put('photo.jpg', ob_get_clean());
+        imagedestroy($image);
+        Storage::disk('filemanager')->put('corrupt.jpg', 'this is not actually a jpeg');
+
+        try {
+            $this->assertTrue($generator->make('filemanager', 'photo.jpg', 'filemanager_thumbs', 'photo.jpg'));
+            $this->assertFalse($generator->make('filemanager', 'corrupt.jpg', 'filemanager_thumbs', 'corrupt.jpg'));
+
+            $this->assertSame([], glob($tempDir.DIRECTORY_SEPARATOR.'*'));
+        } finally {
+            array_map('unlink', glob($tempDir.DIRECTORY_SEPARATOR.'*') ?: []);
+            rmdir($tempDir);
+        }
+    }
 }
