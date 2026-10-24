@@ -141,6 +141,28 @@ class UploadRouteTest extends TestCase
     }
 
     #[Test]
+    public function strips_the_disk_root_prefix_from_fldr_only_on_whole_segments(): void
+    {
+        // Regression: a plain str_starts_with() turned 'media-extra' into '-extra'
+        // when the disk root is base_path('media').
+        config(['filesystems.disks.filemanager.root' => base_path('media')]);
+
+        $this->post(route('filemanager.upload'), [
+            'fldr' => 'media-extra',
+            'files' => [UploadedFile::fake()->image('a.jpg')],
+        ])->assertOk();
+
+        $this->post(route('filemanager.upload'), [
+            'fldr' => 'media/sub',
+            'files' => [UploadedFile::fake()->image('b.jpg')],
+        ])->assertOk();
+
+        Storage::disk('filemanager')->assertExists('media-extra/a.jpg');
+        Storage::disk('filemanager')->assertMissing('-extra/a.jpg');
+        Storage::disk('filemanager')->assertExists('sub/b.jpg');
+    }
+
+    #[Test]
     public function a_second_upload_with_the_same_name_gets_a_unique_filename_instead_of_overwriting(): void
     {
         Storage::disk('filemanager')->put('photo.jpg', 'existing content');

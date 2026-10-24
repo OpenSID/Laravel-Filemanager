@@ -34,6 +34,10 @@ class PathGuardTest extends TestCase
             'null byte injection' => ["foo\0bar"],
             'url encoded null byte' => ['foo%00bar'],
             'windows alternate data stream' => ['image.jpg::$DATA'],
+            'windows-trimmed triple dot' => ['.../etc'],
+            'windows-trimmed dot-dot with space' => ['.. /etc'],
+            'parent dir after folder ending in a dot' => ['a./../etc'],
+            'segment ending in a double dot' => ['foo../etc'],
         ];
     }
 
@@ -53,6 +57,9 @@ class PathGuardTest extends TestCase
             'single segment' => ['foto.jpg'],
             'nested folder' => ['galeri/2026/foto.jpg'],
             'name containing dots but not traversal' => ['v1.2.3-release-notes.txt'],
+            'folder name ending in a dot' => ['a./b'],
+            'version folder ending in a dot' => ['v1./x'],
+            'dot-prefixed (hidden) folder' => ['.config/x'],
         ];
     }
 

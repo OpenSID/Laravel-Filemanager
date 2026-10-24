@@ -79,8 +79,13 @@ class PathGuard
             return false;
         }
 
-        foreach (['../', './', '/..', '..\\', '\\..', '.\\'] as $needle) {
-            if (str_contains($path, $needle)) {
+        // Judge whole segments, not substrings: "a./b" or "v1./x" (a folder
+        // name ending in a single dot) is harmless, while "." / ".." are
+        // traversal. Dot-only segments with trailing dots/whitespace ("...",
+        // ".. ") and segments ending in ".." ("foo..") stay rejected, since
+        // Windows trims trailing dots/spaces in ways that can yield "..".
+        foreach (preg_split('#[/\\\\]#', $path) ?: [] as $segment) {
+            if (preg_match('/^\.[.\s]*$|\.\.[.\s]*$/', $segment)) {
                 return false;
             }
         }

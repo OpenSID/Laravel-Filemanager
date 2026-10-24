@@ -182,6 +182,12 @@ return [
     | Paths outside this directory will be denied. Leave empty ('') to allow
     | access to the entire root of the configured disk.
     |
+    | The value is relative to the disk root. For compatibility, a path
+    | relative to base_path() is also accepted when it starts with the disk
+    | root (disk root base_path('desa/upload') + 'desa/upload/media' =>
+    | 'media'), and a value the disk root already ends with means the whole
+    | disk. Prefixes are matched on whole path segments only.
+    |
     */
     'base_folder' => env('FILEMANAGER_BASE_FOLDER', ''),
 

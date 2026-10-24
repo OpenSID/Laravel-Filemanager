@@ -7,6 +7,15 @@ dan proyek ini memakai [Semantic Versioning](https://semver.org/lang/id/).
 
 ## [Unreleased]
 
+### Diperbaiki
+
+- `FilenameSanitizer`: nama berkas tidak lagi disimpan dengan entitas HTML (`&amp;`, `&#039;`, `&lt;`); karakter `& < > " ' ; #` dibuang dan tag lengkap dihapus (#13).
+- `FilenameSanitizer`: pemotongan nama panjang memakai `mb_strcut()` sehingga tidak merusak UTF-8 (respons upload tidak lagi gagal "Malformed UTF-8") (#13).
+- `FilenameSanitizer`: karakter format Unicode tak terlihat (`\p{Cf}`, mis. U+202E, U+200B) dibuang; ZWNJ/ZWJ dipertahankan (#13).
+- `FilemanagerConfig::baseFolder()` dan `UploadController::store`: pembuangan prefiks root disk dicocokkan per segmen path (`media-extra` tidak lagi menjadi `-extra`) lewat helper `stripPathPrefix()` (#13).
+- `PathGuard`: folder berakhiran satu titik (`a./b`, `v1./x`) tidak lagi ditolak (#13).
+- Dokumentasi `base_folder` di config/README: relatif terhadap root disk, dengan kompatibilitas path relatif `base_path()` (#13).
+
 ## [1.1.0] - 2026-10-23
 
 ### Ditambahkan
