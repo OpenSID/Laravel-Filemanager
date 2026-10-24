@@ -318,6 +318,7 @@ dengan query `type` (0 = file, 1 = image, 2 = link, 3 = media).
 | `editable_text_extensions` + `text_editing_enabled` | Editor teks in-app (default mati). |
 | `transliterate`, `convert_spaces`, `replace_with`, `lower_case` | Perilaku `FilenameSanitizer`. |
 | `assets_path`, `assets_url_path` | Lokasi publish + URL aset frontend. |
+| `asset_version` | Sufiks `?v=` pada URL aset (`null` = versi paket dari Composer, `''` = nonaktif). |
 
 ---
 
@@ -328,7 +329,7 @@ composer install
 composer test        # phpunit
 composer lint        # pint (perbaiki gaya)
 composer lint:test   # pint --test (cek saja, dipakai CI)
-composer analyse     # phpstan / larastan level 5
+composer analyse     # phpstan / larastan level 6
 composer check       # ketiganya sekaligus
 ```
 
