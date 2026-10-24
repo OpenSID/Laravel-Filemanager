@@ -7,6 +7,21 @@ dan proyek ini memakai [Semantic Versioning](https://semver.org/lang/id/).
 
 ## [Unreleased]
 
+### Ditambahkan
+
+- Kunci config `default_view` (tampilan awal dialog) yang sudah dibaca `DialogController` (#15).
+- Test penjaga sinkronisasi `config('filemanager.*')` di kode dengan `config/filemanager.php` (#15).
+
+### Diperbaiki
+
+- `composer.json` kini mendeklarasikan dependensi yang dipakai langsung (`illuminate/support|http|routing|filesystem|console`, `league/flysystem`, `league/mime-type-detection`, `ext-mbstring`, `ext-fileinfo`), `ext-gd`/`ext-imagick`/`ext-intl` di `suggest`, dan `minimum-stability: dev` dihapus (#15).
+- URL `/filemanager/...` hard-code di `include.js` dan aksi `crop_image` di `dialog.blade.php` diganti `window.FILEMANAGER_ROUTES` dari `route()`, sehingga `route_prefix` kustom dan instalasi sub-folder berfungsi (#15).
+- Tombol "Berkas Baru" (saat `text_editing_enabled` aktif) menampilkan "no action passed": aksi `ajax?action=new_file_form` dipulihkan (#15).
+
+### Dihapus
+
+- Kunci config mati `default_language` dan `languages`; bahasa dialog mengikuti *locale* aplikasi host (#15).
+
 ## [1.1.0] - 2026-10-23
 
 ### Ditambahkan

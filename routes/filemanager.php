@@ -15,14 +15,13 @@ use OpenSID\LaravelFilemanager\Http\Middleware\EnsureFilemanagerAccess;
 |--------------------------------------------------------------------------
 |
 | Plain Laravel route names — no ".php"-styled URIs. The vendored legacy
-| assets (resources/dist/js/include.js, and the app's pre-existing TinyMCE
-| plugin at assets/js/tinymce-72/plugins/responsivefilemanager/plugin.min.js)
-| are static files that can't resolve a Laravel route by name at request
-| time, so they call these by ABSOLUTE path instead of relying on relative
-| URL resolution against the current page (which would silently break the
-| moment the dialog page's URL didn't end in a trailing slash). Those two
-| files were edited to call "/{prefix}/..." literally, assuming the
-| default prefix — if you change filemanager.route_prefix, re-patch them.
+| bundle (resources/dist/js/include.js) is a static file that can't resolve
+| a Laravel route by name, so dialog.blade.php hands it the real URLs via
+| `window.FILEMANAGER_ROUTES` (ajax/execute/upload, built with route()).
+| Changing filemanager.route_prefix or serving the app from a sub-folder
+| therefore needs no re-patching of the package's JS. A host-side TinyMCE
+| plugin that opens the dialog should likewise build its URL from
+| route('filemanager.dialog') rather than a literal "/filemanager".
 |
 */
 

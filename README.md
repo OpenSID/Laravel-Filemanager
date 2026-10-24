@@ -72,8 +72,22 @@ return [
     */
     'route_prefix' => 'filemanager',
     'middleware' => ['web', 'auth'],
+
+    /*
+    | Tampilan awal dialog: 0 = kotak/thumbnail, 1 = daftar, 2 = kolom.
+    */
+    'default_view' => 0,
 ];
 ```
+
+Catatan:
+
+- `route_prefix` boleh diubah dan aplikasi boleh berjalan di sub-folder: URL
+  AJAX/execute/upload dikirim ke JavaScript dialog lewat
+  `window.FILEMANAGER_ROUTES` (hasil `route()`), bukan ditulis tetap di
+  `include.js`.
+- Bahasa dialog mengikuti *locale* aplikasi host (`config('app.locale')` /
+  `app()->setLocale()`); tidak ada pengaturan bahasa di config paket.
 
 ---
 
