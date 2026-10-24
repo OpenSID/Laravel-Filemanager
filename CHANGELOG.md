@@ -7,6 +7,18 @@ dan proyek ini memakai [Semantic Versioning](https://semver.org/lang/id/).
 
 ## [Unreleased]
 
+### Diperbaiki
+
+- README: URL dialog `/filemanager/dialog` (404) diganti `route('filemanager.dialog')`/`filemanager_base_url()` (#16).
+- README: contoh TinyMCE membaca `message.url` dengan pengecekan `origin` + `sender`, bukan `message.content` (#16).
+- README: `filebrowserUploadUrl` CKEditor dihapus dari contoh dan keterbatasannya dijelaskan (#16).
+- README: contoh konfigurasi disamakan dengan default sebenarnya; `permissions`, `max_upload_size`, `extensions`, `text_editing_enabled` didokumentasikan (#16).
+- Teks modal crop dan template unggah kini lewat berkas bahasa `id`/`en_EN` (#16).
+
+### Ditambahkan
+
+- Test aksi `ExecuteController`, Gate bawaan, `DialogController` (sort, breadcrumb, apply) dan batas chunk `UploadController` (#16).
+
 ## [1.1.0] - 2026-10-23
 
 ### Ditambahkan

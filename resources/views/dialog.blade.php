@@ -1118,8 +1118,8 @@
             <div style="padding:12px 16px; background:#f8fafc; border-top:1px solid #e2e8f0; display:flex; flex-wrap:wrap; gap:8px; align-items:center; justify-content:space-between;">
                 {{-- Aspect Ratio Buttons --}}
                 <div style="display:inline-flex; gap:4px; align-items:center;">
-                    <span style="font-size:12px; font-weight:600; color:#475569; margin-right:4px;">Rasio:</span>
-                    <button type="button" class="btn btn-small cropper-ratio-btn active" data-ratio="NaN" style="border-radius:5px; font-size:11px; padding:3px 8px;">Bebas</button>
+                    <span style="font-size:12px; font-weight:600; color:#475569; margin-right:4px;">{{ __('filemanager::filemanager.Crop_ratio') }}</span>
+                    <button type="button" class="btn btn-small cropper-ratio-btn active" data-ratio="NaN" style="border-radius:5px; font-size:11px; padding:3px 8px;">{{ __('filemanager::filemanager.Crop_ratio_free') }}</button>
                     <button type="button" class="btn btn-small cropper-ratio-btn" data-ratio="1" style="border-radius:5px; font-size:11px; padding:3px 8px;">1:1</button>
                     <button type="button" class="btn btn-small cropper-ratio-btn" data-ratio="1.3333333333" style="border-radius:5px; font-size:11px; padding:3px 8px;">4:3</button>
                     <button type="button" class="btn btn-small cropper-ratio-btn" data-ratio="1.7777777778" style="border-radius:5px; font-size:11px; padding:3px 8px;">16:9</button>
@@ -1127,11 +1127,11 @@
 
                 {{-- Action / Transform Buttons --}}
                 <div style="display:inline-flex; gap:4px; align-items:center;">
-                    <button type="button" id="cropper-rotate-left" class="btn btn-small" title="Putar Kiri 90°" style="border-radius:5px; padding:3px 8px; font-size:12px;"><i class="icon-repeat" style="transform: scaleX(-1); display:inline-block;"></i> -90°</button>
-                    <button type="button" id="cropper-rotate-right" class="btn btn-small" title="Putar Kanan 90°" style="border-radius:5px; padding:3px 8px; font-size:12px;"><i class="icon-repeat"></i> +90°</button>
-                    <button type="button" id="cropper-flip-h" class="btn btn-small" title="Flip Horizontal" style="border-radius:5px; padding:3px 8px; font-size:12px;">Flip H</button>
-                    <button type="button" id="cropper-flip-v" class="btn btn-small" title="Flip Vertical" style="border-radius:5px; padding:3px 8px; font-size:12px;">Flip V</button>
-                    <button type="button" id="cropper-reset" class="btn btn-small" title="Reset" style="border-radius:5px; padding:3px 8px; font-size:12px;"><i class="icon-refresh"></i></button>
+                    <button type="button" id="cropper-rotate-left" class="btn btn-small" title="{{ __('filemanager::filemanager.Crop_rotate_left') }}" style="border-radius:5px; padding:3px 8px; font-size:12px;"><i class="icon-repeat" style="transform: scaleX(-1); display:inline-block;"></i> -90°</button>
+                    <button type="button" id="cropper-rotate-right" class="btn btn-small" title="{{ __('filemanager::filemanager.Crop_rotate_right') }}" style="border-radius:5px; padding:3px 8px; font-size:12px;"><i class="icon-repeat"></i> +90°</button>
+                    <button type="button" id="cropper-flip-h" class="btn btn-small" title="{{ __('filemanager::filemanager.Crop_flip_horizontal') }}" style="border-radius:5px; padding:3px 8px; font-size:12px;">Flip H</button>
+                    <button type="button" id="cropper-flip-v" class="btn btn-small" title="{{ __('filemanager::filemanager.Crop_flip_vertical') }}" style="border-radius:5px; padding:3px 8px; font-size:12px;">Flip V</button>
+                    <button type="button" id="cropper-reset" class="btn btn-small" title="{{ __('filemanager::filemanager.Crop_reset') }}" style="border-radius:5px; padding:3px 8px; font-size:12px;"><i class="icon-refresh"></i></button>
                 </div>
             </div>
 
@@ -1140,19 +1140,19 @@
                 <div style="display:flex; align-items:center; gap:10px; flex:1; min-width:260px;">
                     <label style="margin:0; font-size:12px; color:#334155; display:inline-flex; align-items:center; gap:4px; cursor:pointer;">
                         <input type="radio" name="cropper_save_mode" value="overwrite" checked style="margin:0;">
-                        <span>Timpa berkas asli</span>
+                        <span>{{ __('filemanager::filemanager.Crop_overwrite') }}</span>
                     </label>
                     <label style="margin:0; font-size:12px; color:#334155; display:inline-flex; align-items:center; gap:4px; cursor:pointer;">
                         <input type="radio" name="cropper_save_mode" value="new" style="margin:0;">
-                        <span>Simpan berkas baru:</span>
+                        <span>{{ __('filemanager::filemanager.Crop_save_as_new') }}</span>
                     </label>
-                    <input type="text" id="cropper-new-name" placeholder="nama-file-baru" style="height:26px; padding:2px 8px; font-size:12px; border:1px solid #cbd5e1; border-radius:5px; display:none; max-width:180px; margin:0;">
+                    <input type="text" id="cropper-new-name" placeholder="{{ __('filemanager::filemanager.Crop_new_name_placeholder') }}" style="height:26px; padding:2px 8px; font-size:12px; border:1px solid #cbd5e1; border-radius:5px; display:none; max-width:180px; margin:0;">
                 </div>
 
                 <div style="display:flex; gap:8px;">
-                    <button type="button" id="cropper-cancel-btn" class="btn" style="border-radius:5px; font-size:12px; padding:5px 14px;">Batal</button>
+                    <button type="button" id="cropper-cancel-btn" class="btn" style="border-radius:5px; font-size:12px; padding:5px 14px;">{{ __('filemanager::filemanager.Cancel') }}</button>
                     <button type="button" id="cropper-save-btn" class="btn btn-primary" style="border-radius:5px; font-size:12px; padding:5px 16px; background:#2563eb; color:#ffffff; font-weight:500;">
-                        <i class="icon-ok icon-white"></i> Simpan Gambar
+                        <i class="icon-ok icon-white"></i> {{ __('filemanager::filemanager.Crop_save') }}
                     </button>
                 </div>
             </div>
@@ -1166,6 +1166,15 @@
             var currentFileName = '';
             var scaleX = 1;
             var scaleY = 1;
+            // Teks UI modal crop dari berkas bahasa (resources/lang/*/filemanager.php).
+            var cropperLang = {
+                imageUrlNotFound: @json(__('filemanager::filemanager.Crop_image_url_not_found')),
+                libraryLoading: @json(__('filemanager::filemanager.Crop_library_loading')),
+                canvasFailed: @json(__('filemanager::filemanager.Crop_canvas_failed')),
+                saving: @json(__('filemanager::filemanager.Crop_saving')),
+                saveFailed: @json(__('filemanager::filemanager.Crop_save_failed')),
+            };
+            var saveButtonHtml = '<i class="icon-ok icon-white"></i> ' + $('<div>').text(@json(__('filemanager::filemanager.Crop_save'))).html();
 
             // Buka Modal Crop Gambar
             $(document).on('click', '.crop-file-btn', function (e) {
@@ -1178,7 +1187,7 @@
                 var imageUrl = $btn.attr('data-url') || $btn.closest('figure').find('a.preview').attr('href') || '';
 
                 if (!imageUrl) {
-                    bootbox.alert('URL gambar tidak ditemukan.');
+                    bootbox.alert(cropperLang.imageUrlNotFound);
                     return;
                 }
 
@@ -1200,7 +1209,7 @@
                 scaleY = 1;
 
                 if (typeof Cropper === 'undefined') {
-                    bootbox.alert('Pustaka Cropper.js sedang dimuat, silakan coba beberapa saat lagi.');
+                    bootbox.alert(cropperLang.libraryLoading);
                     return;
                 }
 
@@ -1295,7 +1304,7 @@
 
                 var canvas = cropperInstance.getCroppedCanvas();
                 if (!canvas) {
-                    bootbox.alert('Gagal membuat kanvas potongan gambar.');
+                    bootbox.alert(cropperLang.canvasFailed);
                     return;
                 }
 
@@ -1303,7 +1312,7 @@
                 var mimeType = ext === 'png' ? 'image/png' : (ext === 'webp' ? 'image/webp' : 'image/jpeg');
                 var dataUrl = canvas.toDataURL(mimeType, 0.92);
 
-                $btn.prop('disabled', true).text('Menyimpan...');
+                $btn.prop('disabled', true).text(cropperLang.saving);
                 show_animation();
 
                 $.ajax({
@@ -1316,7 +1325,7 @@
                     }
                 }).done(function (res) {
                     hide_animation();
-                    $btn.prop('disabled', false).html('<i class="icon-ok icon-white"></i> Simpan Gambar');
+                    $btn.prop('disabled', false).html(saveButtonHtml);
 
                     if (res && res !== '') {
                         bootbox.alert(res);
@@ -1328,8 +1337,8 @@
                     }
                 }).fail(function () {
                     hide_animation();
-                    $btn.prop('disabled', false).html('<i class="icon-ok icon-white"></i> Simpan Gambar');
-                    bootbox.alert('Terjadi kesalahan saat menyimpan potongan gambar.');
+                    $btn.prop('disabled', false).html(saveButtonHtml);
+                    bootbox.alert(cropperLang.saveFailed);
                 });
             });
         });
