@@ -5,6 +5,7 @@ namespace OpenSID\LaravelFilemanager\Tests\Feature;
 use Illuminate\Auth\Middleware\Authenticate;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Storage;
 use OpenSID\LaravelFilemanager\Tests\TestCase;
 use PHPUnit\Framework\Attributes\Test;
 
@@ -78,5 +79,28 @@ class DialogRouteTest extends TestCase
         $response->assertSee('value="alert1valid_callback"', false);
         $response->assertSee('value="scriptalert1script"', false);
         $response->assertDontSee('value="alert(1);//valid_callback"', false);
+    }
+
+    #[Test]
+    public function the_grid_uses_thumbnails_only_for_images_that_have_one(): void
+    {
+        // #9: thumbnail presence comes from one listing of the thumbs folder
+        // (FilesystemManager::thumbnailIndex) instead of exists() per image.
+        Storage::fake('filemanager');
+        Storage::fake('filemanager_thumbs', ['url' => 'http://thumbs.test/t']);
+        config(['filemanager.extensions.image' => ['jpg', 'png']]);
+
+        Storage::disk('filemanager')->put('galeri/ada.jpg', 'x');
+        Storage::disk('filemanager')->put('galeri/tanpa.png', 'x');
+        Storage::disk('filemanager_thumbs')->put('galeri/ada.jpg', 't');
+
+        $this->actingAsUser();
+        $this->allowAllFilemanagerAbilities();
+
+        $this->get(route('filemanager.dialog', ['fldr' => 'galeri']))
+            ->assertOk()
+            ->assertSee('http://thumbs.test/t/galeri/ada.jpg', false)
+            ->assertDontSee('http://thumbs.test/t/galeri/tanpa.png', false)
+            ->assertSee('tanpa.png', false);
     }
 }

@@ -24,6 +24,8 @@ class FilesystemManager
 {
     protected FilemanagerConfig $config;
 
+    protected ?string $appHostMemo = null;
+
     public function __construct(?FilemanagerConfig $config = null)
     {
         $this->config = $config ?? new FilemanagerConfig;
@@ -75,8 +77,9 @@ class FilesystemManager
         // keep it as-is unless it was generated with a default localhost/127.0.0.1
         $host = $parsed['host'] ?? '';
         if ($host !== '' && ! in_array($host, ['localhost', '127.0.0.1'], true) && ($parsed['scheme'] ?? '') !== '') {
-            $configuredAppHost = parse_url((string) config('app.url', ''), PHP_URL_HOST);
-            if ($host !== $configuredAppHost) {
+            // Called once per grid entry — parse app.url only once.
+            $this->appHostMemo ??= (string) parse_url((string) config('app.url', ''), PHP_URL_HOST);
+            if ($host !== $this->appHostMemo) {
                 return $url;
             }
         }
@@ -147,6 +150,32 @@ class FilesystemManager
         }
 
         return $entries;
+    }
+
+    /**
+     * Set of thumbnail paths that exist directly inside $directory on the
+     * thumbs disk, keyed by path (value is always true) — one listContents
+     * round-trip per folder instead of one exists() per image in the grid,
+     * which on S3/FTP/SFTP is one network request each.
+     *
+     * @return array<string, true>
+     */
+    public function thumbnailIndex(string $directory): array
+    {
+        $index = [];
+
+        try {
+            foreach ($this->thumbsDisk()->listContents(trim($directory, '/'), false) as $item) {
+                if ($item instanceof FileAttributes) {
+                    $index[$item->path()] = true;
+                }
+            }
+        } catch (\Throwable) {
+            // thumbs folder missing / thumbs disk unreachable: no thumbnails,
+            // the grid falls back to file-type icons
+        }
+
+        return $index;
     }
 
     public function exists(string $path): bool
@@ -269,11 +298,33 @@ HTACCESS;
             $htaccessPath = $base === '' ? '.htaccess' : $base.'/.htaccess';
             $indexPath = $base === '' ? 'index.html' : $base.'/index.html';
 
-            $disk->put($htaccessPath, $htaccessContent);
-            $disk->put($indexPath, $indexContent);
+            $this->putIfChanged($disk, $htaccessPath, $htaccessContent);
+            $this->putIfChanged($disk, $indexPath, $indexContent);
         } catch (\Throwable) {
             // ignore if storage disk is remote/S3 or read-only
         }
+    }
+
+    /**
+     * Writes $contents only when the file is missing or differs, so
+     * re-running `filemanager:harden` (or re-protecting an existing folder)
+     * costs one read per file instead of a rewrite.
+     *
+     * @return bool true when the file was (re)written
+     */
+    protected function putIfChanged(Filesystem $disk, string $path, string $contents): bool
+    {
+        try {
+            if ($disk->get($path) === $contents) {
+                return false;
+            }
+        } catch (\Throwable) {
+            // missing/unreadable: (re)write below
+        }
+
+        $disk->put($path, $contents);
+
+        return true;
     }
 
     /**
@@ -317,9 +368,7 @@ HTACCESS;
     {
         $ok = $this->disk()->delete($path);
 
-        if ($this->thumbsDisk()->exists($path)) {
-            $this->thumbsDisk()->delete($path);
-        }
+        $this->mirrorOnThumbs(fn (Filesystem $thumbs) => $thumbs->delete($path));
 
         return $ok;
     }
@@ -328,9 +377,7 @@ HTACCESS;
     {
         $ok = $this->disk()->deleteDirectory($path);
 
-        if ($this->thumbsDisk()->exists($path)) {
-            $this->thumbsDisk()->deleteDirectory($path);
-        }
+        $this->mirrorOnThumbs(fn (Filesystem $thumbs) => $thumbs->deleteDirectory($path));
 
         return $ok;
     }
@@ -343,9 +390,7 @@ HTACCESS;
 
         $ok = $this->disk()->move($from, $to);
 
-        if ($this->thumbsDisk()->exists($from)) {
-            $this->thumbsDisk()->move($from, $to);
-        }
+        $this->mirrorOnThumbs(fn (Filesystem $thumbs) => $thumbs->move($from, $to));
 
         return $ok;
     }
@@ -358,11 +403,24 @@ HTACCESS;
 
         $ok = $this->disk()->copy($from, $to);
 
-        if ($this->thumbsDisk()->exists($from)) {
-            $this->thumbsDisk()->copy($from, $to);
-        }
+        $this->mirrorOnThumbs(fn (Filesystem $thumbs) => $thumbs->copy($from, $to));
 
         return $ok;
+    }
+
+    /**
+     * Best-effort mirror of a main-disk operation onto the thumbs disk.
+     * Not every file has a thumbnail, but probing with exists() first
+     * doubles the round-trips on remote disks — just attempt it and treat
+     * "nothing there" (false / exception) as a no-op.
+     */
+    protected function mirrorOnThumbs(callable $operation): void
+    {
+        try {
+            $operation($this->thumbsDisk());
+        } catch (\Throwable) {
+            // no thumbnail for this path, or thumbs disk unavailable
+        }
     }
 
     public function put(string $path, string $contents): bool
@@ -383,18 +441,24 @@ HTACCESS;
      */
     public function directoryStats(string $directory): array
     {
-        $disk = $this->disk();
         $directory = trim($directory, '/');
 
-        $files = $disk->allFiles($directory);
-        $folders = $disk->allDirectories($directory);
-
+        // One recursive listing carries fileSize() for every entry — no
+        // separate allFiles()/allDirectories() walks or size() per file.
         $totalSize = 0;
-        foreach ($files as $file) {
-            $totalSize += $disk->size($file);
+        $fileCount = 0;
+        $folderCount = 0;
+
+        foreach ($this->disk()->listContents($directory, true) as $item) {
+            if ($item instanceof FileAttributes) {
+                $totalSize += $item->fileSize() ?? 0;
+                $fileCount++;
+            } elseif ($item instanceof DirectoryAttributes) {
+                $folderCount++;
+            }
         }
 
-        return [$totalSize, count($files), count($folders)];
+        return [$totalSize, $fileCount, $folderCount];
     }
 
     public function humanFileSize(int $bytes): string
