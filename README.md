@@ -75,6 +75,13 @@ return [
 ];
 ```
 
+### ⚡ Performa (disk remote, upload, session)
+
+- **Thumbnail lewat queue** — secara bawaan thumbnail dibuat sinkron di dalam request upload. Set `FILEMANAGER_THUMBNAIL_QUEUE=true` (antrean bawaan) atau isi nama antrean (mis. `thumbnails`) agar thumbnail dibuat oleh worker (`php artisan queue:work`). Selama worker belum memproses, grid menampilkan ikon tipe berkas.
+- **Disk remote (S3/FTP/SFTP)** — grid memeriksa thumbnail dengan satu listing folder thumbs (bukan `exists()` per gambar), operasi hapus/pindah/salin tidak lagi memeriksa thumbnail lebih dulu, dan `filemanager:harden` hanya menulis `.htaccess`/`index.html` bila isinya berbeda.
+- **Session & upload paralel** — session Laravel tidak mengunci (*lock*) kecuali rute memakai `->block()`, dan rute paket ini tidak memakainya; upload paralel/berpotongan (*chunk*) tidak saling menunggu. Namun dengan driver `file` setiap request menulis ulang berkas session di akhir request, sehingga request paralel saling menimpa (yang terakhir menang). Untuk banyak pengguna/server gunakan driver `redis` atau `database` (`SESSION_DRIVER`). Bila aplikasi host juga memakai session PHP native (`session_start()`, mis. lewat jembatan aplikasi lama), session tersebut **mengunci** berkasnya — panggil `session_write_close()` sebelum request mencapai rute filemanager agar upload paralel tidak diserialkan.
+- **Folder berisi ribuan berkas** — seluruh entri folder dirender dalam satu halaman (pengurutan, filter, dan pilih-banyak di sisi klien bergantung pada daftar lengkap). Pecah berkas ke subfolder bila jumlahnya sangat besar.
+
 ---
 
 ## 🚀 Penggunaan

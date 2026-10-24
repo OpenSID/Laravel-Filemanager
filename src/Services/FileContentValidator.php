@@ -18,7 +18,8 @@ namespace OpenSID\LaravelFilemanager\Services;
  *    file. An allowed non-image extension with no known signature is
  *    rejected outright: "can't verify" is treated as "don't trust".
  *
- * The polyglot scan reads the entire file (no 4 MB cap) and catches the
+ * The polyglot scan reads the entire file (no 4 MB cap; streamed in
+ * overlapping blocks, see scanInBlocks()) and catches the
  * bare PHP short tag `<?` in addition to `<?php` / `<?=` / `<script`.
  *
  * The `<?=` and bare `<?` markers are only 2-3 literal bytes, which real
@@ -78,6 +79,21 @@ class FileContentValidator
     protected const MIN_CODE_RUN_AFTER_SHORT_TAG = 10;
 
     /**
+     * Content scans read the file in blocks of this size rather than
+     * file_get_contents() of the whole upload.
+     */
+    protected const SCAN_BLOCK_BYTES = 1048576;
+
+    /**
+     * Tail of the previous block re-scanned with the next one. Far longer
+     * than any marker (incl. the 10-byte code run after `<?=`), so a match
+     * split across a block boundary is still found. Only markers padded
+     * with more than this much whitespace (`<` + 4 KB of spaces +
+     * `script`, which no browser/PHP parses as a tag anyway) could span it.
+     */
+    protected const SCAN_OVERLAP_BYTES = 4096;
+
+    /**
      * Matches an embedded PHP open tag (including the bare short tag) or an
      * HTML/script document structure smuggled inside another file type.
      */
@@ -111,15 +127,61 @@ class FileContentValidator
 
     protected function isSafeSvg(string $localPath): bool
     {
-        $contents = @file_get_contents($localPath);
-
-        if ($contents === false || ! str_contains($contents, '<svg')) {
-            return false;
-        }
-
         $pattern = '/(<\s*script|<\s*object|<\s*iframe|<\s*embed|<\s*foreignObject|<\s*meta|<\s*link|<\s*form|<\s*base|<\s*applet|<\s*style|<\s*set\b|<\s*animate|<!entity|<!doctype|javascript\s*:|data\s*:\s*text\/html|\b(on[a-zA-Z]+)\s*=|xlink\s*:\s*href|xmlns\s*:\s*script|<\?php|<\?=|<\?[\s\r\n])/i';
 
-        return ! preg_match($pattern, $contents);
+        $hasSvgRoot = false;
+        $clean = $this->scanInBlocks($localPath, function (string $window) use ($pattern, &$hasSvgRoot): bool {
+            $hasSvgRoot = $hasSvgRoot || str_contains($window, '<svg');
+
+            return preg_match($pattern, $window) === 1;
+        });
+
+        return $clean === true && $hasSvgRoot;
+    }
+
+    /**
+     * Feeds the file to $matches in SCAN_BLOCK_BYTES windows, each prefixed
+     * with the last SCAN_OVERLAP_BYTES of the previous window so a marker
+     * straddling a block boundary is still seen whole. Peak memory is one
+     * window instead of the whole upload (up to max_upload_size, read twice
+     * on some paths before).
+     *
+     * @param  callable(string): bool  $matches  true = forbidden content found
+     * @return bool|null true = clean, false = match found, null = unreadable
+     */
+    protected function scanInBlocks(string $localPath, callable $matches): ?bool
+    {
+        $handle = @fopen($localPath, 'rb');
+        if ($handle === false) {
+            return null;
+        }
+
+        try {
+            $carry = '';
+
+            while (! feof($handle)) {
+                $block = fread($handle, self::SCAN_BLOCK_BYTES);
+                if ($block === false) {
+                    return null;
+                }
+
+                if ($block === '' && $carry !== '') {
+                    break;
+                }
+
+                $window = $carry.$block;
+
+                if ($matches($window)) {
+                    return false;
+                }
+
+                $carry = substr($window, -self::SCAN_OVERLAP_BYTES);
+            }
+
+            return true;
+        } finally {
+            fclose($handle);
+        }
     }
 
     protected function isSafeRasterImage(string $localPath, bool $checkImageSize): bool
@@ -137,13 +199,10 @@ class FileContentValidator
      */
     protected function isFreeOfEmbeddedScript(string $localPath): bool
     {
-        $contents = @file_get_contents($localPath);
-
-        if ($contents === false) {
-            return false;
-        }
-
-        return ! preg_match(self::POLYGLOT_PATTERN, $contents);
+        return $this->scanInBlocks(
+            $localPath,
+            fn (string $window): bool => preg_match(self::POLYGLOT_PATTERN, $window) === 1,
+        ) === true;
     }
 
     /**

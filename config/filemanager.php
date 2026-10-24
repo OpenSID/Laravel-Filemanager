@@ -134,6 +134,12 @@ return [
     'thumbnail_width' => 122,
     'thumbnail_height' => 91,
 
+    // Generate upload thumbnails on the queue instead of inside the upload
+    // request: false = synchronous (default), true = default queue, or a
+    // queue name string. Needs a running queue worker unless the host's
+    // queue connection is "sync".
+    'thumbnail_queue' => env('FILEMANAGER_THUMBNAIL_QUEUE', false),
+
     // Image driver spatie/image uses for thumbnails/crop: 'gd' (default,
     // safest for untrusted uploads), 'imagick', or 'vips'. Only switch away
     // from GD if your ImageMagick policy.xml is hardened.

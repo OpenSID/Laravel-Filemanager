@@ -4,6 +4,17 @@ namespace OpenSID\LaravelFilemanager\Support;
 
 class FilemanagerConfig
 {
+    /**
+     * Per-instance memo for values derived from config() that are asked for
+     * many times per request (list(), every PathGuard check, every upload).
+     * The class is resolved fresh from the container (not a singleton), so
+     * a runtime config()->set() is still picked up by the next instance.
+     */
+    protected ?string $baseFolderMemo = null;
+
+    /** @var array<string, array<int, string>> */
+    protected array $extensionsMemo = [];
+
     public function disk(): string
     {
         return (string) config('filemanager.disk', 'filemanager');
@@ -15,6 +26,11 @@ class FilemanagerConfig
     }
 
     public function baseFolder(): string
+    {
+        return $this->baseFolderMemo ??= $this->resolveBaseFolder();
+    }
+
+    protected function resolveBaseFolder(): string
     {
         $baseFolder = trim(str_replace('\\', '/', (string) config('filemanager.base_folder', '')), '/');
         if ($baseFolder === '') {
@@ -47,14 +63,14 @@ class FilemanagerConfig
 
     public function allowedExtensions(): array
     {
-        return array_merge(...array_values(config('filemanager.extensions', [])));
+        return $this->extensionsMemo['all'] ??= array_merge(...array_values(config('filemanager.extensions', [])));
     }
 
     public function allowedExtensionsForType(?int $type = null): array
     {
         return match ($type) {
-            1 => config('filemanager.extensions.image', []),
-            3 => config('filemanager.extensions.video', []),
+            1 => $this->extensionsMemo['image'] ??= config('filemanager.extensions.image', []),
+            3 => $this->extensionsMemo['video'] ??= config('filemanager.extensions.video', []),
             default => $this->allowedExtensions(),
         };
     }

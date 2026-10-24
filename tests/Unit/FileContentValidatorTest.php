@@ -258,6 +258,30 @@ class FileContentValidatorTest extends TestCase
         return $this->tempFile($bytes);
     }
 
+    #[Test]
+    public function finds_a_payload_straddling_a_scan_block_boundary(): void
+    {
+        // #9: the polyglot scan reads in 1 MiB blocks instead of the whole
+        // file — a marker split across two blocks must still be caught.
+        foreach ([1048576 - 2, 1048576 - 4, 1048576 - 12, 3 * 1048576 + 1] as $offset) {
+            $payload = "<?= system(\$_GET['c']); ?>";
+            $bytes = '%PDF-1.4'.str_repeat("\x00", $offset - 8).$payload.str_repeat("\x00", 1024);
+
+            $this->assertFalse(
+                $this->validator->isValidUpload($this->tempFile($bytes), 'pdf'),
+                "Payload at offset {$offset} was not detected."
+            );
+        }
+    }
+
+    #[Test]
+    public function accepts_a_clean_multi_block_file(): void
+    {
+        $bytes = '%PDF-1.4'.str_repeat("0123456789\n", 300000); // ~3.3 MB
+
+        $this->assertTrue($this->validator->isValidUpload($this->tempFile($bytes), 'pdf'));
+    }
+
     protected function tempFile(string $contents): string
     {
         $path = tempnam(sys_get_temp_dir(), 'fcv');

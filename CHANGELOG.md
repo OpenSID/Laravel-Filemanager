@@ -7,6 +7,22 @@ dan proyek ini memakai [Semantic Versioning](https://semver.org/lang/id/).
 
 ## [Unreleased]
 
+### Ditambahkan
+
+- Opsi `thumbnail_queue` (`FILEMANAGER_THUMBNAIL_QUEUE`) dan job `GenerateThumbnail` untuk membuat thumbnail upload lewat queue, bukan di dalam request upload (#9).
+- README: bagian performa — queue thumbnail, disk remote, perilaku session saat upload paralel, folder berisi ribuan berkas (#9).
+
+### Diubah
+
+- Grid memeriksa thumbnail dengan satu listing folder thumbs (`FilesystemManager::thumbnailIndex()`), bukan `exists()` per gambar (#9).
+- `deleteFile/deleteDirectory/move/copy` tidak lagi memanggil `exists()` di disk thumbs sebelum operasi (#9).
+- `protectDirectory`/`filemanager:harden` hanya menulis `.htaccess`/`index.html` bila isinya berbeda (#9).
+- `directoryStats` memakai satu `listContents` rekursif, bukan `size()` per berkas (#9).
+- `FileContentValidator` memindai berkas per blok 1 MiB dengan overlap, bukan `file_get_contents` seluruh berkas (#9).
+- `ThumbnailGenerator` memakai `readStream`/`writeStream`; berkas temp dasar `tempnam()` kini ikut dihapus (#9).
+- Append chunk upload memakai `stream_copy_to_stream` (#9).
+- `FilemanagerConfig` memoisasi `baseFolder()` dan daftar ekstensi per instance (#9).
+
 ## [1.1.0] - 2026-10-23
 
 ### Ditambahkan
