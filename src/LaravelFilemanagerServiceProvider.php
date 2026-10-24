@@ -4,6 +4,7 @@ namespace OpenSID\LaravelFilemanager;
 
 use Illuminate\Support\Facades\Gate;
 use OpenSID\LaravelFilemanager\Console\HardenUploadsCommand;
+use OpenSID\LaravelFilemanager\Console\PublishAssetsCommand;
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
 
@@ -15,7 +16,8 @@ class LaravelFilemanagerServiceProvider extends PackageServiceProvider
             ->hasConfigFile()
             ->hasViews()
             ->hasRoute('filemanager')
-            ->hasCommand(HardenUploadsCommand::class);
+            ->hasCommand(HardenUploadsCommand::class)
+            ->hasCommand(PublishAssetsCommand::class);
     }
 
     public function packageBooted(): void

@@ -7,6 +7,12 @@ dan proyek ini memakai [Semantic Versioning](https://semver.org/lang/id/).
 
 ## [Unreleased]
 
+### Ditambahkan
+
+- Perintah `php artisan filemanager:assets` — mempublikasikan aset ke
+  `filemanager.assets_path` dengan symlink bila didukung, bila tidak berkas
+  disalin. Opsi `--copy` memaksa salin, `--force` menimpa tujuan yang ada.
+
 ## [1.1.0] - 2026-10-23
 
 ### Ditambahkan

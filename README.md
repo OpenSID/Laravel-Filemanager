@@ -34,7 +34,13 @@ Publikasikan file konfigurasi dan aset (opsional/jika diperlukan):
 # Publikasikan konfigurasi
 php artisan vendor:publish --tag=filemanager-config
 
-# Publikasikan asset frontend (CSS, JS, Icons)
+# Publikasikan asset frontend (CSS, JS, Icons) — symlink bila didukung,
+# bila tidak berkas disalin. Tujuan: config('filemanager.assets_path')
+php artisan filemanager:assets
+#   --copy   paksa salin berkas (tanpa symlink)
+#   --force  timpa tujuan yang sudah ada
+
+# Alternatif bawaan Laravel (selalu menyalin, tanpa symlink)
 php artisan vendor:publish --tag=filemanager-assets
 
 # Publikasikan view template
