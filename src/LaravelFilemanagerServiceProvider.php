@@ -2,8 +2,11 @@
 
 namespace OpenSID\LaravelFilemanager;
 
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Log;
 use OpenSID\LaravelFilemanager\Console\HardenUploadsCommand;
+use OpenSID\LaravelFilemanager\Support\FilemanagerConfig;
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
 
@@ -23,6 +26,7 @@ class LaravelFilemanagerServiceProvider extends PackageServiceProvider
         $this->loadFilemanagerTranslations();
         $this->registerDefaultGates();
         $this->publishPackageResources();
+        $this->warnIfDiskRootIsApplicationRoot();
     }
 
     /**
@@ -61,6 +65,35 @@ class LaravelFilemanagerServiceProvider extends PackageServiceProvider
         $this->publishes([
             __DIR__.'/../resources/views' => resource_path('views/vendor/filemanager'),
         ], 'filemanager-views');
+    }
+
+    /**
+     * With base_folder empty, PathGuard confines nothing: the whole disk is
+     * in scope. When that disk's root is the application root itself,
+     * delete/rename/cut/download can reach .env, vendor/, storage/ … —
+     * log a loud warning (throttled to once a day so it doesn't flood the
+     * log on every request). A warning rather than an exception, so an
+     * existing install keeps booting while the operator fixes the config.
+     */
+    protected function warnIfDiskRootIsApplicationRoot(): void
+    {
+        try {
+            if (! $this->app->make(FilemanagerConfig::class)->exposesApplicationRoot()) {
+                return;
+            }
+        } catch (\Throwable) {
+            return;
+        }
+
+        try {
+            if (! Cache::add('filemanager.warned_disk_root_is_app_root', true, now()->addDay())) {
+                return;
+            }
+        } catch (\Throwable) {
+            // cache store unavailable (e.g. during early install) — still warn
+        }
+
+        Log::warning('[filemanager] Disk "'.config('filemanager.disk').'" berakar di base_path() dan filemanager.base_folder kosong: seluruh berkas aplikasi (.env, vendor/, storage/) dapat dijangkau filemanager. Isi FILEMANAGER_BASE_FOLDER atau arahkan root disk ke folder unggahan.');
     }
 
     /**
