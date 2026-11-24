@@ -182,6 +182,11 @@ return [
     | Paths outside this directory will be denied. Leave empty ('') to allow
     | access to the entire root of the configured disk.
     |
+    | WARNING: an empty base_folder is only safe when the disk's root is
+    | already a dedicated upload folder. If the disk root is the application
+    | root (base_path()), delete/rename/cut/download can reach .env, vendor/,
+    | storage/ … — the package logs a warning at boot in that case.
+    |
     */
     'base_folder' => env('FILEMANAGER_BASE_FOLDER', ''),
 

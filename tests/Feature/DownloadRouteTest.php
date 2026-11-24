@@ -63,4 +63,64 @@ class DownloadRouteTest extends TestCase
             'name' => 'legacy.phar',
         ])->assertForbidden();
     }
+
+    #[Test]
+    public function an_empty_path_resolves_to_base_folder_not_the_disk_root(): void
+    {
+        // Regresi #7: path '' lolos isInsideBaseFolder() dan dulu disusun
+        // menjadi '/rahasia.pdf' — berkas di root disk, di luar base_folder.
+        config(['filemanager.base_folder' => 'desa/upload']);
+
+        Storage::disk('filemanager')->put('rahasia.pdf', 'di luar base_folder');
+        Storage::disk('filemanager')->put('desa/upload/dokumen.pdf', 'di dalam base_folder');
+
+        $this->post(route('filemanager.download'), [
+            'path' => '',
+            'name' => 'rahasia.pdf',
+        ])->assertNotFound();
+
+        $this->post(route('filemanager.download'), [
+            'path' => '',
+            'name' => 'dokumen.pdf',
+        ])->assertOk();
+    }
+
+    #[Test]
+    public function a_path_outside_base_folder_is_rejected(): void
+    {
+        config(['filemanager.base_folder' => 'desa/upload']);
+
+        Storage::disk('filemanager')->put('lain/rahasia.pdf', 'di luar base_folder');
+
+        $this->post(route('filemanager.download'), [
+            'path' => 'lain',
+            'name' => 'rahasia.pdf',
+        ])->assertStatus(400);
+    }
+
+    #[Test]
+    public function download_only_serves_whitelisted_extensions(): void
+    {
+        // Tidak di-blacklist, tetapi juga tidak ada di whitelist "extensions".
+        foreach (['.env', 'dump.sql', 'laravel.log', 'kunci.pem', 'composer.json', 'tanpa-ekstensi'] as $name) {
+            Storage::disk('filemanager')->put($name, 'rahasia');
+
+            $this->post(route('filemanager.download'), [
+                'path' => '',
+                'name' => $name,
+            ])->assertForbidden();
+        }
+    }
+
+    #[Test]
+    public function editable_text_files_are_downloadable_only_while_text_editing_is_enabled(): void
+    {
+        Storage::disk('filemanager')->put('catatan.txt', 'halo');
+
+        config(['filemanager.text_editing_enabled' => false]);
+        $this->post(route('filemanager.download'), ['path' => '', 'name' => 'catatan.txt'])->assertForbidden();
+
+        config(['filemanager.text_editing_enabled' => true]);
+        $this->post(route('filemanager.download'), ['path' => '', 'name' => 'catatan.txt'])->assertOk();
+    }
 }
