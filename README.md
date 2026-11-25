@@ -75,6 +75,16 @@ return [
 ];
 ```
 
+> [!WARNING]
+> **Selalu batasi cakupan filemanager.** Semua operasi (unduh, hapus, ganti nama, salin/potong) hanya dibatasi oleh `base_folder`. Bila `base_folder` dikosongkan (`''`), seluruh isi root disk dapat dijangkau — `hidden_folders` hanya mencocokkan nama persis (`.git`, dst.), bukan subpohon. Jadi:
+>
+> - isi `FILEMANAGER_BASE_FOLDER` (mis. `desa/upload`), **atau**
+> - arahkan `root` disk filemanager di `config/filesystems.php` langsung ke folder unggahan khusus.
+>
+> Jangan pernah memakai disk yang root-nya `base_path()` dengan `base_folder` kosong: berkas seperti `.env`, `vendor/`, dan `storage/` ikut terjangkau. Paket akan menulis peringatan ke log (maksimal sekali sehari) bila mendeteksi konfigurasi tersebut.
+>
+> Unduhan serta salin/potong/tempel hanya mengizinkan ekstensi di `extensions` (ditambah `editable_text_extensions` saat `text_editing_enabled` aktif); berkas pelindung seperti `.htaccess` dan `index.html` tidak dapat diunduh, disalin, maupun dipindahkan.
+
 ---
 
 ## 🚀 Penggunaan
@@ -184,6 +194,28 @@ RewriteRule (?i)\.(php|php[0-9]*|phtml|phtm|phps|pht|phar|inc|module|pl|py|cgi|s
 Whitelist `extensions` di `config/filemanager.php` sengaja dipangkas ke format yang dipakai desa **dan** yang tanda-tangan (*magic byte*)-nya bisa diverifikasi oleh `FileContentValidator`. Menambah ekstensi non-gambar yang tidak punya *signature* akan otomatis **ditolak** saat unggah.
 
 `svg` **tidak** ada di whitelist bawaan (risiko *stored XSS* — SVG adalah dokumen XML yang bisa memuat `<script>`/`<style>`/*event handler*). Jika benar-benar butuh SVG, tambahkan pustaka sanitasi khusus (`enshrined/svg-sanitize`) dan pastikan header `nosniff` + `Content-Disposition: attachment` aktif untuk folder media.
+
+### 6. Iframe lintas origin & `crossdomain=1`
+
+Respons dialog mengirim `Content-Security-Policy: frame-ancestors 'self'` dan `X-Content-Type-Options: nosniff` (plus `X-Frame-Options: SAMEORIGIN` bila tidak ada origin tambahan), sehingga dialog admin tidak bisa dibingkai situs lain (*clickjacking*). URL berkas terpilih pada mode `crossdomain=1` dikirim lewat `postMessage` hanya ke origin induk yang diizinkan — tidak pernah ke `"*"`.
+
+Jika dialog memang dipasang di aplikasi pada origin lain, daftarkan origin tersebut:
+
+```env
+FILEMANAGER_ALLOWED_ORIGINS="https://cms.example.id,https://desa.example.id"
+```
+
+### 7. Versi aset frontend
+
+| Berkas (`resources/dist/js`) | Pustaka | Versi |
+|---|---|---|
+| `jquery.min.js` | jQuery | 3.7.1 |
+| `jquery-ui.min.js` | jQuery UI (bundel lengkap) | 1.13.3 |
+| `cropper.min.js` | Cropper.js | 1.5.9 |
+| `modernizr.custom.js` | Modernizr (custom build) | 2.7.1 |
+| `tmpl.min.js`, `load-image.all.min.js`, `canvas-to-blob.min.js`, `jquery.fileupload*.js`, `jquery.iframe-transport.js` | blueimp (bawaan Responsive Filemanager) | tidak tercantum di berkas |
+
+Versi yang diketahui dicatat juga di `package.json` (hanya manifes, tidak ada proses build) agar Dependabot (ekosistem `npm`) memberi tahu bila ada rilis/CVE baru. Saat memperbarui, unduh berkas *minified* resmi (code.jquery.com / cdnjs) ke `resources/dist/js`, lalu samakan versinya di tabel ini dan di `package.json`.
 
 ---
 
