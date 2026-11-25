@@ -86,6 +86,48 @@ class FilemanagerConfigTest extends TestCase
         $this->assertTrue($this->config->isFilenameSafe($filename));
     }
 
+    #[Test]
+    #[DataProvider('baseFolderCases')]
+    public function resolves_base_folder_against_the_disk_root_on_whole_segments(string $diskRoot, string $baseFolder, string $expected): void
+    {
+        config([
+            'filesystems.disks.filemanager.root' => base_path($diskRoot),
+            'filemanager.base_folder' => $baseFolder,
+        ]);
+
+        $this->assertSame($expected, $this->config->baseFolder());
+    }
+
+    public static function baseFolderCases(): array
+    {
+        return [
+            'sibling folder sharing the disk root prefix' => ['media', 'media-extra/x', 'media-extra/x'],
+            'sibling folder with a digit suffix' => ['desa', 'desa2', 'desa2'],
+            'base_path-relative value under the disk root' => ['desa/upload', 'desa/upload/media', 'media'],
+            'base_path-relative value equal to the disk root' => ['desa/upload', 'desa/upload', ''],
+            'disk root already ends with base_folder' => ['desa/upload/media', 'media', ''],
+            'plain disk-relative value' => ['desa/upload', 'media', 'media'],
+        ];
+    }
+
+    #[Test]
+    #[DataProvider('pathPrefixCases')]
+    public function strips_a_path_prefix_only_on_segment_boundaries(string $path, string $prefix, ?string $expected): void
+    {
+        $this->assertSame($expected, FilemanagerConfig::stripPathPrefix($path, $prefix));
+    }
+
+    public static function pathPrefixCases(): array
+    {
+        return [
+            'exact match' => ['media', 'media', ''],
+            'child path' => ['media/a/b', 'media', 'a/b'],
+            'shared prefix, different segment' => ['media-extra/x', 'media', null],
+            'empty prefix' => ['a/b', '', 'a/b'],
+            'unrelated' => ['foo', 'media', null],
+        ];
+    }
+
     public static function safeFilenames(): array
     {
         return [

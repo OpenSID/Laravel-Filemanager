@@ -198,6 +198,12 @@ return [
     | Paths outside this directory will be denied. Leave empty ('') to allow
     | access to the entire root of the configured disk.
     |
+    | The value is relative to the disk root. For compatibility, a path
+    | relative to base_path() is also accepted when it starts with the disk
+    | root (disk root base_path('desa/upload') + 'desa/upload/media' =>
+    | 'media'), and a value the disk root already ends with means the whole
+    | disk. Prefixes are matched on whole path segments only.
+    |
     | WARNING: an empty base_folder is only safe when the disk's root is
     | already a dedicated upload folder. If the disk root is the application
     | root (base_path()), delete/rename/cut/download can reach .env, vendor/,

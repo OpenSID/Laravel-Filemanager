@@ -60,16 +60,11 @@ class UploadController extends Controller
         try {
             $folder = trim(str_replace('\\', '/', (string) $request->input('fldr', '')), '/');
 
-            // Strip absolute disk root / media path prefix if mistakenly passed
-            $diskConfig = config('filesystems.disks.'.$this->config->disk(), []);
-            $diskRoot = trim(str_replace('\\', '/', (string) ($diskConfig['root'] ?? '')), '/');
-            $basePath = trim(str_replace('\\', '/', (string) base_path()), '/');
-            $relativeDiskRoot = str_starts_with($diskRoot, $basePath)
-                ? trim(substr($diskRoot, strlen($basePath)), '/')
-                : $diskRoot;
-
-            if ($relativeDiskRoot !== '' && str_starts_with($folder, $relativeDiskRoot)) {
-                $folder = trim(substr($folder, strlen($relativeDiskRoot)), '/');
+            // Strip the disk root / media path prefix if mistakenly passed. Matched on whole
+            // segments, so a folder like 'media-extra' under disk root '.../media' is kept.
+            $relativeDiskRoot = $this->config->relativeDiskRoot();
+            if ($relativeDiskRoot !== '') {
+                $folder = FilemanagerConfig::stripPathPrefix($folder, $relativeDiskRoot) ?? $folder;
             }
 
             PathGuard::assertSafe($folder);
