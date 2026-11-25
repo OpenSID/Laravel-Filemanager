@@ -39,6 +39,17 @@ class HardenUploadsCommandTest extends TestCase
     }
 
     #[Test]
+    public function pdf_and_office_documents_are_served_as_attachments(): void
+    {
+        // #8: same-origin inline PDF/Office rendering → force download.
+        app(FilesystemManager::class)->protectDirectory('');
+
+        $contents = Storage::disk('filemanager')->get('.htaccess');
+
+        $this->assertMatchesRegularExpression('/<FilesMatch "\(\?i\)\\\\\.\(pdf\|docx\?\|xlsx\?[^"]*">\s*Header set Content-Disposition "attachment"/', $contents);
+    }
+
+    #[Test]
     public function creating_a_folder_through_the_package_protects_it_immediately(): void
     {
         app(FilesystemManager::class)->makeDirectory('baru');

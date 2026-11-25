@@ -42,6 +42,14 @@ class ThumbnailGenerator
         try {
             file_put_contents($tmpIn, $source->get($sourcePath));
 
+            // Image-bomb guard: a few-MB PNG can declare tens of thousands
+            // of pixels per side; GD would then die with a fatal
+            // out-of-memory error that the catch below can't intercept.
+            // Only the header is read here, never the bitmap.
+            if ((new FileContentValidator)->exceedsPixelLimit($tmpIn)) {
+                return false;
+            }
+
             // Pin the driver (default: GD). spatie/image otherwise auto-
             // selects Imagick whenever ext-imagick is present, and running
             // freshly-uploaded, only-loosely-validated files through

@@ -2,10 +2,12 @@
 
 namespace OpenSID\LaravelFilemanager;
 
+use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Log;
 use OpenSID\LaravelFilemanager\Console\HardenUploadsCommand;
+use OpenSID\LaravelFilemanager\Console\PruneChunksCommand;
 use OpenSID\LaravelFilemanager\Support\FilemanagerConfig;
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
@@ -18,7 +20,8 @@ class LaravelFilemanagerServiceProvider extends PackageServiceProvider
             ->hasConfigFile()
             ->hasViews()
             ->hasRoute('filemanager')
-            ->hasCommand(HardenUploadsCommand::class);
+            ->hasCommand(HardenUploadsCommand::class)
+            ->hasCommand(PruneChunksCommand::class);
     }
 
     public function packageBooted(): void
@@ -26,7 +29,21 @@ class LaravelFilemanagerServiceProvider extends PackageServiceProvider
         $this->loadFilemanagerTranslations();
         $this->registerDefaultGates();
         $this->publishPackageResources();
+        $this->scheduleChunkPruning();
         $this->warnIfDiskRootIsApplicationRoot();
+    }
+
+    /**
+     * Hourly sweep of abandoned chunk-upload staging files. Only takes
+     * effect when the host runs Laravel's scheduler (`schedule:run` cron);
+     * otherwise `php artisan filemanager:prune-chunks` can be cron'd
+     * directly.
+     */
+    protected function scheduleChunkPruning(): void
+    {
+        $this->callAfterResolving(Schedule::class, function (Schedule $schedule): void {
+            $schedule->command(PruneChunksCommand::class)->hourly()->withoutOverlapping();
+        });
     }
 
     /**

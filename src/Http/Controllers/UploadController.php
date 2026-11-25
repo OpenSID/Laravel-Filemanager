@@ -27,7 +27,7 @@ use OpenSID\LaravelFilemanager\Support\ResolvesFilemanagerContext;
  * sequence of Content-Range chunked requests, not a single upload. Since
  * that bundle is kept unmodified (see routes/filemanager.php), this
  * controller has to speak that chunk protocol: chunks are appended to a
- * local staging file keyed by folder+filename and only handed to
+ * local staging file keyed by session+user+folder+filename and only handed to
  * Storage/ThumbnailGenerator once the final chunk lands.
  *
  * Dropped vs. upstream: URL-based upload is only wired up if a host app
@@ -111,6 +111,10 @@ class UploadController extends Controller
                 return ['name' => $originalName, 'error' => trans('filemanager::filemanager.max_size_reached', ['size' => $this->config->maxUploadSizeMb()])];
             }
 
+            if ($this->exceedsTotalSize((int) $file->getSize())) {
+                return ['name' => $originalName, 'error' => $this->totalSizeError()];
+            }
+
             return $this->finalize($file->getRealPath(), $originalName, $folder);
         }
 
@@ -120,7 +124,14 @@ class UploadController extends Controller
             return ['name' => $originalName, 'error' => trans('filemanager::filemanager.max_size_reached', ['size' => $this->config->maxUploadSizeMb()])];
         }
 
-        $stagingPath = $this->stagingPath($folder, $originalName);
+        // Checked on the first chunk (against the declared total) so a
+        // client doesn't stream megabytes into staging only to be refused
+        // at the end; finalize() re-checks against the real byte count.
+        if ($start === 0 && $this->exceedsTotalSize($total)) {
+            return ['name' => $originalName, 'error' => $this->totalSizeError()];
+        }
+
+        $stagingPath = $this->stagingPath($request, $folder, $originalName);
         File::ensureDirectoryExists(dirname($stagingPath));
 
         // Chunks must arrive in order and be contiguous: the new chunk has
@@ -168,8 +179,16 @@ class UploadController extends Controller
         // place both the single-shot and chunked paths converge with the
         // full file on disk, so it's the only place content can actually
         // be verified against what the extension claims.
+        if ($this->thumbnails->isImage($originalName) && $this->contentValidator->exceedsPixelLimit($localPath)) {
+            return ['name' => $originalName, 'error' => trans('filemanager::filemanager.image_too_large', ['pixels' => $this->config->maxImageMegapixelsLabel()])];
+        }
+
         if (! $this->contentValidator->isValidUpload($localPath, $extension)) {
             return ['name' => $originalName, 'error' => trans('filemanager::filemanager.wrong extension')];
+        }
+
+        if ($this->exceedsTotalSize((int) filesize($localPath))) {
+            return ['name' => $originalName, 'error' => $this->totalSizeError()];
         }
 
         $disk = $this->files->disk();
@@ -207,9 +226,40 @@ class UploadController extends Controller
         return [(int) $matches[1], (int) $matches[2], (int) $matches[3]];
     }
 
-    protected function stagingPath(string $folder, string $name): string
+    /**
+     * Keyed by session + user as well as folder+name: two operators
+     * uploading "foto.jpg" into the same folder at the same time must not
+     * append into (and corrupt or hijack) each other's staging file.
+     * Leftovers from abandoned uploads are swept by filemanager:prune-chunks.
+     */
+    protected function stagingPath(Request $request, string $folder, string $name): string
     {
-        return storage_path('app/filemanager-chunks/'.sha1($folder.'|'.$name));
+        $sessionId = $request->hasSession() ? $request->session()->getId() : '';
+        $userId = (string) ($request->user()?->getAuthIdentifier() ?? '');
+
+        return $this->config->chunkStagingDirectory().'/'.sha1($sessionId.'|'.$userId.'|'.$folder.'|'.$name);
+    }
+
+    /**
+     * Enforces config('filemanager.max_total_size') — the combined size of
+     * everything under the base folder, including the incoming bytes.
+     */
+    protected function exceedsTotalSize(int $incomingBytes): bool
+    {
+        $limit = $this->config->maxTotalSizeBytes();
+
+        if ($limit === false) {
+            return false;
+        }
+
+        [$used] = $this->files->directoryStats($this->config->baseFolder());
+
+        return $used + $incomingBytes > $limit;
+    }
+
+    protected function totalSizeError(): string
+    {
+        return trans('filemanager::filemanager.max_total_size_reached', ['size' => (int) config('filemanager.max_total_size')]);
     }
 
     protected function uniquePath($disk, string $path): string

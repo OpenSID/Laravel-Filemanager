@@ -245,6 +245,11 @@ Options -ExecCGI -Indexes
         Header set Content-Disposition "attachment"
         Header set Content-Security-Policy "default-src 'none'; style-src 'unsafe-inline'; sandbox"
     </FilesMatch>
+    # PDF/Office documents: download instead of rendering inline on the
+    # site's own origin (PDF viewers run embedded JavaScript/forms).
+    <FilesMatch "(?i)\.(pdf|docx?|xlsx?|pptx?|odt|ods|odp|rtf)$">
+        Header set Content-Disposition "attachment"
+    </FilesMatch>
 </IfModule>
 
 # ----------------------------------------------------------------------

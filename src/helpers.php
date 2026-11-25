@@ -12,6 +12,10 @@ if (! function_exists('filemanager_authorize')) {
      * security value depends entirely on it only running as a side effect
      * of that page's own (already-enforced) access control. Returns void;
      * safe to call unconditionally on every render of the embedding page.
+     *
+     * Not a security boundary: it is a single session key, so the last
+     * page rendered wins (two open tabs share one context), and every
+     * module still browses the same disk. See README "Hak akses".
      */
     function filemanager_authorize(string $modul): void
     {

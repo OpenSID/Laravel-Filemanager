@@ -159,6 +159,7 @@ Konfigurasi `.htaccess` otomatis aktif dengan aturan:
 - `Options -ExecCGI -Indexes`
 - `php_flag engine off` (mod_php 5/7/8)
 - `X-Content-Type-Options: nosniff` untuk semua berkas; `Content-Disposition: attachment` + `Content-Security-Policy` untuk `.svg`/`.xml`/`.html`
+- `Content-Disposition: attachment` untuk dokumen PDF/Office (`pdf`, `doc(x)`, `xls(x)`, `ppt(x)`, `odt`, `ods`, `odp`, `rtf`) — diunduh, tidak dirender *inline* di origin situs. Instalasi lama: jalankan ulang `php artisan filemanager:harden`.
 
 ### 3. Nginx
 Nginx tidak membaca `.htaccess`. Tambahkan pada blok `server` situs Anda, dan pastikan `location ~ \.php$` **hanya** meng-*cover* root aplikasi, bukan folder unggahan:
@@ -178,6 +179,12 @@ location ~* ^/(desa/upload|assets|storage)/ {
         add_header X-Content-Type-Options "nosniff" always;
         add_header Content-Disposition "attachment" always;
         add_header Content-Security-Policy "default-src 'none'; style-src 'unsafe-inline'; sandbox" always;
+    }
+
+    # PDF/Office: paksa unduh, jangan dirender inline di origin situs
+    location ~* \.(pdf|docx?|xlsx?|pptx?|odt|ods|odp|rtf)$ {
+        add_header X-Content-Type-Options "nosniff" always;
+        add_header Content-Disposition "attachment" always;
     }
 }
 ```
@@ -216,6 +223,28 @@ FILEMANAGER_ALLOWED_ORIGINS="https://cms.example.id,https://desa.example.id"
 | `tmpl.min.js`, `load-image.all.min.js`, `canvas-to-blob.min.js`, `jquery.fileupload*.js`, `jquery.iframe-transport.js` | blueimp (bawaan Responsive Filemanager) | tidak tercantum di berkas |
 
 Versi yang diketahui dicatat juga di `package.json` (hanya manifes, tidak ada proses build) agar Dependabot (ekosistem `npm`) memberi tahu bila ada rilis/CVE baru. Saat memperbarui, unduh berkas *minified* resmi (code.jquery.com / cdnjs) ke `resources/dist/js`, lalu samakan versinya di tabel ini dan di `package.json`.
+
+### 8. Batas penggunaan & pembersihan staging
+
+| Kunci config | Bawaan | Fungsi |
+|---|---|---|
+| `max_upload_size` | `8` (MB) | Batas per berkas — berlaku untuk unggah biasa, unggah *chunk*, dan `crop_image` (body base64). |
+| `max_total_size` | `false` | Batas total isi `base_folder` (MB). Dihitung dengan menelusuri seluruh pohon folder, aktifkan hanya bila ukurannya wajar. |
+| `max_image_pixels` | `25000000` | Gambar raster dengan lebar × tinggi melebihi angka ini ditolak saat unggah/crop dan tidak dibuatkan thumbnail (*image/decompression bomb*). |
+| `max_batch_paths` | `200` | Jumlah maksimal `paths[]` per aksi `delete_files`. |
+| `throttle` | `'120,1'` | *Rate limit* rute `upload` & `execute` (`maksPermintaan,menit` per user). Satu *chunk* 2 MB = satu permintaan. `null` untuk mematikan. |
+| `chunk_ttl_minutes` | `60` | Umur staging *chunk* yang dianggap terbengkalai. |
+
+Berkas staging unggahan *chunk* (`storage/app/filemanager-chunks`) diikat ke session + user, dan sisa unggahan yang tidak selesai dihapus oleh `php artisan filemanager:prune-chunks` yang dijadwalkan **setiap jam** lewat scheduler Laravel. Bila host tidak menjalankan `schedule:run`, pasang cron langsung:
+
+```cron
+0 * * * * php /path/ke/aplikasi/artisan filemanager:prune-chunks
+```
+
+### 9. Hak akses & konteks modul
+
+- `permissions.access => null` (bawaan, demi kompatibilitas) berarti **semua user terautentikasi** — peran apa pun — bisa membuka dialog dan menelusuri/mengunduh seluruh isi disk. Disarankan `'access' => 'b'` agar membutuhkan hak baca pada modul yang di-*stamp* lewat `filemanager_authorize()`.
+- Konteks modul **bukan batas keamanan**: disimpan di satu kunci session (`filemanager.context`) yang ditimpa halaman terakhir yang memanggil `filemanager_authorize()` — dengan dua tab terbuka, dialog di tab A berjalan dengan konteks modul tab B. Semua modul juga berbagi satu disk/`base_folder`, jadi hak per modul hanya membatasi **aksi**, bukan berkas yang terlihat. Butuh isolasi sungguhan? Pakai disk/`base_folder` terpisah per peran.
 
 ---
 

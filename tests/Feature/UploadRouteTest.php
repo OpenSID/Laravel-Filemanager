@@ -2,8 +2,11 @@
 
 namespace OpenSID\LaravelFilemanager\Tests\Feature;
 
+use Illuminate\Cookie\CookieValuePrefix;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Routing\Middleware\ThrottleRequests;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Storage;
 use OpenSID\LaravelFilemanager\Tests\TestCase;
 use PHPUnit\Framework\Attributes\Test;
@@ -176,13 +179,17 @@ class UploadRouteTest extends TestCase
         file_put_contents($tmp2, $chunk2);
         $file2 = new UploadedFile($tmp2, 'bigfile.zip', 'application/zip', null, true);
 
-        $this->call('POST', route('filemanager.upload'), ['fldr' => ''], [], ['files' => [$file1]], [
+        // A real browser carries its session cookie on every chunk; staging
+        // is keyed by that session, so the test must do the same.
+        $cookies = $this->sessionCookie(str_repeat('a', 40));
+
+        $this->call('POST', route('filemanager.upload'), ['fldr' => ''], $cookies, ['files' => [$file1]], [
             'HTTP_Content-Range' => 'bytes 0-2097151/3145728',
         ])->assertOk();
 
         Storage::disk('filemanager')->assertMissing('bigfile.zip');
 
-        $final = $this->call('POST', route('filemanager.upload'), ['fldr' => ''], [], ['files' => [$file2]], [
+        $final = $this->call('POST', route('filemanager.upload'), ['fldr' => ''], $cookies, ['files' => [$file2]], [
             'HTTP_Content-Range' => 'bytes 2097152-3145727/3145728',
         ]);
 
@@ -231,5 +238,111 @@ class UploadRouteTest extends TestCase
         $response->assertOk();
         $this->assertArrayHasKey('error', $response->json()['files'][0]);
         Storage::disk('filemanager')->assertMissing('gappy.zip');
+    }
+
+    #[Test]
+    public function a_chunk_from_another_session_cannot_continue_someone_elses_staging_file(): void
+    {
+        // Regression (#8): staging used to be sha1(folder|name) only, so a
+        // second operator uploading the same filename into the same folder
+        // appended into — and corrupted or hijacked — the first one's file.
+        config(['filemanager.extensions' => array_merge(config('filemanager.extensions'), ['archive' => ['zip']])]);
+
+        $tmp1 = tempnam(sys_get_temp_dir(), 'up');
+        file_put_contents($tmp1, "PK\x03\x04".str_repeat('A', 2 * 1024 * 1024 - 4));
+        $file1 = new UploadedFile($tmp1, 'shared.zip', 'application/zip', null, true);
+
+        $this->call('POST', route('filemanager.upload'), ['fldr' => ''], $this->sessionCookie(str_repeat('a', 40)), ['files' => [$file1]], [
+            'HTTP_Content-Range' => 'bytes 0-2097151/3145728',
+        ])->assertOk();
+
+        $tmp2 = tempnam(sys_get_temp_dir(), 'up');
+        file_put_contents($tmp2, str_repeat('B', 1024 * 1024));
+        $file2 = new UploadedFile($tmp2, 'shared.zip', 'application/zip', null, true);
+
+        $response = $this->call('POST', route('filemanager.upload'), ['fldr' => ''], $this->sessionCookie(str_repeat('b', 40)), ['files' => [$file2]], [
+            'HTTP_Content-Range' => 'bytes 2097152-3145727/3145728',
+        ]);
+
+        $response->assertOk();
+        $this->assertArrayHasKey('error', $response->json()['files'][0]);
+        Storage::disk('filemanager')->assertMissing('shared.zip');
+    }
+
+    #[Test]
+    public function max_total_size_is_enforced_on_upload(): void
+    {
+        // Regression (#8): max_total_size existed in config but was never read.
+        config(['filemanager.max_total_size' => 1]);
+        Storage::disk('filemanager')->put('existing.jpg', str_repeat('x', 900 * 1024));
+
+        $file = UploadedFile::fake()->image('photo.jpg', 400, 300)->size(200);
+
+        $response = $this->post(route('filemanager.upload'), ['fldr' => '', 'files' => [$file]]);
+
+        $response->assertOk();
+        $this->assertArrayHasKey('error', $response->json()['files'][0]);
+        Storage::disk('filemanager')->assertMissing('photo.jpg');
+    }
+
+    #[Test]
+    public function max_total_size_is_checked_on_the_first_chunk_before_anything_is_staged(): void
+    {
+        config(['filemanager.max_total_size' => 2]);
+        config(['filemanager.extensions' => array_merge(config('filemanager.extensions'), ['archive' => ['zip']])]);
+
+        $tmp = tempnam(sys_get_temp_dir(), 'up');
+        file_put_contents($tmp, "PK\x03\x04".str_repeat('A', 1024));
+        $file = new UploadedFile($tmp, 'big.zip', 'application/zip', null, true);
+
+        $response = $this->call('POST', route('filemanager.upload'), ['fldr' => ''], [], ['files' => [$file]], [
+            'HTTP_Content-Range' => 'bytes 0-1027/3145728',
+        ]);
+
+        $this->assertArrayHasKey('error', $response->json()['files'][0]);
+        $this->assertSame([], glob(storage_path('app/filemanager-chunks/*')) ?: []);
+    }
+
+    #[Test]
+    public function an_image_over_the_pixel_limit_is_rejected_before_it_is_stored_or_thumbnailed(): void
+    {
+        // Image bomb (#8): a small file can declare a huge canvas; GD would
+        // then fatal with out-of-memory while making the thumbnail.
+        config(['filemanager.max_image_pixels' => 100 * 100]);
+
+        $file = UploadedFile::fake()->image('huge.png', 200, 200);
+
+        $response = $this->post(route('filemanager.upload'), ['fldr' => '', 'files' => [$file]]);
+
+        $response->assertOk();
+        $this->assertArrayHasKey('error', $response->json()['files'][0]);
+        Storage::disk('filemanager')->assertMissing('huge.png');
+        Storage::disk('filemanager_thumbs')->assertMissing('huge.png');
+    }
+
+    #[Test]
+    public function the_upload_route_is_rate_limited(): void
+    {
+        $route = app('router')->getRoutes()->getByName('filemanager.upload');
+
+        $this->assertContains(ThrottleRequests::class.':120,1', $route->gatherMiddleware());
+    }
+
+    /**
+     * Encrypted session cookie pinning the request to a fixed session id,
+     * the way a browser's cookie does across chunk requests.
+     */
+    protected function sessionCookie(string $sessionId): array
+    {
+        return [
+            config('session.cookie') => encrypt(CookieValuePrefix::create(config('session.cookie'), app('encrypter')->getKey()).$sessionId, false),
+        ];
+    }
+
+    protected function tearDown(): void
+    {
+        File::deleteDirectory(storage_path('app/filemanager-chunks'));
+
+        parent::tearDown();
     }
 }
