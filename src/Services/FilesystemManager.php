@@ -81,7 +81,28 @@ class FilesystemManager
             }
         }
 
-        return str_replace('/index.php', '', url($path));
+        $url = str_replace('/index.php', '', url($path));
+
+        return config('filemanager.use_app_url') ? $this->withAppUrlOrigin($url) : $url;
+    }
+
+    /**
+     * Swaps the scheme/host/port url() took from the request (i.e. from the
+     * client-controlled Host header) for those of config('app.url'), so a
+     * forged Host can't end up baked into content. No-op when app.url is
+     * empty or has no host.
+     */
+    protected function withAppUrlOrigin(string $url): string
+    {
+        $app = parse_url((string) config('app.url', ''));
+
+        if (empty($app['host'])) {
+            return $url;
+        }
+
+        $origin = ($app['scheme'] ?? 'https').'://'.$app['host'].(isset($app['port']) ? ':'.$app['port'] : '');
+
+        return (string) preg_replace('#^[a-z][a-z0-9+.\-]*://[^/]+#i', $origin, $url);
     }
 
     /**
@@ -194,6 +215,24 @@ class FilesystemManager
      */
     public function protectDirectory(string $path, bool $isThumbDisk = false): void
     {
+        // `Options` can't be wrapped in <IfModule>, and Apache 500s every
+        // request in the folder when AllowOverride lacks Options — so it's
+        // opt-out via config('filemanager.htaccess_options').
+        $optionsBlock = config('filemanager.htaccess_options', true)
+            ? <<<'OPTIONS'
+# ----------------------------------------------------------------------
+# 4. Disable CGI Execution & Directory Indexing
+#    (needs "AllowOverride Options" — see config filemanager.htaccess_options)
+# ----------------------------------------------------------------------
+Options -ExecCGI -Indexes
+OPTIONS
+            : <<<'OPTIONS'
+# ----------------------------------------------------------------------
+# 4. CGI/indexing directive omitted (filemanager.htaccess_options =
+#    false) — disable CGI & indexes at the vhost level instead.
+# ----------------------------------------------------------------------
+OPTIONS;
+
         $htaccessContent = <<<HTACCESS
 # ----------------------------------------------------------------------
 # 1. Block Access to Dangerous Files (Apache 2.2, 2.4, OpenLiteSpeed, LiteSpeed)
@@ -230,10 +269,7 @@ class FilesystemManager
     ForceType text/plain
 </FilesMatch>
 
-# ----------------------------------------------------------------------
-# 4. Disable CGI Execution & Directory Indexing
-# ----------------------------------------------------------------------
-Options -ExecCGI -Indexes
+{$optionsBlock}
 
 # ----------------------------------------------------------------------
 # 4b. Stop MIME sniffing (an uploaded .svg / polyglot won't be re-typed

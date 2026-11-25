@@ -20,6 +20,17 @@ dan proyek ini memakai [Semantic Versioning](https://semver.org/lang/id/).
 - `include.js`: pembersih nama klien membuang semua kutip/garis miring dan duplikat berkas tidak lagi merangkai HTML dari nama berkas (DOM XSS) (#10).
 - Perbarui jQuery 3.1.1 → 3.7.1 dan jQuery UI 1.12.1 → 1.13.3; versi aset dicatat di README/`package.json` dan dipantau Dependabot npm (#10).
 - Hapus aset tak terpakai: `jquery.fileupload-angular.js`, `jquery.fileupload-jquery-ui.js`, `vendor/jquery.ui.widget.js`, `*-noscript.css`, `*.map` (#10).
+### Ditambahkan
+
+- Config `htaccess_options` (`FILEMANAGER_HTACCESS_OPTIONS`) untuk melewati baris `Options -ExecCGI -Indexes` di `.htaccess` pada server tanpa `AllowOverride Options` (#11).
+- Jejak audit: event `FilemanagerActionPerformed` + `Log::info` (user, aksi, path, IP) untuk unggah, hapus, ubah nama, tempel, buat, duplikasi, crop, simpan; config `audit_log` (#11).
+- Config `use_app_url` (`FILEMANAGER_USE_APP_URL`) agar URL berkas memakai host `app.url`, bukan header `Host` request (#11).
+- README: syarat `AllowOverride`, `TrustHosts`/`APP_URL`, serta `FollowSymLinks`/`open_basedir` untuk aset symlink (#11).
+
+### Diperbaiki
+
+- Dialog tidak lagi HTTP 500 saat `multiple`/`popup`/`crossdomain`/`relative_url`/`field_id`/`editor`/`callback`/`type` dikirim sebagai array (#11).
+- Exception storage (disk `throw => true`) di `ExecuteController`/`UploadController` dilaporkan via `report()` dan dijawab HTTP 200 dengan pesan generik, bukan 500 (#11).
 
 ## [1.1.0] - 2026-10-23
 

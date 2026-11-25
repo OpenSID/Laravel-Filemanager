@@ -35,11 +35,14 @@ class DialogController extends Controller
         $descending = (bool) $this->rememberedOrRequested($request, 'descending', 'filemanager.descending', true);
         $filter = (string) $request->query('filter', Session::get('filemanager.filter', ''));
 
-        $fieldId = $this->sanitizeIdentifier((string) $request->query('field_id', ''));
-        $editor = $this->sanitizeIdentifier((string) $request->query('editor', ''));
-        $callback = $this->sanitizeIdentifier((string) $request->query('callback', ''));
-        $type = (int) $request->query('type', 0);
-        $multiple = $request->query('multiple');
+        $fieldId = $this->sanitizeIdentifier((string) $this->scalarQuery($request, 'field_id'));
+        $editor = $this->sanitizeIdentifier((string) $this->scalarQuery($request, 'editor'));
+        $callback = $this->sanitizeIdentifier((string) $this->scalarQuery($request, 'callback'));
+        $type = (int) $this->scalarQuery($request, 'type');
+        $multiple = $this->scalarQuery($request, 'multiple');
+        $popup = $this->scalarQuery($request, 'popup');
+        $crossdomain = $this->scalarQuery($request, 'crossdomain');
+        $relativeUrl = $this->scalarQuery($request, 'relative_url');
 
         $entries = $this->files->list($subdir, $type);
         $entries = $this->sortEntries($entries, $sortBy, $descending);
@@ -52,14 +55,14 @@ class DialogController extends Controller
             'type' => $type ?: null,
             'field_id' => $fieldId ?: null,
             'multiple' => $multiple,
-            'popup' => $request->query('popup'),
-            'crossdomain' => $request->query('crossdomain'),
+            'popup' => $popup,
+            'crossdomain' => $crossdomain,
             'editor' => $editor ?: null,
-            'relative_url' => $request->query('relative_url'),
+            'relative_url' => $relativeUrl,
             'callback' => $callback ?: null,
         ], fn ($value) => $value !== null && $value !== '');
 
-        $crossdomain = (bool) $request->query('crossdomain', false);
+        $crossdomain = (bool) $crossdomain;
 
         $response = response(view('filemanager::dialog', [
             'subdir' => $subdir,
@@ -73,12 +76,12 @@ class DialogController extends Controller
             'type' => $type,
             'acceptTypes' => $this->config->acceptAttributeForType($type),
             'multiple' => $multiple,
-            'popup' => (bool) $request->query('popup', false),
+            'popup' => (bool) $popup,
             'crossdomain' => $crossdomain,
             'targetOrigin' => $crossdomain ? $this->resolveTargetOrigin($request) : '',
             'callback' => $callback,
             'editor' => $editor,
-            'relativeUrl' => (bool) $request->query('relative_url', false),
+            'relativeUrl' => (bool) $relativeUrl,
             'linkParams' => $linkParams,
             'clipboardHasContent' => $this->clipboard->hasContent(),
             'canUpload' => Gate::allows('filemanager.upload', $context),
@@ -135,6 +138,20 @@ class DialogController extends Controller
         }
 
         return count($allowed) === 1 ? $allowed[0] : '';
+    }
+
+    /**
+     * A query value as a string, or null when absent or not a scalar.
+     * `?multiple[]=1` arrives as an array: a bare (string) cast raises
+     * "Array to string conversion" and `value="{{ $multiple }}"` in the
+     * view throws a TypeError — either way a 500. Treat such input as
+     * not given.
+     */
+    protected function scalarQuery(Request $request, string $key): ?string
+    {
+        $value = $request->query($key);
+
+        return is_scalar($value) ? (string) $value : null;
     }
 
     protected function sanitizeIdentifier(string $value): string

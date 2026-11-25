@@ -143,4 +143,5 @@ return [
     'GB' => 'GB',
     'TB' => 'TB',
     'total size' => 'Total size',
+    'storage_error' => 'Operasi penyimpanan gagal. Coba lagi atau hubungi administrator.',
 ];
