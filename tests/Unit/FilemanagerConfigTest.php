@@ -94,4 +94,61 @@ class FilemanagerConfigTest extends TestCase
             'no extension' => ['README'],
         ];
     }
+
+    #[Test]
+    public function file_accessibility_uses_the_whitelist_and_hidden_rules(): void
+    {
+        config([
+            'filemanager.hidden_files' => ['.htaccess', 'index.html'],
+            'filemanager.hidden_extensions' => ['php'],
+            'filemanager.editable_text_extensions' => ['txt'],
+            'filemanager.text_editing_enabled' => false,
+        ]);
+
+        $this->assertTrue($this->config->isFileAccessible('foto.jpg'));
+        $this->assertTrue($this->config->isFileAccessible('Laporan.PDF'));
+
+        foreach (['.htaccess', 'index.html', '.env', 'dump.sql', 'app.log', 'shell.php', 'shell.php.jpg', 'README', 'catatan.txt'] as $name) {
+            $this->assertFalse($this->config->isFileAccessible($name), $name);
+        }
+
+        config(['filemanager.text_editing_enabled' => true]);
+        $this->assertTrue($this->config->isFileAccessible('catatan.txt'));
+    }
+
+    #[Test]
+    public function clipboard_source_rules_cover_files_hidden_folders_and_the_base_folder(): void
+    {
+        config([
+            'filemanager.hidden_files' => ['.htaccess'],
+            'filemanager.hidden_folders' => ['.git'],
+            'filemanager.base_folder' => 'desa/upload',
+        ]);
+
+        $this->assertTrue($this->config->isClipboardSourceAllowed('desa/upload/album', true));
+        $this->assertTrue($this->config->isClipboardSourceAllowed('desa/upload/album/foto.jpg', false));
+        $this->assertFalse($this->config->isClipboardSourceAllowed('desa/upload/album/.htaccess', false));
+        $this->assertFalse($this->config->isClipboardSourceAllowed('desa/upload/.git', true));
+        $this->assertFalse($this->config->isClipboardSourceAllowed('desa/upload', true));
+        $this->assertFalse($this->config->isClipboardSourceAllowed('', true));
+    }
+
+    #[Test]
+    public function detects_a_disk_rooted_at_the_application_root_without_base_folder(): void
+    {
+        config([
+            'filesystems.disks.filemanager.root' => base_path(),
+            'filemanager.base_folder' => '',
+        ]);
+        $this->assertTrue($this->config->exposesApplicationRoot());
+
+        config(['filemanager.base_folder' => 'desa/upload']);
+        $this->assertFalse($this->config->exposesApplicationRoot());
+
+        config([
+            'filesystems.disks.filemanager.root' => storage_path('framework/testing/disks/filemanager'),
+            'filemanager.base_folder' => '',
+        ]);
+        $this->assertFalse($this->config->exposesApplicationRoot());
+    }
 }
