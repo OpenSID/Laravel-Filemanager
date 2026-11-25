@@ -133,7 +133,8 @@ class FileContentValidator
         $clean = $this->scanInBlocks($localPath, function (string $window) use ($pattern, &$hasSvgRoot): bool {
             $hasSvgRoot = $hasSvgRoot || str_contains($window, '<svg');
 
-            return preg_match($pattern, $window) === 1;
+            // !== 0, not === 1: a PCRE error (false) must fail closed.
+            return preg_match($pattern, $window) !== 0;
         });
 
         return $clean === true && $hasSvgRoot;
@@ -201,7 +202,8 @@ class FileContentValidator
     {
         return $this->scanInBlocks(
             $localPath,
-            fn (string $window): bool => preg_match(self::POLYGLOT_PATTERN, $window) === 1,
+            // !== 0, not === 1: a PCRE error (false) must fail closed.
+            fn (string $window): bool => preg_match(self::POLYGLOT_PATTERN, $window) !== 0,
         ) === true;
     }
 
