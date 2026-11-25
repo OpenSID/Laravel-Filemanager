@@ -13,6 +13,22 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Allowed embedding origins
+    |--------------------------------------------------------------------------
+    |
+    | Origin (scheme://host[:port], tanpa path) yang boleh membingkai dialog
+    | di <iframe> dan menerima URL berkas terpilih lewat postMessage pada mode
+    | `crossdomain=1`. Origin aplikasi sendiri ('self') selalu diizinkan.
+    | Kosong = dialog hanya bisa di-iframe oleh origin sendiri dan
+    | postMessage tidak pernah dikirim ke origin lain. Entri yang bukan
+    | origin valid diabaikan. Contoh .env:
+    |   FILEMANAGER_ALLOWED_ORIGINS="https://desa.example.id,https://cms.example.id"
+    |
+    */
+    'allowed_origins' => explode(',', (string) env('FILEMANAGER_ALLOWED_ORIGINS', '')),
+
+    /*
+    |--------------------------------------------------------------------------
     | Permissions
     |--------------------------------------------------------------------------
     |
@@ -187,6 +203,11 @@ return [
     | root (disk root base_path('desa/upload') + 'desa/upload/media' =>
     | 'media'), and a value the disk root already ends with means the whole
     | disk. Prefixes are matched on whole path segments only.
+    |
+    | WARNING: an empty base_folder is only safe when the disk's root is
+    | already a dedicated upload folder. If the disk root is the application
+    | root (base_path()), delete/rename/cut/download can reach .env, vendor/,
+    | storage/ … — the package logs a warning at boot in that case.
     |
     */
     'base_folder' => env('FILEMANAGER_BASE_FOLDER', ''),
