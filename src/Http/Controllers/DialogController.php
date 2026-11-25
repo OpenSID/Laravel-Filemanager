@@ -2,7 +2,6 @@
 
 namespace OpenSID\LaravelFilemanager\Http\Controllers;
 
-use Illuminate\Contracts\View\View;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Routing\Controller;
@@ -26,7 +25,7 @@ class DialogController extends Controller
         protected FilemanagerConfig $config,
     ) {}
 
-    public function show(Request $request): View
+    public function show(Request $request): Response
     {
         $subdir = $this->resolveSubdir($request);
         $context = $this->resolveContext();
