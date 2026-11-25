@@ -15,6 +15,11 @@ dan proyek ini memakai [Semantic Versioning](https://semver.org/lang/id/).
 - `get_file` menolak berkas tersembunyi/ekstensi tersembunyi meskipun berekstensi teks yang dapat disunting (#7).
 - `FileContentValidator`: `isFreeOfEmbeddedScript` dan `isSafeSvg` kini *fail-closed* bila `preg_match()` galat (#7).
 - Peringatan log (maks. sekali sehari) bila root disk filemanager sama dengan `base_path()` dan `base_folder` kosong; README dan komentar config diperjelas (#7).
+- `DialogController`: kirim `Content-Security-Policy: frame-ancestors 'self'` (+ `allowed_origins`), `X-Frame-Options` dan `X-Content-Type-Options: nosniff` (#10).
+- `include.js`: `postMessage` mode `crossdomain` tidak lagi memakai targetOrigin `"*"`; tujuannya origin induk yang ada di config baru `allowed_origins` (#10).
+- `include.js`: pembersih nama klien membuang semua kutip/garis miring dan duplikat berkas tidak lagi merangkai HTML dari nama berkas (DOM XSS) (#10).
+- Perbarui jQuery 3.1.1 → 3.7.1 dan jQuery UI 1.12.1 → 1.13.3; versi aset dicatat di README/`package.json` dan dipantau Dependabot npm (#10).
+- Hapus aset tak terpakai: `jquery.fileupload-angular.js`, `jquery.fileupload-jquery-ui.js`, `vendor/jquery.ui.widget.js`, `*-noscript.css`, `*.map` (#10).
 
 ## [1.1.0] - 2026-10-23
 
