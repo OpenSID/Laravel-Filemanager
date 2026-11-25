@@ -20,6 +20,8 @@ dan proyek ini memakai [Semantic Versioning](https://semver.org/lang/id/).
 - `include.js`: pembersih nama klien membuang semua kutip/garis miring dan duplikat berkas tidak lagi merangkai HTML dari nama berkas (DOM XSS) (#10).
 - Perbarui jQuery 3.1.1 → 3.7.1 dan jQuery UI 1.12.1 → 1.13.3; versi aset dicatat di README/`package.json` dan dipantau Dependabot npm (#10).
 - Hapus aset tak terpakai: `jquery.fileupload-angular.js`, `jquery.fileupload-jquery-ui.js`, `vendor/jquery.ui.widget.js`, `*-noscript.css`, `*.map` (#10).
+- `FileContentValidator`: pemindaian polyglot kini menganggap setiap `<?` (selain `<?xml`, `<?xpacket`, `<?adobe-xap-filters`) sebagai penanda PHP, sehingga *short tag* tanpa spasi seperti `<?system(...)` dan ``<?`...` `` di dalam JPEG/PDF/SVG tidak lagi lolos (#17).
+- README: dokumentasi `short_open_tag = Off` dan pemisahan folder unggahan dari handler PHP (#17).
 
 ## [1.1.0] - 2026-10-23
 

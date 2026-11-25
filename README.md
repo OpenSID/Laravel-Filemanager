@@ -217,6 +217,13 @@ FILEMANAGER_ALLOWED_ORIGINS="https://cms.example.id,https://desa.example.id"
 
 Versi yang diketahui dicatat juga di `package.json` (hanya manifes, tidak ada proses build) agar Dependabot (ekosistem `npm`) memberi tahu bila ada rilis/CVE baru. Saat memperbarui, unduh berkas *minified* resmi (code.jquery.com / cdnjs) ke `resources/dist/js`, lalu samakan versinya di tabel ini dan di `package.json`.
 
+### 8. PHP `short_open_tag` & pemisahan eksekusi
+
+`FileContentValidator` menolak berkas yang memuat penanda PHP mana pun (`<?php`, `<?=`, `<? `, maupun bentuk tanpa spasi seperti `<?system(...)`), kecuali instruksi XML sah (`<?xml`, `<?xpacket`). Validasi isi tetap hanya **satu lapis**; lapisan berikutnya ada di server:
+
+- Matikan `short_open_tag` di `php.ini` (`short_open_tag = Off`). Tanpa `php.ini`, nilai bawaan PHP adalah `On`, sehingga `<?...` tanpa kata `php` ikut dieksekusi bila berkas unggahan sampai ke interpreter PHP.
+- Pastikan folder unggahan **tidak pernah** diteruskan ke PHP-FPM/handler PHP (aturan Nginx/OpenLiteSpeed di atas, atau sajikan unggahan dari host/subdomain statis tanpa PHP).
+
 ---
 
 ## 🤝 Berkontribusi
