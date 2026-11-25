@@ -72,6 +72,11 @@ return [
     */
     'route_prefix' => 'filemanager',
     'middleware' => ['web', 'auth'],
+
+    /*
+    | Tampilan awal dialog: 0 = kotak/thumbnail, 1 = daftar, 2 = kolom.
+    */
+    'default_view' => 0,
 ];
 ```
 
@@ -84,6 +89,15 @@ return [
 > Jangan pernah memakai disk yang root-nya `base_path()` dengan `base_folder` kosong: berkas seperti `.env`, `vendor/`, dan `storage/` ikut terjangkau. Paket akan menulis peringatan ke log (maksimal sekali sehari) bila mendeteksi konfigurasi tersebut.
 >
 > Unduhan serta salin/potong/tempel hanya mengizinkan ekstensi di `extensions` (ditambah `editable_text_extensions` saat `text_editing_enabled` aktif); berkas pelindung seperti `.htaccess` dan `index.html` tidak dapat diunduh, disalin, maupun dipindahkan.
+
+Catatan:
+
+- `route_prefix` boleh diubah dan aplikasi boleh berjalan di sub-folder: URL
+  AJAX/execute/upload dikirim ke JavaScript dialog lewat
+  `window.FILEMANAGER_ROUTES` (hasil `route()`), bukan ditulis tetap di
+  `include.js`.
+- Bahasa dialog mengikuti *locale* aplikasi host (`config('app.locale')` /
+  `app()->setLocale()`); tidak ada pengaturan bahasa di config paket.
 
 ---
 

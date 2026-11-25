@@ -23,6 +23,13 @@
         var image_editor = false; {{-- TUI image editor dropped from this package; keep the guard include.js checks --}}
         {{-- targetOrigin postMessage mode crossdomain: origin induk yang ada di allow-list, selain itu origin sendiri (tidak pernah "*") --}}
         var rfm_target_origin = @json($targetOrigin) || window.location.origin;
+        {{-- include.js is a static asset and can't resolve route names itself — hand it the real URLs so a custom route_prefix or a sub-folder install keeps working --}}
+        {{-- json_encode instead of @json: Blade's @json splits its argument on commas, so a multi-entry array literal breaks it. JSON_HEX_TAG keeps "</script>" out. --}}
+        var FILEMANAGER_ROUTES = {!! json_encode([
+            'ajax' => route('filemanager.ajax'),
+            'execute' => route('filemanager.execute'),
+            'upload' => route('filemanager.upload'),
+        ], JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) !!};
     </script>
 
     <script src="{{ filemanager_asset('js/include.js') }}"></script>
@@ -1308,7 +1315,7 @@
 
                 $.ajax({
                     type: 'POST',
-                    url: '/filemanager/execute?action=crop_image',
+                    url: FILEMANAGER_ROUTES.execute + '?action=crop_image',
                     data: {
                         path: currentFilePath,
                         image_data: dataUrl,

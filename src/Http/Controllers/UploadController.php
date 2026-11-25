@@ -30,11 +30,11 @@ use OpenSID\LaravelFilemanager\Support\ResolvesFilemanagerContext;
  * local staging file keyed by folder+filename and only handed to
  * Storage/ThumbnailGenerator once the final chunk lands.
  *
- * Dropped vs. upstream: URL-based upload is only wired up if a host app
- * opts in via config('filemanager.url_upload_enabled') — it defaults to
- * false, matching this app's existing rfm/config/config.php ('url_upload'
- * was already false there), and the upload panel view doesn't render the
- * URL-upload tab unless it's enabled.
+ * Dropped vs. upstream: URL-based upload (fetching a remote file by URL) is
+ * not supported at all — this app's existing rfm/config/config.php already
+ * had 'url_upload' => false, the upload panel view never renders the
+ * URL-upload tab, and a request carrying only `url` (no `files`) simply
+ * yields an empty result. There is deliberately no config switch for it.
  */
 class UploadController extends Controller
 {
