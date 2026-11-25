@@ -4,7 +4,10 @@ namespace OpenSID\LaravelFilemanager\Tests\Feature;
 
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Storage;
+use OpenSID\LaravelFilemanager\Jobs\GenerateThumbnail;
+use OpenSID\LaravelFilemanager\Services\ThumbnailGenerator;
 use OpenSID\LaravelFilemanager\Tests\TestCase;
 use PHPUnit\Framework\Attributes\Test;
 
@@ -231,5 +234,50 @@ class UploadRouteTest extends TestCase
         $response->assertOk();
         $this->assertArrayHasKey('error', $response->json()['files'][0]);
         Storage::disk('filemanager')->assertMissing('gappy.zip');
+    }
+
+    #[Test]
+    public function generates_the_thumbnail_synchronously_by_default(): void
+    {
+        $response = $this->post(route('filemanager.upload'), [
+            'fldr' => '',
+            'files' => [UploadedFile::fake()->image('sync.jpg', 400, 300)],
+        ]);
+
+        $this->assertArrayHasKey('thumbnailUrl', $response->json()['files'][0]);
+        Storage::disk('filemanager_thumbs')->assertExists('sync.jpg');
+    }
+
+    #[Test]
+    public function queues_the_thumbnail_when_thumbnail_queue_is_enabled(): void
+    {
+        // #9: thumbnail work moved out of the upload request on demand.
+        Queue::fake();
+        config(['filemanager.thumbnail_queue' => 'thumbnails']);
+
+        $response = $this->post(route('filemanager.upload'), [
+            'fldr' => '',
+            'files' => [UploadedFile::fake()->image('queued.jpg', 400, 300)],
+        ]);
+
+        $response->assertOk();
+        $this->assertArrayNotHasKey('thumbnailUrl', $response->json()['files'][0]);
+        Storage::disk('filemanager')->assertExists('queued.jpg');
+        Storage::disk('filemanager_thumbs')->assertMissing('queued.jpg');
+
+        Queue::assertPushedOn('thumbnails', GenerateThumbnail::class, function (GenerateThumbnail $job) {
+            return $job->sourcePath === 'queued.jpg' && $job->thumbPath === 'queued.jpg';
+        });
+    }
+
+    #[Test]
+    public function the_queued_thumbnail_job_writes_the_thumbnail(): void
+    {
+        Storage::disk('filemanager')->put('job.jpg', UploadedFile::fake()->image('job.jpg', 400, 300)->getContent());
+
+        (new GenerateThumbnail('filemanager', 'job.jpg', 'filemanager_thumbs', 'job.jpg'))
+            ->handle(app(ThumbnailGenerator::class));
+
+        Storage::disk('filemanager_thumbs')->assertExists('job.jpg');
     }
 }

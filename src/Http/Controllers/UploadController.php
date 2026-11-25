@@ -8,6 +8,7 @@ use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Gate;
 use OpenSID\LaravelFilemanager\Exceptions\UnsafePathException;
+use OpenSID\LaravelFilemanager\Jobs\GenerateThumbnail;
 use OpenSID\LaravelFilemanager\Services\FileContentValidator;
 use OpenSID\LaravelFilemanager\Services\FilenameSanitizer;
 use OpenSID\LaravelFilemanager\Services\FilesystemManager;
@@ -138,8 +139,14 @@ class UploadController extends Controller
             return ['name' => $originalName, 'error' => trans('filemanager::filemanager.wrong path')];
         }
 
+        // Stream the chunk onto the staging file instead of loading it into
+        // memory with file_get_contents().
         $chunk = fopen($stagingPath, $start === 0 ? 'wb' : 'ab');
-        fwrite($chunk, file_get_contents($file->getRealPath()));
+        $incoming = fopen($file->getRealPath(), 'rb');
+        if ($incoming !== false) {
+            stream_copy_to_stream($incoming, $chunk);
+            fclose($incoming);
+        }
         fclose($chunk);
 
         clearstatcache(true, $stagingPath);
@@ -187,10 +194,21 @@ class UploadController extends Controller
             'url' => $this->files->url($path),
         ];
 
-        if ($this->thumbnails->isImage($path)
-            && $this->thumbnails->make($this->config->disk(), $path, $this->config->thumbsDisk(), $path)
-        ) {
-            $entry['thumbnailUrl'] = $this->files->thumbUrl($path);
+        if ($this->thumbnails->isImage($path)) {
+            $queue = config('filemanager.thumbnail_queue', false);
+
+            if ($queue) {
+                // Off the request: the upload response returns as soon as
+                // the original is stored; the grid shows the file-type icon
+                // until the worker has written the thumbnail.
+                $job = new GenerateThumbnail($this->config->disk(), $path, $this->config->thumbsDisk(), $path);
+                if (is_string($queue)) {
+                    $job->onQueue($queue);
+                }
+                dispatch($job);
+            } elseif ($this->thumbnails->make($this->config->disk(), $path, $this->config->thumbsDisk(), $path)) {
+                $entry['thumbnailUrl'] = $this->files->thumbUrl($path);
+            }
         }
 
         return $entry;

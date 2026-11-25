@@ -5,7 +5,11 @@
     $videoExts = array_flip(config('filemanager.extensions.video', []));
     $audioExts = array_flip(config('filemanager.extensions.audio', []));
     $iconTheme = config('filemanager.icon_theme', 'ico');
-    $thumbsDisk = $filesManager->thumbsDisk();
+    // One listing of the thumbs folder instead of exists() per image (N+1
+    // round-trips on S3/FTP/SFTP).
+    $thumbIndex = $filesManager->thumbnailIndex($subdir);
+    $fmConfig = app(\OpenSID\LaravelFilemanager\Support\FilemanagerConfig::class);
+    $textEditingEnabled = (bool) config('filemanager.text_editing_enabled');
     $baseFolder = trim((string) config('filemanager.base_folder', ''), '/');
     $isAtBaseFolder = $subdir === '' || $subdir === $baseFolder;
     $parentDir = \Illuminate\Support\Str::beforeLast($subdir, '/') === $subdir ? $baseFolder : \Illuminate\Support\Str::beforeLast($subdir, '/');
@@ -90,7 +94,7 @@
             $isImage = isset($imageExts[$entry['extension']]);
             $isPdf = $entry['extension'] === 'pdf';
             $fileUrl = $filesManager->url($entry['path']);
-            $thumbUrl = $isImage && $thumbsDisk->exists($entry['path']) ? $filesManager->thumbUrl($entry['path']) : null;
+            $thumbUrl = $isImage && isset($thumbIndex[$entry['path']]) ? $filesManager->thumbUrl($entry['path']) : null;
             $iconFile = isset($knownIconExts[$entry['extension']]) ? $entry['extension'] . '.jpg' : 'default.jpg';
             $iconUrl = filemanager_asset('img/' . $iconTheme . '/' . $iconFile);
             $imageSrc = $thumbUrl ?: $iconUrl;
@@ -156,7 +160,7 @@
                             @endif
                         @elseif ($isPdf)
                             <a class="tip-right preview" title="{{ __('filemanager::filemanager.Preview') }}" data-featherlight="iframe" data-featherlight-iframe-width="100%" data-featherlight-iframe-height="100%" href="{{ $fileUrl }}"><i class="icon-eye-open"></i></a>
-                        @elseif (config('filemanager.text_editing_enabled') && app(\OpenSID\LaravelFilemanager\Support\FilemanagerConfig::class)->isEditableTextExtension($entry['extension']))
+                        @elseif ($textEditingEnabled && $fmConfig->isEditableTextExtension($entry['extension']))
                             <a class="tip-right file-preview-btn" title="{{ __('filemanager::filemanager.Preview') }}" data-url="{{ route('filemanager.ajax', ['action' => 'get_file', 'sub_action' => 'preview', 'preview_mode' => 'text', 'file' => $entry['path']]) }}" href="javascript:void('');"><i class="icon-eye-open"></i></a>
                         @else
                             <a class="preview disabled"><i class="icon-eye-open icon-white"></i></a>

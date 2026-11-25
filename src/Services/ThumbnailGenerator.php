@@ -36,11 +36,17 @@ class ThumbnailGenerator
         $source = Storage::disk($sourceDisk);
         $extension = pathinfo($sourcePath, PATHINFO_EXTENSION) ?: 'jpg';
 
-        $tmpIn = tempnam(sys_get_temp_dir(), 'rfmIn').'.'.$extension;
-        $tmpOut = tempnam(sys_get_temp_dir(), 'rfmOut').'.'.$extension;
+        // tempnam() creates the extension-less file itself; only the
+        // suffixed name is used, but both must be cleaned up.
+        $tmpInBase = tempnam(sys_get_temp_dir(), 'rfmIn');
+        $tmpOutBase = tempnam(sys_get_temp_dir(), 'rfmOut');
+        $tmpIn = $tmpInBase.'.'.$extension;
+        $tmpOut = $tmpOutBase.'.'.$extension;
 
         try {
-            file_put_contents($tmpIn, $source->get($sourcePath));
+            // Stream disk -> temp file (and back below) instead of holding
+            // the whole original in memory via get()/file_get_contents().
+            $this->streamToLocal($source->readStream($sourcePath), $tmpIn);
 
             // Pin the driver (default: GD). spatie/image otherwise auto-
             // selects Imagick whenever ext-imagick is present, and running
@@ -54,9 +60,16 @@ class ThumbnailGenerator
                 ->fit(Fit::Crop, $width, $height)
                 ->save($tmpOut);
 
-            Storage::disk($thumbDisk)->put($thumbPath, file_get_contents($tmpOut));
+            $out = fopen($tmpOut, 'rb');
+            try {
+                $written = Storage::disk($thumbDisk)->writeStream($thumbPath, $out);
+            } finally {
+                if (is_resource($out)) {
+                    fclose($out);
+                }
+            }
 
-            return true;
+            return $written !== false;
         } catch (\Throwable) {
             // Never let a thumbnail failure take down the file operation
             // that triggered it (upload/rename/etc already succeeded by
@@ -67,6 +80,27 @@ class ThumbnailGenerator
         } finally {
             @unlink($tmpIn);
             @unlink($tmpOut);
+            @unlink($tmpInBase);
+            @unlink($tmpOutBase);
+        }
+    }
+
+    /**
+     * @param  resource|null  $stream
+     */
+    protected function streamToLocal($stream, string $localPath): void
+    {
+        if (! is_resource($stream)) {
+            throw new \RuntimeException('Unable to read source image.');
+        }
+
+        $target = fopen($localPath, 'wb');
+
+        try {
+            stream_copy_to_stream($stream, $target);
+        } finally {
+            fclose($target);
+            fclose($stream);
         }
     }
 
