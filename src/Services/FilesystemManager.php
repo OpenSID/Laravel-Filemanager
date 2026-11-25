@@ -87,6 +87,8 @@ class FilesystemManager
     /**
      * List the immediate contents of a directory (files + subdirectories),
      * excluding hidden entries and unallowed formats per config in a single filesystem pass.
+     *
+     * @return array<int, array<string, mixed>>
      */
     public function list(string $directory, ?int $type = null): array
     {

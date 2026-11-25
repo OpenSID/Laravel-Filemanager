@@ -143,11 +143,10 @@
                 <div class="file-size">{{ $filesManager->humanFileSize($entry['size']) }}</div>
                 <div class='file-extension'>{{ $entry['extension'] }}</div>
                 <figcaption>
-                    <form action="{{ route('filemanager.download') }}" method="post" class="download-form">
-                        @csrf
-                        <input type="hidden" name="path" value="{{ $subdir }}">
-                        <input type="hidden" class="name_download" name="name" value="{{ $entry['name'] }}">
-                        <a title="{{ __('filemanager::filemanager.Download') }}" class="tip-right" href="javascript:void('')" onclick="jQuery(this).closest('form').submit();"><i class="icon-download"></i></a>
+                    {{-- Bukan <form> + @csrf per berkas: .submit() pada div ini ditangkap handler di dialog.blade.php yang mengirim satu #download-form-shared. --}}
+                    <div class="download-form">
+                        <input type="hidden" class="name_download" value="{{ $entry['name'] }}">
+                        <a title="{{ __('filemanager::filemanager.Download') }}" class="tip-right" href="javascript:void('')" onclick="jQuery(this).closest('.download-form').submit();"><i class="icon-download"></i></a>
 
                         @if ($isImage)
                             <a class="tip-right preview" title="{{ __('filemanager::filemanager.Preview') }}" data-featherlight="image" href="{{ $fileUrl }}"><i class="icon-eye-open"></i></a>
@@ -168,7 +167,7 @@
                         @if ($canDelete)
                             <a href="javascript:void('')" class="tip-left erase-button delete-file" title="{{ __('filemanager::filemanager.Erase') }}" data-confirm="{{ __('filemanager::filemanager.Confirm_del') }}"><i class="icon-trash"></i></a>
                         @endif
-                    </form>
+                    </div>
                 </figcaption>
             </figure>
         </li>

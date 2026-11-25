@@ -1,5 +1,6 @@
 <?php
 
+use Composer\InstalledVersions;
 use Illuminate\Support\Facades\Session;
 
 if (! function_exists('filemanager_authorize')) {
@@ -35,14 +36,58 @@ if (! function_exists('filemanager_asset')) {
     /**
      * URL for a published filemanager asset (see config('filemanager.
      * assets_url_path')). Uses url() and strips index.php to produce
-     * a clean static-asset URL.
+     * a clean static-asset URL, suffixed with "?v=<filemanager_asset_version()>"
+     * so a package update busts long-lived browser/CDN caches.
      */
     function filemanager_asset(string $path = ''): string
     {
         $base = trim((string) config('filemanager.assets_url_path', 'assets/vendor/filemanager'), '/');
 
-        $url = url($base.'/'.ltrim($path, '/'));
+        $url = str_replace('/index.php', '', url($base.'/'.ltrim($path, '/')));
 
-        return str_replace('/index.php', '', $url);
+        $version = filemanager_asset_version();
+
+        if ($version === '') {
+            return $url;
+        }
+
+        return $url.(str_contains($url, '?') ? '&' : '?').'v='.rawurlencode($version);
+    }
+}
+
+if (! function_exists('filemanager_asset_version')) {
+    /**
+     * config('filemanager.asset_version') when set (a string; '' disables
+     * versioning), otherwise the installed package version from Composer:
+     * the pretty version for a tagged install, or the first 8 chars of the
+     * commit hash for a dev-* install (whose "dev-master" label never
+     * changes between updates). The Composer lookup is memoized per
+     * process since it can't change at runtime.
+     */
+    function filemanager_asset_version(): string
+    {
+        $configured = config('filemanager.asset_version');
+
+        if ($configured !== null) {
+            return (string) $configured;
+        }
+
+        static $installed = null;
+
+        if ($installed === null) {
+            $installed = '';
+            $package = 'opensid/laravel-filemanager';
+
+            if (class_exists(InstalledVersions::class) && InstalledVersions::isInstalled($package)) {
+                $pretty = (string) InstalledVersions::getPrettyVersion($package);
+                $reference = (string) InstalledVersions::getReference($package);
+
+                $installed = (str_starts_with($pretty, 'dev-') || $pretty === '') && $reference !== ''
+                    ? substr($reference, 0, 8)
+                    : $pretty;
+            }
+        }
+
+        return $installed;
     }
 }

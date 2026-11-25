@@ -25,7 +25,7 @@ class DialogController extends Controller
         protected FilemanagerConfig $config,
     ) {}
 
-    public function show(Request $request)
+    public function show(Request $request): Response
     {
         $subdir = $this->resolveSubdir($request);
         $context = $this->resolveContext();
@@ -229,6 +229,10 @@ class DialogController extends Controller
         return Session::get($sessionKey, $default);
     }
 
+    /**
+     * @param  array<int, array<string, mixed>>  $entries
+     * @return array<int, array<string, mixed>>
+     */
     protected function sortEntries(array $entries, string $sortBy, bool $descending): array
     {
         usort($entries, function (array $a, array $b) use ($sortBy, $descending): int {
@@ -249,6 +253,9 @@ class DialogController extends Controller
         return $entries;
     }
 
+    /**
+     * @return array<int, array{name: string, path: string}>
+     */
     protected function breadcrumbs(string $subdir): array
     {
         $baseFolder = $this->files->config()->baseFolder();

@@ -69,11 +69,17 @@ class FilemanagerConfig
         return array_values(array_unique($origins));
     }
 
+    /**
+     * @return array<int, string>
+     */
     public function allowedExtensions(): array
     {
         return array_merge(...array_values(config('filemanager.extensions', [])));
     }
 
+    /**
+     * @return array<int, string>
+     */
     public function allowedExtensionsForType(?int $type = null): array
     {
         return match ($type) {
