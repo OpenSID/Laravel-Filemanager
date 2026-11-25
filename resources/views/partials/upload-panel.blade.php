@@ -48,14 +48,14 @@
                                     <strong class="error text-danger"></strong>
                                 </td>
                                 <td>
-                                    <p class="size">Processing...</p>
+                                    <p class="size">{{ __('filemanager::filemanager.Upload_processing') }}</p>
                                     <div class="progress progress-striped active" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div class="bar bar-success" style="width:0%;"></div></div>
                                 </td>
                                 <td>
                                     {% if (!i && !o.options.autoUpload) { %}
                                         <button class="btn btn-primary start" disabled style="display:none">
                                             <i class="glyphicon glyphicon-upload"></i>
-                                            <span>Start</span>
+                                            <span>{{ __('filemanager::filemanager.Upload_start_single') }}</span>
                                         </button>
                                     {% } %}
                                     {% if (!i) { %}
@@ -89,7 +89,7 @@
                                         {% } %}
                                     </p>
                                     {% if (file.error) { %}
-                                        <div><span class="label label-danger">Error</span> {%=file.error%}</div>
+                                        <div><span class="label label-danger">{{ __('filemanager::filemanager.Upload_error_label') }}</span> {%=file.error%}</div>
                                     {% } %}
                                 </td>
                                 <td><span class="size">{%=o.formatFileSize(file.size)%}</span></td>
