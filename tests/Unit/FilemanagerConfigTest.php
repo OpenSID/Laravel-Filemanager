@@ -136,19 +136,21 @@ class FilemanagerConfigTest extends TestCase
     #[Test]
     public function detects_a_disk_rooted_at_the_application_root_without_base_folder(): void
     {
+        // baseFolder() is memoised per instance (see FilemanagerConfig), so each
+        // assertion below uses a fresh instance after changing config at runtime.
         config([
             'filesystems.disks.filemanager.root' => base_path(),
             'filemanager.base_folder' => '',
         ]);
-        $this->assertTrue($this->config->exposesApplicationRoot());
+        $this->assertTrue((new FilemanagerConfig)->exposesApplicationRoot());
 
         config(['filemanager.base_folder' => 'desa/upload']);
-        $this->assertFalse($this->config->exposesApplicationRoot());
+        $this->assertFalse((new FilemanagerConfig)->exposesApplicationRoot());
 
         config([
             'filesystems.disks.filemanager.root' => storage_path('framework/testing/disks/filemanager'),
             'filemanager.base_folder' => '',
         ]);
-        $this->assertFalse($this->config->exposesApplicationRoot());
+        $this->assertFalse((new FilemanagerConfig)->exposesApplicationRoot());
     }
 }
