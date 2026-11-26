@@ -65,6 +65,20 @@ class DownloadRouteTest extends TestCase
     }
 
     #[Test]
+    public function download_of_a_folder_name_is_a_404_not_a_server_error(): void
+    {
+        // exists() is true for directories too (name has an allowed
+        // extension so the whitelist lets it through); download() on a
+        // directory would then throw.
+        Storage::disk('filemanager')->makeDirectory('album.pdf');
+
+        $this->post(route('filemanager.download'), [
+            'path' => '',
+            'name' => 'album.pdf',
+        ])->assertNotFound();
+    }
+
+    #[Test]
     public function an_empty_path_resolves_to_base_folder_not_the_disk_root(): void
     {
         // Regresi #7: path '' lolos isInsideBaseFolder() dan dulu disusun

@@ -7,6 +7,7 @@ use Illuminate\Http\UploadedFile;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Lang;
 use OpenSID\LaravelFilemanager\Exceptions\UnsafePathException;
 use OpenSID\LaravelFilemanager\Services\FileContentValidator;
 use OpenSID\LaravelFilemanager\Services\FilenameSanitizer;
@@ -78,11 +79,32 @@ class UploadController extends Controller
             return response()->json(['files' => [['error' => trans('filemanager::filemanager.wrong path')]]]);
         }
 
+        // The local Flysystem driver creates missing parent directories on
+        // put(), so an upload to fldr=media/new/sub would silently create
+        // folders that never got protectDirectory()'s .htaccess/index.html
+        // (only makeDirectory() stamps those). Folders must be created
+        // through the "new folder" action first.
+        if ($folder !== '' && ! $this->files->isDirectory($folder)) {
+            return response()->json(['files' => [['error' => trans('filemanager::filemanager.wrong path')]]]);
+        }
+
         $uploaded = $request->file('files', []);
         $results = [];
 
         foreach ((is_array($uploaded) ? $uploaded : [$uploaded]) as $file) {
-            if (! $file || ! $file->isValid()) {
+            if (! $file) {
+                continue;
+            }
+
+            // A file PHP itself rejected (upload_max_filesize, partial
+            // upload, no tmp dir, ...) used to be dropped from the response,
+            // leaving the widget with files: [] and no reason why.
+            if (! $file->isValid()) {
+                $results[] = [
+                    'name' => $this->names->sanitize($file->getClientOriginalName()),
+                    'error' => $this->uploadErrorMessage($file),
+                ];
+
                 continue;
             }
 
@@ -194,6 +216,13 @@ class UploadController extends Controller
         }
 
         return $entry;
+    }
+
+    protected function uploadErrorMessage(UploadedFile $file): string
+    {
+        $key = 'filemanager::filemanager.Upload_error_messages.'.$file->getError();
+
+        return Lang::has($key) ? trans($key) : $file->getErrorMessage();
     }
 
     protected function parseContentRange(Request $request): ?array

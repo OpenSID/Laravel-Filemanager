@@ -27,6 +27,7 @@ return [
     'Insert_Folder_Name' => 'Insert folder name:',
     'Root' => 'root',
     'Rename' => 'Rename',
+    'Refresh' => 'Refresh',
     'Back' => 'back',
     'View' => 'View',
     'View_list' => 'List view',
@@ -43,6 +44,7 @@ return [
     'Upload_base_help' => 'Drag & Drop files(modern browsers) or click in upper button to Add the file(s) and click on Start upload. When the upload is complete, click the \'Return to files list\' button.',
     'Upload_add_files' => 'Add file(s)',
     'Upload_start' => 'Start upload',
+    'Upload_error' => 'Upload failed: the data sent is invalid.',
     'Upload_error_messages' => [
         1 => 'The uploaded file exceeds the upload_max_filesize directive in php.ini',
         2 => 'The uploaded file exceeds the MAX_FILE_SIZE directive that was specified in the HTML form',
@@ -121,6 +123,7 @@ return [
     'New_File' => 'New File',
     'No_Extension' => 'You have to add a file extension.',
     'Valid_Extensions' => 'Valid extensions: %s',
+    'Upload_message' => 'Drop file here to upload',
     'SERVER ERROR' => 'SERVER ERROR',
     'forbidden' => 'Forbidden',
     'wrong path' => 'Wrong path',

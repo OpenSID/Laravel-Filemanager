@@ -53,7 +53,7 @@ class DownloadController extends Controller
             abort(403, trans('filemanager::filemanager.File_Permission_Not_Allowed'));
         }
 
-        if (! $this->files->exists($fullPath)) {
+        if (! $this->files->fileExists($fullPath)) {
             abort(404, trans('filemanager::filemanager.File_Not_Found'));
         }
 

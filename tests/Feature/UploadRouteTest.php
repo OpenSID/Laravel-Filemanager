@@ -232,4 +232,76 @@ class UploadRouteTest extends TestCase
         $this->assertArrayHasKey('error', $response->json()['files'][0]);
         Storage::disk('filemanager')->assertMissing('gappy.zip');
     }
+
+    #[Test]
+    public function reports_a_php_level_upload_error_instead_of_dropping_the_file(): void
+    {
+        // e.g. the file exceeded php.ini upload_max_filesize: PHP hands the
+        // request an UploadedFile with an error code and no usable content.
+        app()->setLocale('id');
+
+        $tmp = tempnam(sys_get_temp_dir(), 'up');
+        $file = new UploadedFile($tmp, 'big.jpg', 'image/jpeg', UPLOAD_ERR_INI_SIZE, true);
+
+        $response = $this->call('POST', route('filemanager.upload'), ['fldr' => ''], [], ['files' => [$file]]);
+
+        $response->assertOk();
+        $files = $response->json('files');
+
+        $this->assertCount(1, $files);
+        $this->assertSame('big.jpg', $files[0]['name']);
+        $this->assertSame('The uploaded file exceeds the upload_max_filesize directive in php.ini', $files[0]['error']);
+        Storage::disk('filemanager')->assertMissing('big.jpg');
+
+        @unlink($tmp);
+    }
+
+    #[Test]
+    public function rejects_an_upload_into_a_folder_that_does_not_exist(): void
+    {
+        // The local driver would otherwise create media/baru/sub on put(),
+        // without the .htaccess/index.html that makeDirectory() stamps.
+        $file = UploadedFile::fake()->image('photo.jpg');
+
+        $response = $this->post(route('filemanager.upload'), [
+            'fldr' => 'baru/sub',
+            'files' => [$file],
+        ]);
+
+        $response->assertOk();
+        $this->assertSame(trans('filemanager::filemanager.wrong path'), $response->json('files.0.error'));
+        $this->assertFalse(Storage::disk('filemanager')->directoryExists('baru'));
+    }
+
+    #[Test]
+    public function uploads_into_an_existing_subfolder(): void
+    {
+        Storage::disk('filemanager')->makeDirectory('album');
+
+        $file = UploadedFile::fake()->image('photo.jpg');
+
+        $response = $this->post(route('filemanager.upload'), [
+            'fldr' => 'album',
+            'files' => [$file],
+        ]);
+
+        $response->assertOk();
+        $this->assertArrayNotHasKey('error', $response->json('files.0'));
+        Storage::disk('filemanager')->assertExists('album/photo.jpg');
+    }
+
+    #[Test]
+    public function falls_back_to_symfonys_message_for_a_locale_the_package_does_not_ship(): void
+    {
+        app()->setLocale('xx');
+
+        $tmp = tempnam(sys_get_temp_dir(), 'up');
+        $file = new UploadedFile($tmp, 'part.jpg', 'image/jpeg', UPLOAD_ERR_PARTIAL, true);
+
+        $response = $this->call('POST', route('filemanager.upload'), ['fldr' => ''], [], ['files' => [$file]]);
+
+        $this->assertStringContainsString('partially uploaded', $response->json('files.0.error'));
+
+        @unlink($tmp);
+    }
 }

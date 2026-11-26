@@ -36,10 +36,13 @@ class ThumbnailGenerator
         $source = Storage::disk($sourceDisk);
         $extension = pathinfo($sourcePath, PATHINFO_EXTENSION) ?: 'jpg';
 
-        $tmpIn = tempnam(sys_get_temp_dir(), 'rfmIn').'.'.$extension;
-        $tmpOut = tempnam(sys_get_temp_dir(), 'rfmOut').'.'.$extension;
+        $tmpIn = null;
+        $tmpOut = null;
 
         try {
+            $tmpIn = $this->tempFile('rfmIn', $extension);
+            $tmpOut = $this->tempFile('rfmOut', $extension);
+
             file_put_contents($tmpIn, $source->get($sourcePath));
 
             // Pin the driver (default: GD). spatie/image otherwise auto-
@@ -65,9 +68,43 @@ class ThumbnailGenerator
             // on malformed or exotic raster files too.
             return false;
         } finally {
-            @unlink($tmpIn);
-            @unlink($tmpOut);
+            foreach ([$tmpIn, $tmpOut] as $tmp) {
+                if ($tmp !== null && is_file($tmp)) {
+                    @unlink($tmp);
+                }
+            }
         }
+    }
+
+    /**
+     * tempnam() already creates its (extension-less) file on disk, so
+     * appending an extension to its return value — as this class used to —
+     * left that original file behind on every call. Rename it instead: one
+     * file, carrying the extension spatie/image needs to pick the output
+     * encoder, and the only path make() has to clean up.
+     */
+    protected function tempFile(string $prefix, string $extension): string
+    {
+        $base = tempnam($this->tempDirectory(), $prefix);
+
+        if ($base === false) {
+            throw new \RuntimeException('Unable to create a temporary file.');
+        }
+
+        $path = $base.'.'.$extension;
+
+        if (! @rename($base, $path)) {
+            @unlink($base);
+
+            throw new \RuntimeException('Unable to create a temporary file.');
+        }
+
+        return $path;
+    }
+
+    protected function tempDirectory(): string
+    {
+        return sys_get_temp_dir();
     }
 
     public function isImage(string $path): bool
