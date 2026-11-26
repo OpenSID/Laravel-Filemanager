@@ -139,6 +139,8 @@ return [
     'view type number missing' => 'View type number missing',
     'Not enough Memory' => 'Not enough Memory',
     'max_size_reached' => 'The uploaded file exceeds the maximum allowed size of :size MB.',
+    'Upload_max_size_info' => 'Maximum size per file: :size MB.',
+    'upload_rejected_by_server' => 'The server rejected the request size. Ask your hosting provider to raise post_max_size, upload_max_filesize or client_max_body_size.',
     'B' => 'B',
     'KB' => 'KB',
     'MB' => 'MB',

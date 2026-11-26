@@ -4,6 +4,15 @@ namespace OpenSID\LaravelFilemanager\Support;
 
 class FilemanagerConfig
 {
+    /** Ukuran potongan bawaan blueimp (2 MiB). */
+    public const DEFAULT_CHUNK_SIZE = 2097152;
+
+    /** Potongan terkecil yang masih wajar (256 KiB). */
+    public const MIN_CHUNK_SIZE = 262144;
+
+    /** Ruang untuk header multipart dan field form per request (128 KiB). */
+    public const CHUNK_OVERHEAD_RESERVE = 131072;
+
     public function disk(): string
     {
         return (string) config('filemanager.disk', 'filemanager');
@@ -245,5 +254,46 @@ class FilemanagerConfig
         $mb = config('filemanager.max_total_size', false);
 
         return $mb === false ? false : ((int) $mb * 1024 * 1024);
+    }
+
+    /**
+     * Ukuran potongan (byte) uploader chunked agar satu request tetap muat di bawah
+     * post_max_size dan upload_max_filesize PHP. Potongan bawaan 2 MiB ditambah
+     * overhead multipart melebihi batas 2M yang lazim di hosting dan memicu HTTP 413.
+     * Batas tak terbatas ("0", "-1") diabaikan.
+     */
+    public function maxChunkSizeBytes(?string $postMaxSize = null, ?string $uploadMaxFilesize = null): int
+    {
+        $limits = array_filter([
+            $this->iniSizeToBytes($postMaxSize ?? (string) ini_get('post_max_size')),
+            $this->iniSizeToBytes($uploadMaxFilesize ?? (string) ini_get('upload_max_filesize')),
+        ], static fn (int $bytes): bool => $bytes > 0);
+
+        if ($limits === []) {
+            return self::DEFAULT_CHUNK_SIZE;
+        }
+
+        $safe = min($limits) - self::CHUNK_OVERHEAD_RESERVE;
+
+        return max(self::MIN_CHUNK_SIZE, min(self::DEFAULT_CHUNK_SIZE, $safe));
+    }
+
+    /**
+     * Ubah notasi php.ini ("2M", "512K", "1G", "-1") menjadi byte; 0 bila tak terbatas/tak valid.
+     */
+    public function iniSizeToBytes(string $value): int
+    {
+        if (! preg_match('/^\s*(\d+)\s*([kmg])?b?\s*$/i', $value, $matches)) {
+            return 0;
+        }
+
+        $number = (int) $matches[1];
+
+        return match (strtolower($matches[2] ?? '')) {
+            'g' => $number * 1073741824,
+            'm' => $number * 1048576,
+            'k' => $number * 1024,
+            default => $number,
+        };
     }
 }

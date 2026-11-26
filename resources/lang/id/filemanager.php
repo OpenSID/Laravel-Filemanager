@@ -139,6 +139,8 @@ return [
     'view type number missing' => 'View type number missing',
     'Not enough Memory' => 'Not enough Memory',
     'max_size_reached' => 'Ukuran berkas melebihi batas maksimal :size MB.',
+    'Upload_max_size_info' => 'Ukuran maksimal per berkas: :size MB.',
+    'upload_rejected_by_server' => 'Server menolak ukuran permintaan. Hubungi pengelola hosting untuk menaikkan post_max_size, upload_max_filesize atau client_max_body_size.',
     'B' => 'B',
     'KB' => 'KB',
     'MB' => 'MB',
