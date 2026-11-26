@@ -1,3 +1,4 @@
+@php $uploadConfig = app(\OpenSID\LaravelFilemanager\Support\FilemanagerConfig::class); $maxUploadMb = $uploadConfig->maxUploadSizeMb(); @endphp
 <div class="uploader">
     <div class="flex">
         <div class="text-center">
@@ -36,8 +37,45 @@
                                     <table role="presentation" class="table table-striped table-condensed small"><tbody class="files"></tbody></table>
                                 </div>
                                 <div class="upload-help">{{ __('filemanager::filemanager.Upload_base_help') }}</div>
+                                <div class="upload-help" id="upload-limit-info"><strong>{{ __('filemanager::filemanager.Upload_max_size_info', ['size' => $maxUploadMb]) }}</strong></div>
                             </div>
                         </form>
+
+                        <script>
+                            jQuery(function ($) {
+                                var $form = $('#fileupload');
+                                if (typeof $form.fileupload !== 'function') {
+                                    return;
+                                }
+
+                                var sizeLimitMessage = @json(__('filemanager::filemanager.max_size_reached', ['size' => $maxUploadMb]));
+                                var serverRejectedMessage = @json(__('filemanager::filemanager.upload_rejected_by_server'));
+
+                                // A chunk (plus multipart overhead) must fit under the server's
+                                // post_max_size / upload_max_filesize, otherwise PHP drops the body (HTTP 413).
+                                $form.fileupload('option', {
+                                    maxChunkSize: {{ $uploadConfig->maxChunkSizeBytes() }},
+                                    maxFileSize: {{ $uploadConfig->maxUploadSizeBytes() }},
+                                    messages: {maxFileSize: sizeLimitMessage}
+                                });
+
+                                $form.on('fileuploadfail', function (e, data) {
+                                    if (data.jqXHR && data.jqXHR.status === 413) {
+                                        data.errorThrown = serverRejectedMessage;
+                                    }
+                                });
+
+                                // An empty "files" response (request body dropped by PHP) must not leave the row stuck.
+                                $form.on('fileuploaddone', function (e, data) {
+                                    var result = data.result;
+                                    if (result && Array.isArray(result.files) && result.files.length === 0) {
+                                        data.result = {files: $.map(data.files, function (file) {
+                                            return {name: file.name, error: serverRejectedMessage};
+                                        })};
+                                    }
+                                });
+                            });
+                        </script>
 
                         <script id="template-upload" type="text/x-tmpl">
                         {% for (var i=0, file; file=o.files[i]; i++) { %}

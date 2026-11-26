@@ -7,6 +7,18 @@ dan proyek ini memakai [Semantic Versioning](https://semver.org/lang/id/).
 
 ## [Unreleased]
 
+### Diperbaiki
+
+- Unggahan berkas > 2 MB gagal (HTTP 413) di hosting dengan `post_max_size`/
+  `upload_max_filesize` 2M: ukuran potongan uploader tetap 2 MiB, sehingga satu
+  request (potongan + overhead multipart) melebihi batas PHP. Ukuran potongan
+  kini dihitung dari batas PHP yang berlaku (`FilemanagerConfig::maxChunkSizeBytes()`,
+  dikurangi cadangan 128 KiB, antara 256 KiB dan 2 MiB). Panel unggah juga
+  meneruskan `max_upload_size` ke uploader agar berkas terlalu besar ditolak
+  sebelum dikirim, menampilkan "Ukuran maksimal per berkas", dan memberi pesan
+  jelas untuk HTTP 413/respons kosong (`OpenSID/Laravel-Filemanager` #29,
+  `OpenSID/OpenSID` #12193).
+
 ### Keamanan
 
 - `DownloadController`: `path` kosong kini diarahkan ke `base_folder` (bukan root disk) dan `fullPath` dicek ulang terhadap `base_folder` (#7).
